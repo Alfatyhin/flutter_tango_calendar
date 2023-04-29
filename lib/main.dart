@@ -1,26 +1,24 @@
 // Copyright 2019 Aleksander Woźniak
 // SPDX-License-Identifier: Apache-2.0
 
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import 'repositories/calendar/calendar_repository.dart';
 import 'utils.dart';
-
-import 'pages/basics_example.dart';
-import 'pages/complex_example.dart';
-import 'pages/events_example.dart';
-import 'pages/multi_example.dart';
-import 'pages/range_example.dart';
+import 'models/Event.dart';
 
 void main() {
-  initializeDateFormatting().then((_) => runApp(MyApp()));
+ initializeDateFormatting().then((_) => runApp(MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'TableCalendar Example',
       theme: ThemeData(
@@ -44,6 +42,12 @@ class StartPage extends StatefulWidget {
 }
 
 class _StartPageState extends State<StartPage> {
+
+  var key = DateTime.now();
+  var value = Event('1', 'test event', 'test event', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
+  var kEvents;
+
+
   late final ValueNotifier<List<Event>> _selectedEvents;
   CalendarFormat _calendarFormat = CalendarFormat.month;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
@@ -56,11 +60,17 @@ class _StartPageState extends State<StartPage> {
   @override
   void initState() {
     super.initState();
+    var kEventSource = {this.key: [value]};
+
+    /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+    kEvents = LinkedHashMap<DateTime, List<Event>>(
+      equals: isSameDay,
+      hashCode: getHashCode,
+    )..addAll(kEventSource);
 
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
 
-    CalendarRepository().getCalendarsList();
   }
 
   @override
@@ -70,6 +80,7 @@ class _StartPageState extends State<StartPage> {
   }
 
   List<Event> _getEventsForDay(DateTime day) {
+
     // Implementation example
     return kEvents[day] ?? [];
   }
@@ -173,9 +184,18 @@ class _StartPageState extends State<StartPage> {
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: ListTile(
-                        onTap: () => print('${value[index]}'),
-                        title: Text('${value[index]}'),
-                        subtitle: Text('$_focusedDay / ${index}'),
+                        onTap: () => print(value[index].toString()),
+                        title: Row(
+                          children: [
+                            Column(
+                              children: [
+                                Text(value[index].name),
+                                Text(value[index].timePeriod()),
+                              ],
+                            )
+                          ],
+                        ),
+                        subtitle: Text('${value[index].locationString()}'),
                       ),
                     );
                   },
@@ -185,6 +205,12 @@ class _StartPageState extends State<StartPage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.update),
+        onPressed: () async {
+          kEvents = await CalendarRepository().getEventsList();
+        }
+      ,),
     );
   }
 }

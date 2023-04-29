@@ -3,37 +3,28 @@
 
 import 'dart:collection';
 
+import 'package:tango_calendar/main.dart';
+
+import 'models/Event.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:dio/dio.dart';
-import 'dart:convert' as convert;
 
-/// Example event class.
-class Event {
-  final String title;
-
-  const Event(this.title);
-
-  @override
-  String toString() => title;
-}
 
 /// Example events.
 ///
-/// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-final kEvents = LinkedHashMap<DateTime, List<Event>>(
-  equals: isSameDay,
-  hashCode: getHashCode,
-)..addAll(_kEventSource2);
-
-var key = DateTime.parse('2023-04-28');
-var value = Event('test event');
-
-var _kEventSource2 = {key: [value]};
-
-var url =
-  Uri.https('https://tango-calendar.it-alex.net.ua', '/api/getevents?test=12345', {'q': '{http}'});
-
-
+// /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+// var kEvents = LinkedHashMap<DateTime, List<Event>>(
+//   equals: isSameDay,
+//   hashCode: getHashCode,
+// )..addAll(kEventSource);
+//
+//
+//
+//
+// var key = DateTime.parse('2023-04-28');
+// var value = Event('1', 'test event');
+//
+//
+// var kEventSource = {key: [value]};
 
 
 int getHashCode(DateTime key) {
@@ -52,4 +43,4 @@ List<DateTime> daysInRange(DateTime first, DateTime last) {
 String kLang = 'uk';
 final kToday = DateTime.now();
 final kFirstDay = DateTime(kToday.year, kToday.month - 3, kToday.day);
-final kLastDay = DateTime(kToday.year, kToday.month + 3, kToday.day);
+final kLastDay = DateTime(kToday.year, kToday.month + 6, kToday.day);
