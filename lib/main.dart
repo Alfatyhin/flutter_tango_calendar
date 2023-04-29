@@ -210,7 +210,7 @@ class _StartPageState extends State<StartPage> {
         onPressed: () async {
           kEvents = await CalendarRepository().getEventsList();
           setState(() {
-
+            _selectedEvents.value = _getEventsForDay(_selectedDay!);
           });
         }
       ,),
