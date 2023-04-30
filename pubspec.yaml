@@ -17,6 +17,7 @@ dependencies:
   googleapis: ^11.0.0
   googleapis_auth: ^1.4.0
   html: ^0.15.2
+  shared_preferences: ^2.1.0
 
 dev_dependencies:
   flutter_test:

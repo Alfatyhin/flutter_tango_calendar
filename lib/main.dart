@@ -2,17 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'repositories/calendar/calendar_repository.dart';
 import 'utils.dart';
 import 'models/Event.dart';
 
 void main() {
- initializeDateFormatting().then((_) => runApp(MyApp()));
+  WidgetsFlutterBinding.ensureInitialized();
+  initializeDateFormatting().then((_) => runApp(MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -57,11 +60,14 @@ class _StartPageState extends State<StartPage> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
 
+  late Map<DateTime, List<Event>> kEventSource;
+
   @override
   void initState() {
     super.initState();
-    var kEventSource = {this.key: [value]};
+    kEventSource = {this.key: [value]};
 
+    setlocaleJsonData();
     /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
     kEvents = LinkedHashMap<DateTime, List<Event>>(
       equals: isSameDay,
@@ -71,6 +77,30 @@ class _StartPageState extends State<StartPage> {
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
 
+  }
+
+  @override
+  Future<void> setlocaleJsonData() async {
+    // CalendarRepository().setLocalDataJson('test', 'test 1');
+
+    var oldJson = await CalendarRepository().getLocalDataJson('eventsJson');
+    if (oldJson != '') {
+
+      var data = json.decode(oldJson as String);
+      kEventSource = CalendarRepository().getJsonDataEventsMap(data) as Map<DateTime, List<Event>>;
+
+      /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+      kEvents = LinkedHashMap<DateTime, List<Event>>(
+        equals: isSameDay,
+        hashCode: getHashCode,
+      )..addAll(kEventSource);
+
+      print(_focusedDay);
+      _selectedEvents.value = _getEventsForDay(_selectedDay!);
+
+    } else {
+      print('local json filed');
+    }
   }
 
   @override
