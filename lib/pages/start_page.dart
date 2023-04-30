@@ -53,6 +53,36 @@ class _StartPageState extends State<StartPage> {
 
   }
 
+  void _menuOpen() {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(title: Text('Меню'),),
+            body: Column(
+              children: [
+                ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+                  }, child: Text('Календари событий')),
+                ElevatedButton(onPressed: () async {
+                    await CalendarRepository().clearLocalDataJson('eventsJson');
+                    setState(() {
+                      kEventSource = {this.key: [value]};
+                      /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+                      kEvents = LinkedHashMap<DateTime, List<Event>>(
+                        equals: isSameDay,
+                        hashCode: getHashCode,
+                      )..addAll(kEventSource);
+
+                      _selectedEvents.value = _getEventsForDay(_selectedDay!);
+                    });
+                  }, child: Text('очистить список событий'))
+              ],
+            ),
+          );
+        })
+    );
+  }
 
 
   @override
@@ -70,8 +100,7 @@ class _StartPageState extends State<StartPage> {
         equals: isSameDay,
         hashCode: getHashCode,
       )..addAll(kEventSource);
-
-      print(_focusedDay);
+      setState(() {});
       _selectedEvents.value = _getEventsForDay(_selectedDay!);
 
     }
@@ -138,6 +167,12 @@ class _StartPageState extends State<StartPage> {
         title: Center(
           child: Text('Tango Calendar'),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.menu),
+            onPressed: _menuOpen,
+          )
+        ],
       ),
       body: Column(
         children: [
