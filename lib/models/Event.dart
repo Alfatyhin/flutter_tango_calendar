@@ -23,7 +23,7 @@ class Event{
       if (dateStart == dateEnd) {
         string = "$timeStart - $timeEnd";
       } else {
-        string = "$dateStart - $dateEnd";
+        string = "с $dateStart с $timeStart по $dateEnd до $timeEnd";
       }
     }
     return string;

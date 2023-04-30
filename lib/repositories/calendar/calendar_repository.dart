@@ -91,6 +91,11 @@ class CalendarRepository {
     return kEventSource;
   }
 
+  Future clearLocalDataJson(key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(key);
+  }
+
   Future setLocalDataJson(key, data) async {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString(key, data);
