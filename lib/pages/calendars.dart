@@ -89,7 +89,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
             tango_school.add(xl);
         }
         xl++;
-        print(value['type_events']);
       });
 
       setState(() {});
@@ -166,6 +165,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
         onPressed: () async {
           await CalendarRepository().updateCalendarsData();
           print('calendars updated');
+          setlocaleJsonData();
           setState(() {});
         }
         ,),
