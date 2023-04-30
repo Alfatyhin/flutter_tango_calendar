@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:tango_calendar/models/Calendar.dart';
 
 import '../repositories/calendar/calendar_repository.dart';
 
@@ -12,7 +15,99 @@ class CalendarsPage extends StatefulWidget {
 class _CalendarsPageState extends State<CalendarsPage> {
 
   List calendarsList = [];
+  List festivals = [];
+  List master_classes = [];
+  List milongas = [];
+  List tango_school = [];
+  List countries = [];
+  List cityes = [];
 
+  @override
+  void initState() {
+    super.initState();
+    setlocaleJsonData();
+  }
+
+  @override
+  Future<void> setlocaleJsonData() async {
+    Map selected = {};
+    List selectedCalendars = [];
+
+    var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
+    var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
+
+    if (selectedCalendarsJson != '') {
+      selectedCalendars = json.decode(selectedCalendarsJson as String);
+    }
+    if (selectedCalendars.length > 0) {
+      for(var x = 0; x < selectedCalendars.length; x++) {
+        var key = selectedCalendars[x] as String;
+        selected[key] = true;
+      }
+      print(selected);
+    } else {
+      print('not selected');
+    }
+
+    if (calendarsJson != '') {
+      Map data = json.decode(calendarsJson as String);
+
+      Map calendarsData = data['calendars'];
+
+      int xl = 0;
+      calendarsData.forEach((key, value) {
+        var calendar = Calendar(
+            key,
+            value['name'],
+            value['description'],
+            value['type_events'],
+            value['country'],
+            value['city'],
+            value['source']
+        );
+
+        if (selectedCalendars.length > 0 && selected.containsKey(key)) {
+          print('${calendar.name} +');
+          calendar.enable = true;
+        }
+
+        calendarsList.add(calendar);
+        countries.add(value['country']);
+        cityes.add(value['city']);
+
+        switch(value['type_events']) {
+          case 'festivals':
+            festivals.add(xl);
+            break;
+          case 'master_classes':
+            master_classes.add(xl);
+            break;
+          case 'milongas':
+            milongas.add(xl);
+            break;
+          case 'tango_school':
+            tango_school.add(xl);
+        }
+        xl++;
+        print(value['type_events']);
+      });
+
+      setState(() {});
+
+    }
+  }
+
+  void selectCalendar() {
+    List selected = [];
+    for(var x = 0; x < calendarsList.length; x++) {
+      var enable = calendarsList[x].enable;
+      if (enable) {
+        selected.add(calendarsList[x].id);
+      }
+    }
+    var data = json.encode(selected);
+    CalendarRepository().setLocalDataJson('selectedCalendars', data);
+  }
 
   void _menuOpen() {
     Navigator.of(context).push(
@@ -53,31 +148,27 @@ class _CalendarsPageState extends State<CalendarsPage> {
       body: ListView.builder(
           itemCount: calendarsList.length,
           itemBuilder: (BuildContext context, int index) {
-            return Dismissible(
-              key: Key(calendarsList[index]),
-              child: Card(
-                child: ListTile(
-                  title: Text(calendarsList[index]),
-                  trailing: IconButton(
-                    icon: Icon(
-                      Icons.delete_sweep,
-                      color: Colors.deepOrange,
-                    ), onPressed: () {
-                    setState(() {
-                      calendarsList.removeAt(index);
-                    });
-                  },
-                  ),
-                ),
-              ),
-              onDismissed: (direction) {
-                setState(() {
-                  calendarsList.removeAt(index);
-                });
-              },
+            return Row(
+              children: [
+                Text(calendarsList[index].name),
+                Checkbox(value: calendarsList[index].enable, onChanged: (bool? newValue) {
+                  setState(() {
+                    calendarsList[index].enable = newValue!;
+                  });
+                  selectCalendar();
+                })
+              ],
             );
           }
       ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.update),
+        onPressed: () async {
+          await CalendarRepository().updateCalendarsData();
+          print('calendars updated');
+          setState(() {});
+        }
+        ,),
     );
   }
 }

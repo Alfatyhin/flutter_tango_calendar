@@ -15,9 +15,9 @@ class CalendarRepository {
     final response = await Dio().get('https://tango-calendar.it-alex.net.ua/api/get/events/14');
 
     var res;
-    var key = DateTime.now();
-    var value = Event('1', 'test event', 'test event', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
-    var kEventSource = {key: [value]};
+    // var key = DateTime.now();
+    // var value = Event('1', 'test event', 'test event', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
+    Map<DateTime, List<Event>> kEventSource = {};
 
     if (response.statusCode == 200) {
       var dataJson = response.data;
@@ -42,20 +42,10 @@ class CalendarRepository {
   }
 
 
-  Future<void> getCalendarsList() async {
+  Future<void> updateCalendarsData() async {
     final response = await Dio().get('https://tango-calendar.it-alex.net.ua/api/get/calendars');
-    final data = response.data;
-    print(data);
-    // final dataList = data.entries.map((e) => Calendar(
-    //     name: e.name,
-    //     description,
-    //     type_events,
-    //     country,
-    //     city,
-    //     source
-    // ));
-    //
-    // return dataList;
+    var dataJson = response.data;
+    setLocalDataJson('calendars', dataJson);
   }
 
   Map<DateTime, List<Event>> getKeventToDataMap(data) {
