@@ -87,7 +87,7 @@ class _StartPageState extends State<StartPage> {
     if (oldJson != '') {
 
       var data = json.decode(oldJson as String);
-      kEventSource = CalendarRepository().getJsonDataEventsMap(data) as Map<DateTime, List<Event>>;
+      kEventSource = CalendarRepository().getKeventToDataMap(data) as Map<DateTime, List<Event>>;
 
       /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
       kEvents = LinkedHashMap<DateTime, List<Event>>(

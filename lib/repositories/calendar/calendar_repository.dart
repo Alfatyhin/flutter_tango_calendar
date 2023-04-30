@@ -22,11 +22,11 @@ class CalendarRepository {
     if (response.statusCode == 200) {
       var dataJson = response.data;
       setLocalDataJson('eventsJson', dataJson);
-      
+
       if (dataJson is String) {
         var data = json.decode(dataJson);
         if (data is Map) {
-          kEventSource = getJsonDataEventsMap(data);
+          kEventSource = getKeventToDataMap(data);
 
           /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
           res = LinkedHashMap<DateTime, List<Event>>(
@@ -58,7 +58,7 @@ class CalendarRepository {
     // return dataList;
   }
 
-  Map<DateTime, List<Event>> getJsonDataEventsMap(data) {
+  Map<DateTime, List<Event>> getKeventToDataMap(data) {
 
     Map<DateTime, List<Event>> kEventSource = {};
 
