@@ -12,30 +12,55 @@ import '../../utils.dart';
 class CalendarRepository {
 
   Future<Map> getEventsList() async {
-    final response = await Dio().get('https://tango-calendar.it-alex.net.ua/api/get/events/14');
 
     var res;
-    // var key = DateTime.now();
-    // var value = Event('1', 'test event', 'test event', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
+    var dataJson;
+    Map dataSaver = {};
+
+    List selectedCalendars = [];
     Map<DateTime, List<Event>> kEventSource = {};
+    var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
 
-    if (response.statusCode == 200) {
-      var dataJson = response.data;
-      setLocalDataJson('eventsJson', dataJson);
+    if (selectedCalendarsJson != '') {
+      selectedCalendars = json.decode(selectedCalendarsJson as String);
+    }
+    if (selectedCalendars.length > 0) {
 
-      if (dataJson is String) {
-        var data = json.decode(dataJson);
-        if (data is Map) {
-          kEventSource = getKeventToDataMap(data);
+      for(var x = 0; x < selectedCalendars.length; x++) {
+        var calendarId = selectedCalendars[x];
+        final response = await Dio().get('https://tango-calendar.it-alex.net.ua/api/get/events/$calendarId');
 
-          /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-          res = LinkedHashMap<DateTime, List<Event>>(
-            equals: isSameDay,
-            hashCode: getHashCode,
-          )..addAll(kEventSource);
+        if (response.statusCode == 200) {
+          dataJson = response.data;
 
+          if (dataJson is String) {
+            var data = json.decode(dataJson);
+            if (data is Map) {
+              data.forEach((key, value) {
+                if (dataSaver.containsKey(key)) {
+                  List oldData = dataSaver[key];
+                  oldData.addAll(value);
+                  dataSaver[key] = oldData;
+                } else {
+                  dataSaver[key] = value;
+                }
+              });
+
+            }
+          }
         }
       }
+      kEventSource = getKeventToDataMap(dataSaver);
+
+      /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+      res = LinkedHashMap<DateTime, List<Event>>(
+        equals: isSameDay,
+        hashCode: getHashCode,
+      )..addAll(kEventSource);
+
+      dataJson = json.encode(dataSaver);
+      setLocalDataJson('eventsJson', dataJson);
+
     }
 
     return res;

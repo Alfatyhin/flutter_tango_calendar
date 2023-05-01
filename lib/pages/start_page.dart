@@ -248,11 +248,10 @@ class _StartPageState extends State<StartPage> {
         child: Icon(Icons.update),
         onPressed: () async {
           kEvents = await CalendarRepository().getEventsList();
-          setState(() {
-            _selectedEvents.value = _getEventsForDay(_selectedDay!);
-          });
-        }
-        ,),
+          setState(() {});
+          _selectedEvents.value = _getEventsForDay(_selectedDay!);
+        },
+      ),
     );
   }
 }
