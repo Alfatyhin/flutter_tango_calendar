@@ -225,6 +225,8 @@ class _StartPageState extends State<StartPage> {
                       child: ListTile(
                         onTap: () => print(value[index].toString()),
                         title: Row(
+                          textDirection: TextDirection.ltr,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             Column(
                               children: [

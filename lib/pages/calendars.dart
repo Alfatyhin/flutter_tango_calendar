@@ -146,10 +146,16 @@ class _CalendarsPageState extends State<CalendarsPage> {
       ),
       body: ListView.builder(
           itemCount: calendarsList.length,
+          padding: EdgeInsets.only(left: 20),
           itemBuilder: (BuildContext context, int index) {
             return Row(
+              textDirection: TextDirection.ltr,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(calendarsList[index].name),
+                Text(calendarsList[index].name,
+                style: TextStyle(
+                  fontSize: 20
+                ),),
                 Checkbox(value: calendarsList[index].enable, onChanged: (bool? newValue) {
                   setState(() {
                     calendarsList[index].enable = newValue!;
