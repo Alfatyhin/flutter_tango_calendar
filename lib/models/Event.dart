@@ -41,6 +41,14 @@ class Event{
     return string;
   }
 
+  String descriptionString() {
+    String string = '';
+    if (description != null) {
+      string = description;
+    }
+    return string;
+  }
+
   @override
   String toString() => "$eventId | $name | $location";
 }

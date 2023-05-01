@@ -59,11 +59,15 @@ class _StartPageState extends State<StartPage> {
           return Scaffold(
             appBar: AppBar(title: Text('Меню'),),
             body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(onPressed: () {
                     Navigator.pop(context);
                     Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
-                  }, child: Text('Календари событий')),
+                  }, child: Text('Календари событий',
+                  style: TextStyle(
+                      fontSize: 20
+                  ),),),
                 ElevatedButton(onPressed: () async {
                     await CalendarRepository().clearLocalDataJson('eventsJson');
                     setState(() {
@@ -76,8 +80,66 @@ class _StartPageState extends State<StartPage> {
 
                       _selectedEvents.value = _getEventsForDay(_selectedDay!);
                     });
-                  }, child: Text('очистить список событий'))
+                  }, child: Text('очистить список событий',
+                  style: TextStyle(
+                      fontSize: 20
+                  ),))
               ],
+            ),
+          );
+        })
+    );
+  }
+
+  void _eventOpen(Event event) {
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(title: Text('event data'),),
+            body:  Center(
+                child: Container (
+                  padding: EdgeInsets.only(top:25, left:10, right:10),
+                  child:  Column(
+                    // mainAxisAlignment: MainAxisAlignment.center,
+                    // crossAxisAlignment: CrossAxisAlignment.center,
+                    // mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("${event.name}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w600
+                          ),
+                          softWrap: true
+                      ),
+                      Text("",),
+                      Text("${event.timePeriod()}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 20),
+                          softWrap: true
+                      ),
+                      Text("",),
+                      Text("${event.locationString()}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 15),
+                          softWrap: true
+                      ),
+                      Text("",),
+                      Text("${event.descriptionString()}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 20),
+                          softWrap: true
+                      ),
+                      Text("",),
+                      Text("${event.organizerName}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 20),
+                          softWrap: true
+                      ),
+                    ],
+                  ),
+                )
+
             ),
           );
         })
@@ -223,7 +285,7 @@ class _StartPageState extends State<StartPage> {
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: ListTile(
-                        onTap: () => print(value[index].toString()),
+                        onTap: () => _eventOpen(value[index]),
                         title: Row(
                           textDirection: TextDirection.ltr,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,

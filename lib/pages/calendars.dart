@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 
@@ -113,16 +114,25 @@ class _CalendarsPageState extends State<CalendarsPage> {
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
             appBar: AppBar(title: Text('Меню'),),
-            body: Column(
+            body:  Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(onPressed: () {
                   Navigator.pop(context);
                   Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                }, child: Text('на главную')),
+                  }, child: Text('на главную',
+                  style: TextStyle(
+                      fontSize: 20
+                  ),)
+                ),
                 ElevatedButton(onPressed: () async {
                   await CalendarRepository().clearLocalDataJson('eventsJson');
                   setState(() {});
-                }, child: Text('очистить список салендарей'))
+                  }, child: Text('очистить список салендарей',
+                  style: TextStyle(
+                      fontSize: 20
+                  ),)
+                )
               ],
             ),
           );
@@ -135,7 +145,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Center(
-          child: Text('Список календарей'),
+          child: Text('Calendars'),
         ),
         actions: [
           IconButton(
