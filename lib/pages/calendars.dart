@@ -126,7 +126,8 @@ class _CalendarsPageState extends State<CalendarsPage> {
                   ),)
                 ),
                 ElevatedButton(onPressed: () async {
-                  await CalendarRepository().clearLocalDataJson('eventsJson');
+                  await CalendarRepository().clearLocalDataJson('calendars');
+                  await CalendarRepository().clearLocalDataJson('selectedCalendars');
                   setState(() {});
                   }, child: Text('очистить список салендарей',
                   style: TextStyle(
