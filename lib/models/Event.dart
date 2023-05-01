@@ -25,6 +25,10 @@ class Event{
       } else {
         string = "с $dateStart $timeStart по $dateEnd $timeEnd";
       }
+    } else {
+      if (dateStart != dateEnd) {
+        string = "с $dateStart по $dateEnd";
+      }
     }
     return string;
   }
