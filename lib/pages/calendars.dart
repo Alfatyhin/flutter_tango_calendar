@@ -144,9 +144,14 @@ class _CalendarsPageState extends State<CalendarsPage> {
           )
         ],
       ),
-      body: ListView.builder(
+      body: ListView.separated(
           itemCount: calendarsList.length,
           padding: EdgeInsets.only(left: 20),
+          separatorBuilder: (BuildContext context, int index) => Divider(
+            height: 20,
+            color: Colors.blueAccent,
+            thickness: 3,
+          ),
           itemBuilder: (BuildContext context, int index) {
             return Row(
               textDirection: TextDirection.ltr,
@@ -164,7 +169,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                 })
               ],
             );
-          }
+          },
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.update),
