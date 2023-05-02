@@ -204,7 +204,11 @@ class _CalendarsPageState extends State<CalendarsPage> {
         return ExpansionPanel(
           headerBuilder: (BuildContext context, bool isExpanded) {
             return ListTile(
-              title: Text(item.headerValue),
+              title: Text(
+                item.headerValue,
+                style: TextStyle(
+                  fontSize: 20
+              ),),
             );
           },
           body: Container(
@@ -225,7 +229,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                   children: [
                     Text(calendarsList[item.eventCalendars[index]].name,
                       style: TextStyle(
-                          fontSize: 20
+                          fontSize: 15
                       ),),
                     Checkbox(value: calendarsList[item.eventCalendars[index]].enable, onChanged: (bool? newValue) {
                       setState(() {
