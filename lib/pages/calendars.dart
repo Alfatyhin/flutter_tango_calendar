@@ -13,13 +13,28 @@ class CalendarsPage extends StatefulWidget {
   _CalendarsPageState createState() => _CalendarsPageState();
 }
 
+
+List<TypeEvent> generateItems() {
+  List typesEventsList = ['festivals', 'master classes', 'milongas', 'tango schools'];
+  List<TypeEvent> types = [];
+  typesEventsList.forEach((element) {
+    print(element);
+    var type = TypeEvent(headerValue: element);
+    types.add(type);
+  });
+
+  return types;
+}
+
+
 class _CalendarsPageState extends State<CalendarsPage> {
 
+  final List<TypeEvent> _dataTypes = generateItems();
   List calendarsList = [];
   List festivals = [];
-  List master_classes = [];
+  List masterClasses = [];
   List milongas = [];
-  List tango_school = [];
+  List tangoSchools = [];
   List countries = [];
   List cityes = [];
 
@@ -74,22 +89,26 @@ class _CalendarsPageState extends State<CalendarsPage> {
         countries.add(value['country']);
         cityes.add(value['city']);
 
-        var item = Item(expandedValue: 'This is item number $xl', headerValue: value['type_events']);
         switch(value['type_events']) {
           case 'festivals':
-            festivals.add(item);
+            festivals.add(xl);
             break;
           case 'master_classes':
-            master_classes.add(xl);
+            masterClasses.add(xl);
             break;
           case 'milongas':
             milongas.add(xl);
             break;
           case 'tango_school':
-            tango_school.add(xl);
+            tangoSchools.add(xl);
         }
         xl++;
       });
+
+      _dataTypes[0].eventCalendars = festivals;
+      _dataTypes[1].eventCalendars = masterClasses;
+      _dataTypes[2].eventCalendars = milongas;
+      _dataTypes[3].eventCalendars = tangoSchools;
 
       setState(() {});
 
@@ -120,14 +139,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
                   Navigator.pop(context);
                   Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
                   }, child: Text('на главную',
-                  style: TextStyle(
-                      fontSize: 20
-                  ),)
-                ),
-                ElevatedButton(onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(context, '/fests', (route) => false);
-                  }, child: Text('fests test',
                   style: TextStyle(
                       fontSize: 20
                   ),)
@@ -163,32 +174,10 @@ class _CalendarsPageState extends State<CalendarsPage> {
         ],
       ),
       body: Center(
-        child: ListView.separated(
-          itemCount: calendarsList.length,
-          padding: EdgeInsets.only(left: 20),
-          separatorBuilder: (BuildContext context, int index) => Divider(
-            height: 20,
-            color: Colors.blueAccent,
-            thickness: 3,
+        child: SingleChildScrollView(
+          child: Container(
+            child: _buildPanel(),
           ),
-          itemBuilder: (BuildContext context, int index) {
-            return Row(
-              textDirection: TextDirection.ltr,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(calendarsList[index].name,
-                  style: TextStyle(
-                      fontSize: 20
-                  ),),
-                Checkbox(value: calendarsList[index].enable, onChanged: (bool? newValue) {
-                  setState(() {
-                    calendarsList[index].enable = newValue!;
-                  });
-                  selectCalendar();
-                })
-              ],
-            );
-          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -202,17 +191,70 @@ class _CalendarsPageState extends State<CalendarsPage> {
         ,),
     );
   }
+
+
+  Widget _buildPanel() {
+    return ExpansionPanelList(
+      expansionCallback: (int index, bool isExpanded) {
+        setState(() {
+          _dataTypes[index].isExpanded = !isExpanded;
+        });
+      },
+      children: _dataTypes.map<ExpansionPanel>((TypeEvent item) {
+        return ExpansionPanel(
+          headerBuilder: (BuildContext context, bool isExpanded) {
+            return ListTile(
+              title: Text(item.headerValue),
+            );
+          },
+          body: Container(
+            child:  ListView.separated(
+              itemCount: item.eventCalendars.length,
+              padding: EdgeInsets.only(left: 20),
+              shrinkWrap: true,
+              physics: ClampingScrollPhysics(),
+              separatorBuilder: (BuildContext context, int index) => Divider(
+                height: 20,
+                color: Colors.blueAccent,
+                thickness: 3,
+              ),
+              itemBuilder: (BuildContext context, int index) {
+                return Row(
+                  textDirection: TextDirection.ltr,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(calendarsList[item.eventCalendars[index]].name,
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),
+                    Checkbox(value: calendarsList[item.eventCalendars[index]].enable, onChanged: (bool? newValue) {
+                      setState(() {
+                        calendarsList[item.eventCalendars[index]].enable = newValue!;
+                      });
+                      selectCalendar();
+                    })
+                  ],
+                );
+              },
+            ),
+          ),
+          isExpanded: item.isExpanded,
+        );
+      }).toList(),
+    );
+  }
+
 }
 
 // stores ExpansionPanel state information
-class Item {
-  Item({
-    required this.expandedValue,
+class TypeEvent {
+  TypeEvent({
     required this.headerValue,
     this.isExpanded = false,
   });
 
-  String expandedValue;
   String headerValue;
   bool isExpanded;
+  List eventCalendars = [];
+
 }

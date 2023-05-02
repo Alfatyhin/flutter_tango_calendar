@@ -32,7 +32,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) =>StartPage(),
         '/calendars': (context)  => CalendarsPage(),
-        '/fests': (context)  => MyStatefulWidget()
       },
     );
   }
