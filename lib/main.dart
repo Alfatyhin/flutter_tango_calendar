@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:tango_calendar/pages/fests.dart';
 import 'pages/calendars.dart';
 import 'pages/start_page.dart';
 
@@ -30,7 +31,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) =>StartPage(),
-        '/calendars': (context)  => CalendarsPage()
+        '/calendars': (context)  => CalendarsPage(),
+        '/fests': (context)  => MyStatefulWidget()
       },
     );
   }

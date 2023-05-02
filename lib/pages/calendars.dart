@@ -45,7 +45,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
         var key = selectedCalendars[x] as String;
         selected[key] = true;
       }
-      print(selected);
     } else {
       print('not selected');
     }
@@ -68,7 +67,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
         );
 
         if (selectedCalendars.length > 0 && selected.containsKey(key)) {
-          print('${calendar.name} +');
           calendar.enable = true;
         }
 
@@ -76,9 +74,10 @@ class _CalendarsPageState extends State<CalendarsPage> {
         countries.add(value['country']);
         cityes.add(value['city']);
 
+        var item = Item(expandedValue: 'This is item number $xl', headerValue: value['type_events']);
         switch(value['type_events']) {
           case 'festivals':
-            festivals.add(xl);
+            festivals.add(item);
             break;
           case 'master_classes':
             master_classes.add(xl);
@@ -125,6 +124,14 @@ class _CalendarsPageState extends State<CalendarsPage> {
                       fontSize: 20
                   ),)
                 ),
+                ElevatedButton(onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamedAndRemoveUntil(context, '/fests', (route) => false);
+                  }, child: Text('fests test',
+                  style: TextStyle(
+                      fontSize: 20
+                  ),)
+                ),
                 ElevatedButton(onPressed: () async {
                   await CalendarRepository().clearLocalDataJson('calendars');
                   await CalendarRepository().clearLocalDataJson('selectedCalendars');
@@ -155,7 +162,8 @@ class _CalendarsPageState extends State<CalendarsPage> {
           )
         ],
       ),
-      body: ListView.separated(
+      body: Center(
+        child: ListView.separated(
           itemCount: calendarsList.length,
           padding: EdgeInsets.only(left: 20),
           separatorBuilder: (BuildContext context, int index) => Divider(
@@ -169,9 +177,9 @@ class _CalendarsPageState extends State<CalendarsPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(calendarsList[index].name,
-                style: TextStyle(
-                  fontSize: 20
-                ),),
+                  style: TextStyle(
+                      fontSize: 20
+                  ),),
                 Checkbox(value: calendarsList[index].enable, onChanged: (bool? newValue) {
                   setState(() {
                     calendarsList[index].enable = newValue!;
@@ -181,6 +189,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
               ],
             );
           },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.update),
@@ -195,4 +204,15 @@ class _CalendarsPageState extends State<CalendarsPage> {
   }
 }
 
+// stores ExpansionPanel state information
+class Item {
+  Item({
+    required this.expandedValue,
+    required this.headerValue,
+    this.isExpanded = false,
+  });
 
+  String expandedValue;
+  String headerValue;
+  bool isExpanded;
+}
