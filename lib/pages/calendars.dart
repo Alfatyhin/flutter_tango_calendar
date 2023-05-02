@@ -192,7 +192,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
             label: 'clear',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.update),
+            icon: Icon(Icons.refresh),
             label: 'update',
           ),
         ],
@@ -270,14 +270,35 @@ class _CalendarsPageState extends State<CalendarsPage> {
         await CalendarRepository().clearLocalDataJson('calendars');
         await CalendarRepository().clearLocalDataJson('selectedCalendars');
         setState(() {});
+        _shortMessage('calendars deleted', 2);
         break;
       case 2:
+        _shortMessage('upload calendars', 2);
         await CalendarRepository().updateCalendarsData();
         print('calendars updated');
         setlocaleJsonData();
         setState(() {});
+        _shortMessage('upload complit', 2);
         break;
     }
+  }
+
+  void _shortMessage(String text, int sec) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Center(
+        child: Text(text),
+      ),
+      backgroundColor: Colors.blueAccent,
+      duration: Duration(seconds: sec),
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 8.0, // Inner padding for SnackBar content.
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+    ));
   }
 }
 

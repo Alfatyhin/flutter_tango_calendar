@@ -16,7 +16,6 @@ class StartPage extends StatefulWidget {
 }
 
 class _StartPageState extends State<StartPage> {
-
   var key = DateTime.now();
   var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
   var kEvents;
@@ -321,7 +320,7 @@ class _StartPageState extends State<StartPage> {
             label: 'clear',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.update),
+            icon: Icon(Icons.refresh),
             label: 'update',
           ),
         ],
@@ -332,7 +331,7 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  Future<void> _onItemTapped(int index) async {
+  void _onItemTapped(int index) async {
     switch (index) {
       case 0:
         Navigator.pop(context);
@@ -351,14 +350,36 @@ class _StartPageState extends State<StartPage> {
           _selectedEvents.value = _getEventsForDay(_selectedDay!);
           _selectedIndex = index;
         });
+        _shortMessage('events deleted', 2);
         break;
       case 2:
+        _shortMessage('upload events', 2);
         kEvents = await CalendarRepository().getEventsList();
         setState(() {
           _selectedIndex = index;
         });
         _selectedEvents.value = _getEventsForDay(_selectedDay!);
+        _shortMessage('upload complit', 2);
         break;
     }
+
+  }
+
+  void _shortMessage(String text, int sec) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Center(
+        child: Text(text),
+      ),
+      backgroundColor: Colors.blueAccent,
+      duration: Duration(seconds: sec),
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 8.0, // Inner padding for SnackBar content.
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+    ));
   }
 }
