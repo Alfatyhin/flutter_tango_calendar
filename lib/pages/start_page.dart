@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -19,6 +20,7 @@ class _StartPageState extends State<StartPage> {
   var key = DateTime.now();
   var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
   var kEvents;
+  int _selectedIndex = 0;
 
 
   late final ValueNotifier<List<Event>> _selectedEvents;
@@ -62,25 +64,25 @@ class _StartPageState extends State<StartPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
-                  }, child: Text('Календари событий',
+                  Navigator.pop(context);
+                  Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+                }, child: Text('Календари событий',
                   style: TextStyle(
                       fontSize: 20
                   ),),),
                 ElevatedButton(onPressed: () async {
-                    await CalendarRepository().clearLocalDataJson('eventsJson');
-                    setState(() {
-                      kEventSource = {this.key: [value]};
-                      /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-                      kEvents = LinkedHashMap<DateTime, List<Event>>(
-                        equals: isSameDay,
-                        hashCode: getHashCode,
-                      )..addAll(kEventSource);
+                  await CalendarRepository().clearLocalDataJson('eventsJson');
+                  setState(() {
+                    kEventSource = {this.key: [value]};
+                    /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+                    kEvents = LinkedHashMap<DateTime, List<Event>>(
+                      equals: isSameDay,
+                      hashCode: getHashCode,
+                    )..addAll(kEventSource);
 
-                      _selectedEvents.value = _getEventsForDay(_selectedDay!);
-                    });
-                  }, child: Text('очистить список событий',
+                    _selectedEvents.value = _getEventsForDay(_selectedDay!);
+                  });
+                }, child: Text('очистить список событий',
                   style: TextStyle(
                       fontSize: 20
                   ),))
@@ -308,14 +310,55 @@ class _StartPageState extends State<StartPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.update),
-        onPressed: () async {
-          kEvents = await CalendarRepository().getEventsList();
-          setState(() {});
-          _selectedEvents.value = _getEventsForDay(_selectedDay!);
-        },
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt),
+            label: 'calendars',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.delete),
+            label: 'clear',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.update),
+            label: 'update',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.lightBlueAccent[800],
+        onTap: _onItemTapped,
       ),
     );
+  }
+
+  Future<void> _onItemTapped(int index) async {
+    switch (index) {
+      case 0:
+        Navigator.pop(context);
+        Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+        break;
+      case 1:
+        await CalendarRepository().clearLocalDataJson('eventsJson');
+        setState(() {
+          kEventSource = {this.key: [value]};
+          /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+          kEvents = LinkedHashMap<DateTime, List<Event>>(
+            equals: isSameDay,
+            hashCode: getHashCode,
+          )..addAll(kEventSource);
+
+          _selectedEvents.value = _getEventsForDay(_selectedDay!);
+          _selectedIndex = index;
+        });
+        break;
+      case 2:
+        kEvents = await CalendarRepository().getEventsList();
+        setState(() {
+          _selectedIndex = index;
+        });
+        _selectedEvents.value = _getEventsForDay(_selectedDay!);
+        break;
+    }
   }
 }

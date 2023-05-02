@@ -37,6 +37,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
   List tangoSchools = [];
   List countries = [];
   List cityes = [];
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -180,15 +181,25 @@ class _CalendarsPageState extends State<CalendarsPage> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.update),
-        onPressed: () async {
-          await CalendarRepository().updateCalendarsData();
-          print('calendars updated');
-          setlocaleJsonData();
-          setState(() {});
-        }
-        ,),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.delete),
+            label: 'clear',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.update),
+            label: 'update',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.lightBlueAccent[800],
+        onTap: _onItemTapped,
+      ),
     );
   }
 
@@ -248,6 +259,26 @@ class _CalendarsPageState extends State<CalendarsPage> {
     );
   }
 
+  Future<void> _onItemTapped(int index) async {
+    switch (index) {
+      case 0:
+        Navigator.pop(context);
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        break;
+      case 1:
+        await CalendarRepository().clearLocalDataJson('eventsJson');
+        await CalendarRepository().clearLocalDataJson('calendars');
+        await CalendarRepository().clearLocalDataJson('selectedCalendars');
+        setState(() {});
+        break;
+      case 2:
+        await CalendarRepository().updateCalendarsData();
+        print('calendars updated');
+        setlocaleJsonData();
+        setState(() {});
+        break;
+    }
+  }
 }
 
 // stores ExpansionPanel state information
