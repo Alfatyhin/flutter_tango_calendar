@@ -14,8 +14,11 @@ class Event{
   final dynamic creatorName;
   final String organizerEmail;
   final dynamic organizerName;
+  var calendar_id;
 
   Event(this.eventId, this.name, this.description, this.location, this.timeUse, this.dateStart, this.timeStart, this.dateEnd, this.timeEnd, this.update, this.creatorEmail, this.creatorName, this.organizerEmail, this.organizerName);
+
+  var colorHash = 0xFF000000;
 
   String timePeriod() {
     String string = 'весь день';
@@ -43,9 +46,11 @@ class Event{
 
   String descriptionString() {
     String string = '';
+    RegExp exp = RegExp(r"\\n");
     if (description != null) {
       string = description;
     }
+    string = string.replaceAll(exp, "\n");
     return string;
   }
 

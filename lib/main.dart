@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'pages/calendars.dart';
 import 'pages/start_page.dart';
+import 'pages/fb_events.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) =>StartPage(),
         '/calendars': (context)  => CalendarsPage(),
+        '/fb_events': (context)  => FbEvents(),
       },
     );
   }

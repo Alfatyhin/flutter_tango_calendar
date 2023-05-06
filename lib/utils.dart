@@ -3,6 +3,7 @@
 
 import 'dart:collection';
 
+import 'package:googleapis/sheets/v4.dart';
 import 'package:tango_calendar/main.dart';
 
 import 'models/Event.dart';
@@ -45,3 +46,21 @@ String kLang = 'uk';
 final kToday = DateTime.now();
 final kFirstDay = DateTime(kToday.year, kToday.month - 3, kToday.day);
 final kLastDay = DateTime(kToday.year, kToday.month + 6, kToday.day);
+
+String NumFormat(int num) {
+  String res = '$num';
+  if (num < 10) {
+    res = '0$num';
+  }
+  return res;
+}
+
+
+
+String DateFormatDate(DateTime date) {
+  return '${date.year}-${NumFormat(date.month)}-${NumFormat(date.day)}';
+}
+String DateFormatTime(DateTime date) {
+  return '${NumFormat(date.hour)}-${NumFormat(date.minute)}';
+}
+

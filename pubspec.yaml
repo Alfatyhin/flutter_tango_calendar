@@ -18,6 +18,7 @@ dependencies:
   googleapis_auth: ^1.4.0
   html: ^0.15.2
   shared_preferences: ^2.1.0
+  icalendar_parser: ^1.1.1
 
 dev_dependencies:
   flutter_test:

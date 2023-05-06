@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import '../models/table_calendar.dart';
 import '../models/Event.dart';
 import '../repositories/calendar/calendar_repository.dart';
 import '../utils.dart';
@@ -59,32 +60,17 @@ class _StartPageState extends State<StartPage> {
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
             appBar: AppBar(title: Text('Меню'),),
-            body: Column(
+            body:
+            Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(onPressed: () {
                   Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
-                }, child: Text('Календари событий',
+                  Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
+                }, child: Text('Facebook Events',
                   style: TextStyle(
                       fontSize: 20
                   ),),),
-                ElevatedButton(onPressed: () async {
-                  await CalendarRepository().clearLocalDataJson('eventsJson');
-                  setState(() {
-                    kEventSource = {this.key: [value]};
-                    /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-                    kEvents = LinkedHashMap<DateTime, List<Event>>(
-                      equals: isSameDay,
-                      hashCode: getHashCode,
-                    )..addAll(kEventSource);
-
-                    _selectedEvents.value = _getEventsForDay(_selectedDay!);
-                  });
-                }, child: Text('очистить список событий',
-                  style: TextStyle(
-                      fontSize: 20
-                  ),))
               ],
             ),
           );
@@ -97,51 +83,51 @@ class _StartPageState extends State<StartPage> {
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
             appBar: AppBar(title: Text('event data'),),
-            body:  Center(
-                child: Container (
-                  padding: EdgeInsets.only(top:25, left:10, right:10),
-                  child:  Column(
-                    // mainAxisAlignment: MainAxisAlignment.center,
-                    // crossAxisAlignment: CrossAxisAlignment.center,
-                    // mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text("${event.name}",
+            body: Container (
+              margin: EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0),
+              child: ListView(
+                children: [
+                  Center(
+                      child:  SelectableText("${event.name}",
                           textDirection: TextDirection.ltr,
                           style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.w600
                           ),
-                          softWrap: true
-                      ),
-                      Text("",),
-                      Text("${event.timePeriod()}",
+                      )
+                  ),
+                  const SizedBox(height: 8.0),
+                  Center(
+                      child:  SelectableText("${event.timePeriod()}",
                           textDirection: TextDirection.ltr,
                           style: TextStyle(fontSize: 20),
-                          softWrap: true
                       ),
-                      Text("",),
-                      Text("${event.locationString()}",
+                  ),
+                  const SizedBox(height: 8.0),
+                  Center(
+                      child: SelectableText("${event.locationString()}",
                           textDirection: TextDirection.ltr,
                           style: TextStyle(fontSize: 15),
-                          softWrap: true
                       ),
-                      Text("",),
-                      Text("${event.descriptionString()}",
-                          textDirection: TextDirection.ltr,
-                          style: TextStyle(fontSize: 20),
-                          softWrap: true
-                      ),
-                      Text("",),
-                      Text("${event.organizerName}",
-                          textDirection: TextDirection.ltr,
-                          style: TextStyle(fontSize: 20),
-                          softWrap: true
-                      ),
-                    ],
                   ),
-                )
-
-            ),
+                  const SizedBox(height: 8.0),
+                  Center(
+                      child: SelectableText("${event.descriptionString()}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 20),
+                      ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Center(
+                      child: Text("${event.organizerName}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 20),
+                          softWrap: true
+                      ),
+                  ),
+                ],
+              ),
+            )
           );
         })
     );
@@ -239,7 +225,7 @@ class _StartPageState extends State<StartPage> {
       ),
       body: Column(
         children: [
-          TableCalendar<Event>(
+          TableCalendarCuston<Event>(
             locale: kLang,
             firstDay: kFirstDay,
             lastDay: kLastDay,
@@ -251,9 +237,13 @@ class _StartPageState extends State<StartPage> {
             rangeSelectionMode: _rangeSelectionMode,
             eventLoader: _getEventsForDay,
             startingDayOfWeek: StartingDayOfWeek.monday,
+            calendarBuilders: CalendarBuilders(
+              // singleMarkerBuilder: SingleMarkerBuilder()
+            ),
             calendarStyle: CalendarStyle(
               // Use `CalendarStyle` to customize the UI
               outsideDaysVisible: false,
+              // markerDecoration: BoxDecoration(color: Colors.cyanAccent)
             ),
             onDaySelected: _onDaySelected,
             onRangeSelected: _onRangeSelected,
@@ -293,7 +283,9 @@ class _StartPageState extends State<StartPage> {
                           children: [
                             Column(
                               children: [
-                                Text(value[index].name),
+                                Text(value[index].name, style: TextStyle(
+                                  fontWeight: FontWeight.w600
+                                ),),
                                 Text(value[index].timePeriod()),
                               ],
                             )
@@ -330,6 +322,7 @@ class _StartPageState extends State<StartPage> {
       ),
     );
   }
+
 
   void _onItemTapped(int index) async {
     switch (index) {
