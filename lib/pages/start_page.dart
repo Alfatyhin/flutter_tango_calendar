@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 
 
+import '../AppTools.dart';
 import '../models/table_calendar.dart';
 import '../models/Event.dart';
 import '../models/UserData.dart';
@@ -477,36 +478,19 @@ class _StartPageState extends State<StartPage> {
           _selectedEvents.value = _getEventsForDay(_selectedDay!);
           _selectedIndex = index;
         });
-        _shortMessage('events deleted', 2);
+        shortMessage(context as BuildContext, 'events deleted', 2);
         break;
       case 2:
-        _shortMessage('upload events', 2);
+        shortMessage(context as BuildContext, 'upload events', 2);
         kEvents = await CalendarRepository().getEventsList();
         setState(() {
           _selectedIndex = index;
         });
         _selectedEvents.value = _getEventsForDay(_selectedDay!);
-        _shortMessage('upload complit', 2);
+        shortMessage(context as BuildContext, 'upload complit', 2);
         break;
     }
 
   }
 
-  void _shortMessage(String text, int sec) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Center(
-        child: Text(text),
-      ),
-      backgroundColor: Colors.blueAccent,
-      duration: Duration(seconds: sec),
-      margin: EdgeInsets.symmetric(horizontal: 8),
-      padding: EdgeInsets.symmetric(
-        horizontal: 8.0, // Inner padding for SnackBar content.
-      ),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
-      ),
-    ));
-  }
 }
