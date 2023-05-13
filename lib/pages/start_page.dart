@@ -335,7 +335,7 @@ class _StartPageState extends State<StartPage> {
 
   Widget _appBarLogin() {
     if (userUid == '') {
-      return Icon(Icons.verified_user, color: Colors.grey,);
+      return Icon(Icons.verified_user, size: 0,);
     } else {
       return Icon(Icons.verified_user, color: Colors.lightGreenAccent[700],);
     }
