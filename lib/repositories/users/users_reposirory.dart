@@ -51,4 +51,18 @@ class usersRepository {
     );
   }
 
+  Future<String> changeUserData(userUid, fieldName, fieldValue) async {
+    return db.collection("usersData")
+        .doc(userUid)
+        .update({'${fieldName}': fieldValue})
+        .then((value) {
+      print("User Updated");
+      return 'User Updated';
+    })
+        .catchError((error) {
+      print("Failed to update user: $error");
+      return 'Failed to update user';
+    });
+  }
+
 }

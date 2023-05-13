@@ -48,7 +48,7 @@ class _UsersListState extends State<UsersList> {
 
   void _userOpen(UserData data) {
 
-    dropdownValueList = data.role;
+    userRole = data.role;
 
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
@@ -83,12 +83,29 @@ class _UsersListState extends State<UsersList> {
                       ),
                     ),
                     UserRoleList(),
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      _changeRole(data.uid);
+                      // Navigator.pop(context);
+                    }, child: Text('change role',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
                   ],
                 ),
               )
           );
         })
     );
+  }
+
+  Future<void> _changeRole(uid) async {
+    await usersRepository().changeUserData(uid, 'role', userRole)
+        .then((value) {
+          print('test - ${value}');
+      initUsers();
+      shortMessage(context as BuildContext, value as String, 5);
+    });
   }
 
   @override
@@ -171,9 +188,8 @@ class _UsersListState extends State<UsersList> {
 
         break;
       case 2:
-        setState(() {
+        initUsers();
 
-        });
         break;
     }
 
