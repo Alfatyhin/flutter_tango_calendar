@@ -14,11 +14,11 @@ class Event{
   final dynamic creatorName;
   final String organizerEmail;
   final dynamic organizerName;
-  var calendar_id;
+  var calendarId;
+  var colorHash = 0xFF000000;
 
   Event(this.eventId, this.name, this.description, this.location, this.timeUse, this.dateStart, this.timeStart, this.dateEnd, this.timeEnd, this.update, this.creatorEmail, this.creatorName, this.organizerEmail, this.organizerName);
 
-  var colorHash = 0xFF000000;
 
   String timePeriod() {
     String string = 'весь день';

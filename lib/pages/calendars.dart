@@ -126,6 +126,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
     }
     var data = json.encode(selected);
     CalendarRepository().setLocalDataJson('selectedCalendars', data);
+    CalendarRepository().getEventsList();
   }
 
   void _menuOpen() {
@@ -193,7 +194,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.refresh),
-            label: 'update',
+            label: 'calendars list',
           ),
         ],
         currentIndex: _selectedIndex,

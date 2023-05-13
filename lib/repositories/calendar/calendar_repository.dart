@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:tango_calendar/models/Event.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../localRepository.dart';
 import '../../utils.dart';
 
 class CalendarRepository {
@@ -107,23 +107,15 @@ class CalendarRepository {
   }
 
   Future clearLocalDataJson(key) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(key);
+    localRepository().clearLocalData(key);
   }
 
   Future setLocalDataJson(key, data) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString(key, data);
+    localRepository().setLocalDataString(key, data);
   }
 
   Future<String?> getLocalDataJson(key) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? json;
-    if (prefs.containsKey(key)) {
-      json = await prefs.getString(key);
-    } else {
-      json = '';
-    }
+    var json = await localRepository().getLocalDataString(key);
     return json;
   }
 

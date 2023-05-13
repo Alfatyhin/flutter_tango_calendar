@@ -50,75 +50,90 @@ class _FbEventsState extends State<FbEvents> {
   }
 
   Future<void> getEvents() async {
-
-    eventsUrl = await FbEventsRepository().getLocalDataString('eventsUrl') as String;
     _isLoading = true;
-    String fbCalendar = await FbEventsRepository().getLocalDataString('fbEvents') as String;
-    if (fbCalendar == '') {
 
-    } else {
-      final iCalendar = ICalendar.fromString(fbCalendar);
-      Events = [];
-      iCalendar.data.forEach((element) {
+    FbEventsRepository().getLocalDataString('eventsUrl').then((value){
+      eventsUrl = value!;
+      print(eventsUrl);
 
-        var dateTimeStart = DateTime.parse(element['dtstart'].dt);
-        var dateStart = DateFormatDate(dateTimeStart);
-        var timeStart = DateFormatTime(dateTimeStart);
+      if (eventsUrl != '') {
+        FbEventsRepository().getLocalDataString('fbEvents').then((value){
+          String fbCalendar = value as String;
 
-        var dateTimeEnd = DateTime.parse(element['dtend'].dt);
-        var dateEnd = DateFormatDate(dateTimeEnd);
-        var timeEnd = DateFormatTime(dateTimeEnd);
 
-        var date = DateTime.parse(element['lastModified'].dt);
-        var modifedDate = DateFormatDate(date);
-        var modifedtime = DateFormatTime(date);
+          if (fbCalendar != '') {
+            final now = DateTime.now().toLocal();
+            final iCalendar = ICalendar.fromString(fbCalendar);
+            Events = [];
+            iCalendar.data.forEach((element) {
 
-        var cEvent = FbEvent(
-            element['uid'],
-            element['summary'],
-            element['description'],
-            element['location'],
-            1,
-            dateStart,
-            timeStart,
-            dateEnd,
-            timeEnd,
-            '$modifedDate $modifedtime',
-            element['organizer']['mail'],
-            element['organizer']['name'],
-            element['organizer']['mail'],
-            element['organizer']['name']
-        );
-        cEvent.url = element['url'];
-        cEvent.importData = element;
-        final now = DateTime.now();
-        if (now.isBefore(dateTimeEnd)) {
-          Events.add(cEvent);
-        }
 
-      });
+              var dateTimeStart = DateTime.parse(element['dtstart'].dt).add(Duration(hours: 3));
+              var dateStart = DateFormatDate(dateTimeStart);
+              var timeStart = DateFormatTime(dateTimeStart);
 
-      Events.sort(
-              (a, b) {
-            int testa = -1;
+              var dateTimeEnd = DateTime.parse(element['dtend'].dt).add(Duration(hours: 3));;
+              var dateEnd = DateFormatDate(dateTimeEnd);
+              var timeEnd = DateFormatTime(dateTimeEnd);
 
-            var adate = DateTime.parse(a.dateStart);
-            var bdate = DateTime.parse(b.dateStart);
-            if (adate.isAfter(bdate)) {
-              testa = 1;
-            }
-            if (adate.isAtSameMomentAs(bdate)) {
-              testa = 0;
-            }
-            return testa;
+              var date = DateTime.parse(element['lastModified'].dt).add(Duration(hours: 3));;
+              var modifedDate = DateFormatDate(date);
+              var modifedtime = DateFormatTime(date);
+
+              var cEvent = FbEvent(
+                  element['uid'],
+                  element['summary'],
+                  element['description'],
+                  element['location'],
+                  1,
+                  dateStart,
+                  timeStart,
+                  dateEnd,
+                  timeEnd,
+                  '$modifedDate $modifedtime',
+                  element['organizer']['mail'],
+                  element['organizer']['name'],
+                  element['organizer']['mail'],
+                  element['organizer']['name']
+              );
+              cEvent.url = element['url'];
+              cEvent.importData = element;
+
+              if (now.isBefore(dateTimeEnd)) {
+                Events.add(cEvent);
+              }
+
+            });
+
+            Events.sort(
+                    (a, b) {
+                  int testa = -1;
+
+                  var adate = DateTime.parse(a.dateStart);
+                  var bdate = DateTime.parse(b.dateStart);
+                  if (adate.isAfter(bdate)) {
+                    testa = 1;
+                  }
+                  if (adate.isAtSameMomentAs(bdate)) {
+                    testa = 0;
+                  }
+                  return testa;
+                }
+            );
+
+            setState(() {
+              eventsUrl = eventsUrl;
+              Events = Events;
+              _iCalendar = iCalendar;
+              _isLoading = false;
+            });
           }
-      );
 
-      setState(() {
-        _iCalendar = iCalendar;
-        _isLoading = false;
-      });
-    }
+        });
+      }
+
+    });
+
 
     ////
     var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
@@ -235,34 +250,43 @@ class _FbEventsState extends State<FbEvents> {
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
               appBar: AppBar(title: Text('event Import'),),
-              body: ListView.separated(
-                itemCount: selectedCalendars.length,
-                padding: EdgeInsets.only(left: 20),
-                shrinkWrap: true,
-                physics: ClampingScrollPhysics(),
-                separatorBuilder: (BuildContext context, int index) => Divider(
-                  height: 20,
-                  color: Colors.blueAccent,
-                  thickness: 3,
-                ),
-                itemBuilder: (BuildContext context, int index) {
-                  return Row(
-                    textDirection: TextDirection.ltr,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              body: ListView(
+                children: [
+                  Row (
                     children: [
-                      Text(selectedCalendars[index].name,
-                        style: TextStyle(
-                            fontSize: 15
-                        ),),
-                      Checkbox(value: false, onChanged: (bool? newValue) {
-                        setState(() {
-                          selectedCalendars[index].enable = newValue!;
-                        });
-                        // selectCalendar();
-                      })
+                      Expanded(child: Text('select calendar', textAlign: TextAlign.center,),)
                     ],
-                  );
-                },
+                  ),
+                  ListView.separated(
+                    itemCount: selectedCalendars.length,
+                    padding: EdgeInsets.only(left: 20),
+                    shrinkWrap: true,
+                    physics: ClampingScrollPhysics(),
+                    separatorBuilder: (BuildContext context, int index) => Divider(
+                      height: 10,
+                      color: Colors.blueAccent,
+                      thickness: 3,
+                    ),
+                    itemBuilder: (BuildContext context, int index) {
+                      return Row(
+                        textDirection: TextDirection.ltr,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(selectedCalendars[index].name,
+                            style: TextStyle(
+                                fontSize: 15
+                            ),),
+                          Checkbox(value: false, onChanged: (bool? newValue) {
+                            setState(() {
+                              selectedCalendars[index].enable = newValue!;
+                            });
+                            // selectCalendar();
+                          })
+                        ],
+                      );
+                    },
+                  )
+                ],
               ),
           );
         })

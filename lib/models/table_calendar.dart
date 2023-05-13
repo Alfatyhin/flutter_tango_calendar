@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:simple_gesture_detector/simple_gesture_detector.dart';
 
 import 'package:table_calendar/src/customization/calendar_builders.dart';
-import 'package:table_calendar/src/customization/calendar_builders.dart';
 import 'package:table_calendar/src/customization/calendar_style.dart';
 import 'package:table_calendar/src/customization/days_of_week_style.dart';
 import 'package:table_calendar/src/customization/header_style.dart';

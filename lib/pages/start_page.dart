@@ -4,11 +4,20 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:tango_calendar/repositories/users/users_reposirory.dart';
+
 
 import '../models/table_calendar.dart';
 import '../models/Event.dart';
+import '../models/UserData.dart';
 import '../repositories/calendar/calendar_repository.dart';
 import '../utils.dart';
+
+late final FirebaseApp app;
+late final FirebaseAuth auth;
+
 
 
 class StartPage extends StatefulWidget {
@@ -17,10 +26,33 @@ class StartPage extends StatefulWidget {
 }
 
 class _StartPageState extends State<StartPage> {
+
+  var userUid = '';
+  var userRole = '';
   var key = DateTime.now();
   var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
   var kEvents;
   int _selectedIndex = 0;
+
+
+  void initFirebase() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp().whenComplete(() => print('completed'));
+    
+    FirebaseAuth.instance
+        .authStateChanges()
+        .listen((User? user) async {
+      if (user != null) {
+        UserData userData = await usersRepository().getUserDataByUid(user.uid!);
+
+        setState(() {
+          userRole = userData.role;
+          userUid = user.uid!;
+          print(user.displayName);
+        });
+      }
+    });
+  }
 
 
   late final ValueNotifier<List<Event>> _selectedEvents;
@@ -37,7 +69,9 @@ class _StartPageState extends State<StartPage> {
   @override
   void initState() {
     super.initState();
+    initFirebase();
 
+    print('int state');
     ///  без событий календарь валится
     kEventSource = {this.key: [value]};
     /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
@@ -56,26 +90,115 @@ class _StartPageState extends State<StartPage> {
   }
 
   void _menuOpen() {
+
+    var title = 'Меню';
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
-          return Scaffold(
-            appBar: AppBar(title: Text('Меню'),),
-            body:
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
-                }, child: Text('Facebook Events',
-                  style: TextStyle(
-                      fontSize: 20
-                  ),),),
-              ],
-            ),
-          );
+
+          if (userUid == '') {
+            return Scaffold(
+              appBar: AppBar(title: Text(title),),
+              body:
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(context, '/register_user', (route) => false);
+                  }, child: Text('Register',
+                    style: TextStyle(
+                        fontSize: 20
+                    ),),),
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(context, '/login_user', (route) => false);
+                  }, child: Text('Login',
+                    style: TextStyle(
+                        fontSize: 20
+                    ),),),
+                ],
+              ),
+            );
+          } else {
+            if (userRole == 'su_admin') {
+              return Scaffold(
+                appBar: AppBar(title: Text(title),),
+                body:
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
+                    }, child: Text('Facebook Events',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      _logOut();
+                      Navigator.pop(context);
+                    }, child: Text('Log out',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/users', (route) => false);
+                    }, child: Text('Users',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+                  ],
+                ),
+              );
+            } else {
+              return Scaffold(
+                appBar: AppBar(title: Text(title),),
+                body:
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
+                    }, child: Text('Facebook Events',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      _logOut();
+                      Navigator.pop(context);
+                    }, child: Text('Log out',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+                  ],
+                ),
+              );
+            }
+
+          }
+
+
         })
     );
+  }
+
+  Future<void> _logOut() async {
+    await FirebaseAuth.instance.signOut();
+    setState(() {
+      userUid = '';
+    });
   }
 
   void _eventOpen(Event event) {
@@ -209,6 +332,14 @@ class _StartPageState extends State<StartPage> {
     }
   }
 
+  Widget _appBarLogin() {
+    if (userUid == '') {
+      return Icon(Icons.verified_user, color: Colors.grey,);
+    } else {
+      return Icon(Icons.verified_user, color: Colors.lightGreenAccent[700],);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -217,10 +348,13 @@ class _StartPageState extends State<StartPage> {
           child: Text('Tango Calendar'),
         ),
         actions: [
+          Container(
+            child: _appBarLogin(),
+          ),
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: _menuOpen,
-          )
+          ),
         ],
       ),
       body: Column(

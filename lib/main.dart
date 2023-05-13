@@ -1,25 +1,27 @@
-// Copyright 2019 Aleksander Woźniak
-// SPDX-License-Identifier: Apache-2.0
-
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'pages/calendars.dart';
 import 'pages/start_page.dart';
 import 'pages/fb_events.dart';
+import 'pages/register_user.dart';
+import 'pages/login_user.dart';
+import 'pages/users.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  initializeDateFormatting().then((_) => runApp(MyApp()));
+  initializeDateFormatting().then((_) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
 
     return MaterialApp(
       title: 'TableCalendar Example',
       theme: ThemeData(
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           titleTextStyle: TextStyle(
               fontSize: 25,
               color: Colors.white,
@@ -31,8 +33,11 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) =>StartPage(),
-        '/calendars': (context)  => CalendarsPage(),
-        '/fb_events': (context)  => FbEvents(),
+        '/calendars': (context)  => const CalendarsPage(),
+        '/fb_events': (context)  => const FbEvents(),
+        '/register_user': (context)  => const RegisterUser(),
+        '/login_user': (context)  => const LoginUser(),
+        '/users': (context)  => const UsersList(),
       },
     );
   }
