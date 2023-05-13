@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import '../models/UserData.dart';
-import '../repositories/users/users_reposirory.dart';
+import '../AppTools.dart';
 
 
 late final FirebaseApp app;
@@ -151,9 +150,9 @@ class _LoginUserState extends State<LoginUser> {
       });
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        shortMessage(context as BuildContext, 'No user found for that email.', 5);
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        shortMessage(context as BuildContext, 'Wrong password provided for that user.', 5);
       }
     }
   }

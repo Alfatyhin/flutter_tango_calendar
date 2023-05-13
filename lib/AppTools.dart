@@ -78,6 +78,28 @@ class GlobalPermissions {
 
 }
 
+class shortMessage {
+
+  shortMessage(BuildContext context, String text, int sec) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Center(
+        child: Text(text),
+      ),
+      backgroundColor: Colors.blueAccent,
+      duration: Duration(seconds: sec),
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: 8.0, // Inner padding for SnackBar content.
+      ),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+    ));
+  }
+}
+
+
 
 class UserRoleList extends StatefulWidget {
   const UserRoleList({super.key});
