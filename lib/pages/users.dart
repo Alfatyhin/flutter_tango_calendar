@@ -104,7 +104,7 @@ class _UsersListState extends State<UsersList> {
         .then((value) {
           print('test - ${value}');
       initUsers();
-      shortMessage(context as BuildContext, value as String, 5);
+      shortMessage(context as BuildContext, value as String, 2);
     });
   }
 
