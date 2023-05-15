@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:tango_calendar/pages/user_profile.dart';
 import 'pages/calendars.dart';
 import 'pages/start_page.dart';
 import 'pages/fb_events.dart';
 import 'pages/register_user.dart';
 import 'pages/login_user.dart';
 import 'pages/users.dart';
+import 'pages/statements.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +40,8 @@ class MyApp extends StatelessWidget {
         '/register_user': (context)  => const RegisterUser(),
         '/login_user': (context)  => const LoginUser(),
         '/users': (context)  => const UsersList(),
+        '/user_profile': (context)  => const UserProfile(),
+        '/statements': (context)  => const StatementsList(),
       },
     );
   }

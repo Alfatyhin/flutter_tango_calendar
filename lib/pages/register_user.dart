@@ -103,40 +103,6 @@ class _RegisterUserState extends State<RegisterUser> {
                     return null;
                   },
                 ),
-                // const SizedBox(height: 10.0),
-                // Text('select your role',
-                //   style: TextStyle(
-                //     fontWeight: FontWeight.w600,
-                //     fontSize: 18,
-                //     color: Colors.grey
-                //   ),
-                // ),
-                // DropdownButton<String>(
-                //   value: dropdownValue,
-                //   isExpanded: true,
-                //   icon: const Icon(Icons.arrow_downward),
-                //   elevation: 16,
-                //   style: const TextStyle(
-                //       color: Colors.black,
-                //       fontSize: 18
-                //   ),
-                //   underline: Container(
-                //     height: 2,
-                //     color: Colors.black26,
-                //   ),
-                //   onChanged: (String? value) {
-                //     // This is called when the user selects an item.
-                //     setState(() {
-                //       dropdownValue = value!;
-                //     });
-                //   },
-                //   items: userRole.map<DropdownMenuItem<String>>((String value) {
-                //     return DropdownMenuItem<String>(
-                //       value: value,
-                //       child: _listItem(value),
-                //     );
-                //   }).toList(),
-                // ),
                 const SizedBox(height: 10.0),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -209,6 +175,7 @@ class _RegisterUserState extends State<RegisterUser> {
             email: user.email,
             role: 'user',
             phone: '',
+            fbProfile: '',
             createdDt: user.metadata.creationTime,
             updatedDt: user.metadata.creationTime,
           );

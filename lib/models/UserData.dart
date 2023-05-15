@@ -10,10 +10,20 @@ class UserData {
   final email;
   final role;
   final phone;
+  final fbProfile;
   final createdDt;
   final updatedDt;
 
-  UserData({this.uid, this.name, this.email, this.role, this.phone, this.createdDt, this.updatedDt});
+  UserData({
+    this.uid,
+    this.name,
+    this.email,
+    this.role,
+    this.phone,
+    this.fbProfile,
+    this.createdDt,
+    this.updatedDt
+  });
 
 
   factory UserData.fromLocalData(data) {
@@ -25,6 +35,7 @@ class UserData {
       email: data?['email'],
       role: data?['role'],
       phone: data?['phone'],
+      fbProfile: data?['fbProfile'],
       createdDt: data?['createdDt'],
       updatedDt: data?['updatedDt'],
     );
@@ -36,6 +47,7 @@ class UserData {
       "name": name,
       "email": email,
       "phone": phone,
+      "fbProfile": fbProfile,
       "role": role,
       "createdDt": createdDt,
       "updatedDt": updatedDt
@@ -53,6 +65,7 @@ class UserData {
       email: data?['email'],
       role: data?['role'],
       phone: data?['phone'],
+      fbProfile: data?['fbProfile'],
       createdDt: data?['createdDt'],
       updatedDt: data?['updatedDt'],
     );
@@ -65,6 +78,7 @@ class UserData {
       if (email != null) "email": email,
       if (role != null) "role": role,
       if (phone != null) "phone": phone,
+      if (fbProfile != null) "fbProfile": fbProfile,
       if (createdDt != null) "createdDt": createdDt,
       if (updatedDt != null) "updatedDt": updatedDt,
     };

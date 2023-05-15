@@ -75,6 +75,8 @@ class _LoginUserState extends State<LoginUser> {
                 const SizedBox(height: 10.0),
                 TextFormField(
                   controller: passwordController,
+                  obscureText: true,
+                  obscuringCharacter: '*',
                   decoration: const InputDecoration(
                     hintText: 'Enter your Password',
                     border: OutlineInputBorder(),

@@ -1,9 +1,6 @@
-// Copyright 2019 Aleksander Woźniak
-// SPDX-License-Identifier: Apache-2.0
-
 import 'dart:collection';
 
-import 'package:googleapis/sheets/v4.dart';
+// import 'package:googleapis/sheets/v4.dart';
 import 'package:tango_calendar/main.dart';
 
 import 'models/Event.dart';

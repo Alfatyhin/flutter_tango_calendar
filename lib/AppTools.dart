@@ -49,7 +49,7 @@ class GlobalPermissions {
   // 2 - all
   Map redactEventToCalendar = {
     'user': 0,
-    'volгnteer': 1,
+    'volгnteer': 0,
     'organaizer': 1,
     'admin': 2,
     'su_admin': 2
@@ -59,7 +59,7 @@ class GlobalPermissions {
   // 2 - all
   Map deleteEventToCalendar = {
     'user': 0,
-    'volгnteer': 1,
+    'volгnteer': 0,
     'organaizer': 1,
     'admin': 2,
     'su_admin': 2
@@ -99,7 +99,7 @@ class shortMessage {
   }
 }
 
-
+late final autshUserData;
 
 class UserRoleList extends StatefulWidget {
   const UserRoleList({super.key});

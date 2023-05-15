@@ -46,6 +46,8 @@ class _StartPageState extends State<StartPage> {
       if (user != null) {
         UserData userData = await usersRepository().getUserDataByUid(user.uid!);
 
+        autshUserData = userData;
+
         setState(() {
           userRole = userData.role;
           userUid = user.uid!;
@@ -140,6 +142,7 @@ class _StartPageState extends State<StartPage> {
                       style: TextStyle(
                           fontSize: 20
                       ),),),
+
                     const SizedBox(height: 20),
                     ElevatedButton(onPressed: () {
                       _logOut();
@@ -148,11 +151,30 @@ class _StartPageState extends State<StartPage> {
                       style: TextStyle(
                           fontSize: 20
                       ),),),
+
                     const SizedBox(height: 20),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/users', (route) => false);
                     }, child: Text('Users',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/user_profile', (route) => false, arguments: userUid);
+                    }, child: Text('My Profile',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/statements', (route) => false);
+                    }, child: Text('Statements',
                       style: TextStyle(
                           fontSize: 20
                       ),),),
@@ -175,6 +197,16 @@ class _StartPageState extends State<StartPage> {
                       style: TextStyle(
                           fontSize: 20
                       ),),),
+
+                    const SizedBox(height: 20),
+                    ElevatedButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/user_profile', (route) => false, arguments: userUid);
+                    }, child: Text('My Profile',
+                      style: TextStyle(
+                          fontSize: 20
+                      ),),),
+
                     const SizedBox(height: 20),
                     ElevatedButton(onPressed: () {
                       _logOut();
