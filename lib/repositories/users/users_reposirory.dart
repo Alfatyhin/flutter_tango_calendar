@@ -123,4 +123,44 @@ class usersRepository {
     });
   }
 
+  Future<String> setCalendarsPermissions(data) async {
+    var id = '${data['calId']}-${data['userUid']}';
+    return db.collection("calendarPermissions")
+        .doc(id)
+        .set(data)
+        .then((value) {
+      print("Calendars Permissions Updated");
+      return 'Calendars Permissions Updated';
+    })
+        .catchError((error) {
+      print("Failed to update Calendars Permissions: $error");
+      return 'Failed to update Calendars Permissions';
+    });
+  }
+
+  Future<Map<String, dynamic>> getUserTokenByUid(userUid) async {
+    return db.collection('usersTokens').doc(userUid).get().then(
+          (DocumentSnapshot doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+  Future<String> setUserToken(data) async {
+    var id = '${data['userUid']}';
+    return db.collection("usersTokens")
+        .doc(id)
+        .set(data)
+        .then((value) {
+      print("usersTokens Updated");
+      return 'usersTokens Updated';
+    })
+        .catchError((error) {
+      print("Failed to update usersTokens: $error");
+      return 'Failed to update usersTokens';
+    });
+  }
+
 }

@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import '../models/Calendar.dart';
 import '../models/UserData.dart';
+import '../repositories/calendar/calendar_repository.dart';
 import '../repositories/users/users_reposirory.dart';
 import '../AppTools.dart';
 
@@ -19,12 +23,18 @@ class _StatementsListState extends State<StatementsList> {
 
   List statementsNew = [];
   Map statmensUsersData = {};
+  var selectedCalendars = [];
+  var statmentOpenIndex;
+
+  Map addEventToCalendar = GlobalPermissions().addEventToCalendar;
+  Map redactEventToCalendar = GlobalPermissions().redactEventToCalendar;
+  Map deleteEventToCalendar = GlobalPermissions().deleteEventToCalendar;
+
 
   void initData() async {
 
     statementsNew = [];
 
-    setState(() {});
     usersRepository().getNewStatements().then((statements){
 
       if (statements.length > 0) {
@@ -33,7 +43,6 @@ class _StatementsListState extends State<StatementsList> {
         statmensUsersData = {};
         List usersUds = [];
         statementsNew.forEach((element) {
-          print(element);
           usersUds.add(element['userUid']);
         });
 
@@ -43,15 +52,12 @@ class _StatementsListState extends State<StatementsList> {
             statmensUsersData[userData.uid] = userData;
           });
 
-          print(statmensUsersData);
-
           setState(() {});
-
         });
       }
     });
   }
-  
+
   int _selectedIndex = 0;
 
 
@@ -62,9 +68,47 @@ class _StatementsListState extends State<StatementsList> {
   }
 
 
-  void _userOpen(UserData data) {
-
+  void _userStaitmensOpen(UserData data, statement) {
     userRole = data.role;
+
+
+    if (statement['type'] == 'calendars' && selectedCalendars.length == 0) {
+      CalendarRepository().getLocalDataJson('calendars').then((calendarsJson) {
+
+        if (calendarsJson != '') {
+          Map dataCalendars = json.decode(calendarsJson as String);
+
+          Map calendarsData = dataCalendars['calendars'];
+
+          calendarsData.forEach((key, value) {
+            var calendar = Calendar(
+                key,
+                value['name'],
+                value['description'],
+                value['type_events'],
+                value['country'],
+                value['city'],
+                value['source']
+            );
+
+            if (statement['value'].contains(key)) {
+              calendar.enable = true;
+              selectedCalendars.add(calendar);
+            }
+
+            setState(() {
+            });
+
+            Navigator.pop(context);
+            _userStaitmensOpen(data, statement);
+          });
+
+        }
+      });
+
+
+    }
+
 
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
@@ -73,6 +117,7 @@ class _StatementsListState extends State<StatementsList> {
               body: Container (
                 margin: EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0),
                 child: ListView(
+                  shrinkWrap: true,
                   children: [
                     Center(
                         child:  SelectableText("${data.name}",
@@ -106,6 +151,47 @@ class _StatementsListState extends State<StatementsList> {
                           color: Colors.black
                       ),
                     ),
+
+                    const SizedBox(height: 8.0),
+
+                    _calendarsAdd(data, statement),
+
+                    if (selectedCalendars.length > 0)
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton(onPressed: () {
+                            _rejectStatement(statement['id']);
+                          },
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStatePropertyAll<Color>(Colors.red.shade900),
+                            ),
+                            child: Text('reject',
+                              style: TextStyle(
+                                  fontSize: 15
+                              ),),),
+
+                          ElevatedButton(onPressed: () {
+                            _confirmStatement(statement['id'], statement['type'], data.uid);
+                            Navigator.pop(context);
+                            statementsNew.removeAt(statmentOpenIndex);
+                            setState(() {
+
+                            });
+                          },
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStatePropertyAll<Color>(Colors.green),
+                            ),
+                            child: Text('confirm',
+                              style: TextStyle(
+                                  fontSize: 15
+                              ),),),
+                        ],
+                      )
+
+
+
                   ],
                 ),
               )
@@ -114,13 +200,55 @@ class _StatementsListState extends State<StatementsList> {
     );
   }
 
-  Future<void> _changeRole(uid) async {
-    await usersRepository().changeUserData(uid, 'role', userRole)
-        .then((value) {
-      initData();
-      shortMessage(context as BuildContext, value as String, 2);
-    });
+
+  Widget _calendarsAdd(userData, statement) {
+
+    var selectedList = selectedCalendars;
+
+    return ListView(
+      shrinkWrap: true,
+      children: [
+        ListView.separated(
+          shrinkWrap: true,
+          itemCount: selectedCalendars.length,
+          padding: EdgeInsets.only(left: 20),
+          physics: ClampingScrollPhysics(),
+          separatorBuilder: (BuildContext context, int index) => Divider(
+            height: 10,
+            color: Colors.blueAccent,
+            thickness: 3,
+          ),
+          itemBuilder: (BuildContext context, int index) {
+            return Row(
+              textDirection: TextDirection.ltr,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("${selectedCalendars[index].name} - ${selectedCalendars[index].typeEvents}",
+                  style: TextStyle(
+                      fontSize: 15
+                  ),),
+                Checkbox(
+                    value: selectedCalendars[index].enable,
+                    onChanged: (bool? newValue) {
+
+                      selectedList[index].enable = newValue!;
+                      selectedCalendars[index].enable = newValue!;
+                      setState(() {
+                      });
+
+                      Navigator.pop(context);
+                      _userStaitmensOpen(userData, statement);
+                    })
+              ],
+            );
+          },
+        ),
+
+      ],
+    );
+
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -140,15 +268,15 @@ class _StatementsListState extends State<StatementsList> {
         itemCount: statementsNew.length,
         itemBuilder: (context, index) {
           return Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 4.0,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(),
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: _statmenListItem(index)
+              margin: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 4.0,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: _statmenListItem(index)
           );
         },
       ),
@@ -185,52 +313,64 @@ class _StatementsListState extends State<StatementsList> {
       info = 'change user role ${userData.role} to ${statement['value']}';
     }
 
+    if (statement['type'] == 'calendars') {
+      info = 'calendars permissions - push to confirm';
+    }
+
     return   ListTile(
-      onTap: () => _userOpen(userData),
-      title: Row(
-        textDirection: TextDirection.ltr,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Column(
-            children: [
-              Text(userData.name, style: TextStyle(
-                  fontWeight: FontWeight.w600
-              ),),
-              Text(info),
-              Text(userData.email),
-            ],
-          ),
-        ],
-      ),
-      subtitle: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-
-          ElevatedButton(onPressed: () {
-            _rejectStatement(statement['id']);
-          },
-            style: ButtonStyle(
-              backgroundColor: MaterialStatePropertyAll<Color>(Colors.red.shade900),
+        onTap: () {
+          statmentOpenIndex = index;
+          _userStaitmensOpen(userData, statement);
+        },
+        title: Row(
+          textDirection: TextDirection.ltr,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Column(
+              children: [
+                Text(userData.name, style: TextStyle(
+                    fontWeight: FontWeight.w600
+                ),),
+                Text(info),
+                Text(userData.email),
+              ],
             ),
-            child: Text('reject',
-            style: TextStyle(
-                fontSize: 15
-            ),),),
+          ],
+        ),
+        subtitle: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
 
-          ElevatedButton(onPressed: () {
-            userRole = statement['value'];
-            _confirmStatement(statement['id'], statement['type'], userData.uid);
-          },
-            style: ButtonStyle(
-              backgroundColor: MaterialStatePropertyAll<Color>(Colors.green),
-            ),
-            child: Text('confirm',
-            style: TextStyle(
-                fontSize: 15
-            ),),),
+            if (statement['type'] == 'role')
 
-        ],
-      )
+              ElevatedButton(onPressed: () {
+                _rejectStatement(statement['id']);
+              },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStatePropertyAll<Color>(Colors.red.shade900),
+                ),
+                child: Text('reject',
+                  style: TextStyle(
+                      fontSize: 15
+                  ),),),
+
+
+            if (statement['type'] == 'role')
+
+              ElevatedButton(onPressed: () {
+                userRole = statement['value'];
+                _confirmStatement(statement['id'], statement['type'], userData.uid);
+              },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStatePropertyAll<Color>(Colors.green),
+                ),
+                child: Text('confirm',
+                  style: TextStyle(
+                      fontSize: 15
+                  ),),),
+
+          ],
+        )
     );
   }
 
@@ -250,12 +390,37 @@ class _StatementsListState extends State<StatementsList> {
   }
 
   void _confirmStatement(id, type, userUid) {
+
+    var date = DateTime.now();
+
     if (type == 'role') {
       usersRepository().changeUserData(userUid, 'role', userRole)
           .then((value) {
-        initData();
       });
-      var date = DateTime.now();
+
+      if (userRole != 'user') {
+
+        ApiSigned().then((signedData) {
+          var requestTokenData = {
+            'userUid': userUid,
+            'userRole': userRole,
+            'tokenId': signedData['tokenId'],
+            'signed': '${signedData['signed']}',
+          };
+
+          CalendarRepository().getApiToken(requestTokenData).then((tokenData) {
+
+            tokenData['userUid'] = userUid;
+            usersRepository().setUserToken(tokenData);
+
+          });
+
+        });
+
+
+      }
+
+
       var data = {
         'status': 'confirm',
         'updatedDt': date,
@@ -264,6 +429,39 @@ class _StatementsListState extends State<StatementsList> {
       usersRepository().changeStatmentData(id, data).then((value) {
         initData();
         shortMessage(context as BuildContext, value as String, 2);
+      });
+    }
+
+
+    if (type == 'calendars') {
+
+      selectedCalendars.forEach((calendar) {
+
+        if (calendar.enable) {
+
+          var calendarPermission = {
+            'calId': calendar.id,
+            'userUid': userUid,
+            'add': addEventToCalendar[userRole],
+            'redact': redactEventToCalendar[userRole],
+            'delete': deleteEventToCalendar[userRole],
+            'updatedDt': date,
+            'changeUserId': autshUserData.uid
+          };
+          usersRepository().setCalendarsPermissions(calendarPermission);
+        }
+
+        var data = {
+          'status': 'confirm',
+          'updatedDt': date,
+          'changeUserId': autshUserData.uid
+        };
+        usersRepository().changeStatmentData(id, data).then((value) {
+          // initData();
+
+          shortMessage(context as BuildContext, value as String, 2);
+        });
+
       });
     }
   }

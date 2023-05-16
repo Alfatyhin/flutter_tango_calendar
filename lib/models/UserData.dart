@@ -13,6 +13,8 @@ class UserData {
   final fbProfile;
   final createdDt;
   final updatedDt;
+  var tokenId;
+  var token;
 
   UserData({
     this.uid,

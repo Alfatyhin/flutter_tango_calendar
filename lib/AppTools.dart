@@ -1,25 +1,71 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:tango_calendar/repositories/users/users_reposirory.dart';
+import 'package:tango_calendar/utils.dart';
+import 'package:crypto/crypto.dart';
+
+import 'models/UserData.dart';
 
 class EventTypes {
   List eventTypes = ['festyval', 'milonga', 'practice', 'lessen sсhool', 'master class'];
   Map calendarCreatedRules = {
-    'festyval': {
-      'usertypes': {
-        'su_admim': 2
-      }
-    }
+    'user': {},
+    'volunteer': {},
+    'organizer': {
+      'festyval_shedule': 1,
+      'festyvals world': 0,
+      'master_classes': 0,
+      'festyvals': 0,
+      'milongas': 0,
+      'practices': 0,
+      'tango_sсhool': 1,
+    },
+    'admin': {
+      'festyval_shedule': 1,
+      'festyvals world': 0,
+      'master_classes': 1,
+      'festyvals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_sсhool': 1,
+    },
+    'su_admin': {
+      'festyval_shedule': 1,
+      'festyvals world': 1,
+      'master_classes': 1,
+      'festyvals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_sсhool': 1,
+    },
+  };
+
+
+  Map CalendarStatmentRules = {
+    'user': {},
+    'volunteer': {},
+    'organizer': {
+      'festyval_shedule': 1,
+      'festyvals world': 0,
+      'master_classes': 0,
+      'festyvals': 0,
+      'milongas': 0,
+      'practices': 0,
+      'tango_sсhool': 1,
+    },
   };
 }
 
 class CalendarTypes {
   List calendarTypes = [
-    'festyval shedule',
+    'festyval_shedule',
     'festyvals world',
-    'festyvals country',
-    'festyvals city',
-    'milongas city',
-    'practices city',
-    'lessens sсhool'
+    'master_classes',
+    'festyvals',
+    'milongas',
+    'practices',
+    'tango_sсhool',
   ];
 }
 
@@ -29,38 +75,38 @@ class GlobalPermissions {
   // 3 - all CalendarTypes
   Map createCalendar = {
     'user': 0,
-    'volгnteer': 0,
-    'organaizer': 1,
+    'volunteer': 0,
+    'organizer': 1,
     'admin': 2,
     'su_admin': 3
   };
 
-  // 1 - проверка доступа по таблице доступов
-  // 2 - all
+  // 1 - разрешено
+  // 2 - всегда
   Map addEventToCalendar = {
     'user': 0,
-    'volгnteer': 1,
-    'organaizer': 1,
+    'volunteer': 1,
+    'organizer': 1,
     'admin': 2,
     'su_admin': 2
   };
 
-  // 1 - проверка доступа по таблице доступов
-  // 2 - all
+  // 1 - только команде создателя события
+  // 2 - всегда
   Map redactEventToCalendar = {
     'user': 0,
-    'volгnteer': 0,
-    'organaizer': 1,
+    'volunteer': 0,
+    'organizer': 1,
     'admin': 2,
     'su_admin': 2
   };
 
-  // 1 - проверка доступа по таблице доступов
-  // 2 - all
+  // 1 - только команде создателя события
+  // 2 - всегда
   Map deleteEventToCalendar = {
     'user': 0,
-    'volгnteer': 0,
-    'organaizer': 1,
+    'volunteer': 0,
+    'organizer': 1,
     'admin': 2,
     'su_admin': 2
   };
@@ -70,8 +116,8 @@ class GlobalPermissions {
   // 2 - all
   Map permissionsAdd = {
     'user': 0,
-    'volгnteer': 0,
-    'organaizer': 1,
+    'volunteer': 0,
+    'organizer': 1,
     'admin': 2,
     'su_admin': 2
   };
@@ -99,7 +145,7 @@ class shortMessage {
   }
 }
 
-late final autshUserData;
+late UserData autshUserData;
 
 class UserRoleList extends StatefulWidget {
   const UserRoleList({super.key});
@@ -161,6 +207,26 @@ class _UserRoleListState extends State<UserRoleList> {
       return Text(value);
     }
   }
+
+
+}
+
+Future<Map> ApiSigned() async {
+  var date = DateTime.now();
+  var signedToken = {};
+  var dateString = '${date.year}-${NumFormat(date.month)}-${NumFormat(date.day)}-${NumFormat(date.hour)}';
+
+  return usersRepository().getUserTokenByUid(autshUserData.uid).then((tokenData) {
+    var string = utf8.encode('${tokenData['token']}-$dateString');
+    var signed = md5.convert(string as List<int>);
+
+    signedToken = {
+      'tokenId': tokenData['tokenId'],
+      'signed': signed
+    };
+
+    return signedToken;
+  });
 
 
 }

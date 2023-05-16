@@ -22,6 +22,8 @@ dependencies:
   firebase_core: ^2.11.0
   firebase_auth: ^4.2.2
   cloud_firestore: ^4.6.0
+  crypto: ^3.0.3
+#  flutter_facebook_auth: ^5.0.11
 
 dev_dependencies:
   flutter_test:

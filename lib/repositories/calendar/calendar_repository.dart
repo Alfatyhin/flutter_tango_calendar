@@ -11,6 +11,8 @@ import '../../utils.dart';
 
 class CalendarRepository {
 
+  final String apiUrl = 'https://tango-calendar.it-alex.net.ua';
+
   Future<Map> getEventsList() async {
 
     var res;
@@ -28,7 +30,7 @@ class CalendarRepository {
 
       for(var x = 0; x < selectedCalendars.length; x++) {
         var calendarId = selectedCalendars[x];
-        final response = await Dio().get('https://tango-calendar.it-alex.net.ua/api/get/events/$calendarId');
+        final response = await Dio().get('${apiUrl}/api/get/events/$calendarId');
 
         if (response.statusCode == 200) {
           dataJson = response.data;
@@ -68,9 +70,20 @@ class CalendarRepository {
 
 
   Future<void> updateCalendarsData() async {
-    final response = await Dio().get('https://tango-calendar.it-alex.net.ua/api/get/calendars');
+    final response = await Dio().get('${apiUrl}/api/get/calendars');
     var dataJson = response.data;
     setLocalDataJson('calendars', dataJson);
+  }
+
+
+  Future<Map> getApiToken(requestTokenData) async {
+    final response = await Dio().post('${apiUrl}/api/get/user_token', data: requestTokenData);
+
+    var dataJson = response.data;
+    print(dataJson);
+    Map data = json.decode(dataJson);
+
+    return data;
   }
 
   Map<DateTime, List<Event>> getKeventToDataMap(data) {
