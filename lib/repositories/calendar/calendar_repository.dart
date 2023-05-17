@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:tango_calendar/models/Event.dart';
@@ -11,7 +11,18 @@ import '../../utils.dart';
 
 class CalendarRepository {
 
+  FirebaseFirestore db = FirebaseFirestore.instance;
   final String apiUrl = 'https://tango-calendar.it-alex.net.ua';
+
+
+  Future<void> addNewCalendarToFirebase(Calendar calendar) async {
+    final data = calendar.toFirestore();
+    db.collection('calendars')
+        .doc(calendar.id)
+        .set(data)
+        .onError((e, _) => print("Error writing document: $e"));
+
+  }
 
   Future<Map> getEventsList() async {
 
@@ -70,9 +81,29 @@ class CalendarRepository {
 
 
   Future<void> updateCalendarsData() async {
-    final response = await Dio().get('${apiUrl}/api/get/calendars');
-    var dataJson = response.data;
-    setLocalDataJson('calendars', dataJson);
+    db.collection("calendars").withConverter(
+      fromFirestore: Calendar.fromFirestore,
+      toFirestore: (Calendar calendar, _) => calendar.toFirestore(),
+    ).get().then(
+          (querySnapshot) {
+        List calendars = [];
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          var calendarData = docSnapshot.data().toJson();
+          calendars.add(calendarData);
+        }
+        var dataJson = json.encode(calendars);
+
+        if (dataJson is String) {
+          setLocalDataJson('calendars', dataJson);
+        } else {
+          print('is not string');
+        }
+
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+
   }
 
 

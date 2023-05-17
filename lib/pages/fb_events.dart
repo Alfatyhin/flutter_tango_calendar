@@ -155,25 +155,12 @@ class _FbEventsState extends State<FbEvents> {
     }
 
     if (calendarsJson != '') {
-      Map data = json.decode(calendarsJson as String);
+      List data = json.decode(calendarsJson as String);
 
-      Map calendarsData = data['calendars'];
+      List calendarsData = data;
 
-      calendarsData.forEach((key, value) {
-        var calendar = Calendar(
-            key,
-            value['name'],
-            value['description'],
-            value['type_events'],
-            value['country'],
-            value['city'],
-            value['source']
-        );
-
-        if (selectedData.length > 0 && selected.containsKey(key)) {
-          calendar.enable = true;
-          selectedCalendars.add(calendar);
-        }
+      calendarsData.forEach((value) {
+        var calendar = Calendar.fromLocalData(value);
 
       });
 

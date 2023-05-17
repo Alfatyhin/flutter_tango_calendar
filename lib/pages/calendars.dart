@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 
 import '../repositories/calendar/calendar_repository.dart';
+import '../AppTools.dart';
 
 class CalendarsPage extends StatefulWidget {
   const CalendarsPage({Key? key}) : super(key: key);
@@ -18,7 +19,6 @@ List<TypeEvent> generateItems() {
   List typesEventsList = ['festivals', 'master classes', 'milongas', 'tango schools'];
   List<TypeEvent> types = [];
   typesEventsList.forEach((element) {
-    print(element);
     var type = TypeEvent(headerValue: element);
     types.add(type);
   });
@@ -66,23 +66,15 @@ class _CalendarsPageState extends State<CalendarsPage> {
     }
 
     if (calendarsJson != '') {
-      Map data = json.decode(calendarsJson as String);
+      List data = json.decode(calendarsJson as String);
 
-      Map calendarsData = data['calendars'];
+      List calendarsData = data;
 
       int xl = 0;
-      calendarsData.forEach((key, value) {
-        var calendar = Calendar(
-            key,
-            value['name'],
-            value['description'],
-            value['type_events'],
-            value['country'],
-            value['city'],
-            value['source']
-        );
+      calendarsData.forEach((value) {
+        var calendar = Calendar.fromLocalData(value);
 
-        if (selectedCalendars.length > 0 && selected.containsKey(key)) {
+        if (selectedCalendars.length > 0 && selected.containsKey(value['id'])) {
           calendar.enable = true;
         }
 
@@ -90,7 +82,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
         countries.add(value['country']);
         cityes.add(value['city']);
 
-        switch(value['type_events']) {
+        switch(calendar.typeEvents) {
           case 'festivals':
             festivals.add(xl);
             break;

@@ -76,22 +76,13 @@ class _StatementsListState extends State<StatementsList> {
       CalendarRepository().getLocalDataJson('calendars').then((calendarsJson) {
 
         if (calendarsJson != '') {
-          Map dataCalendars = json.decode(calendarsJson as String);
 
-          Map calendarsData = dataCalendars['calendars'];
+          List calendarsData = json.decode(calendarsJson as String);
 
-          calendarsData.forEach((key, value) {
-            var calendar = Calendar(
-                key,
-                value['name'],
-                value['description'],
-                value['type_events'],
-                value['country'],
-                value['city'],
-                value['source']
-            );
+          calendarsData.forEach((value) {
+            var calendar = Calendar.fromLocalData(value);
 
-            if (statement['value'].contains(key)) {
+            if (statement['value'].contains(calendar.id)) {
               calendar.enable = true;
               selectedCalendars.add(calendar);
             }

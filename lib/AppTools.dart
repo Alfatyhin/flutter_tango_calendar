@@ -32,7 +32,7 @@ class EventTypes {
     },
     'su_admin': {
       'festyval_shedule': 1,
-      'festyvals world': 1,
+      'festyvals world': 0,
       'master_classes': 1,
       'festyvals': 1,
       'milongas': 1,
@@ -41,18 +41,26 @@ class EventTypes {
     },
   };
 
-
+  // 0 - доступно  для создателя календаря
+  // 1 - может подать заявку
   Map CalendarStatmentRules = {
     'user': {},
-    'volunteer': {},
+    'volunteer': {
+      'festyval_shedule': 0,
+      'festyvals world': 1,
+      'master_classes': 1,
+      'festyvals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_sсhool': 0,},
     'organizer': {
-      'festyval_shedule': 1,
-      'festyvals world': 0,
-      'master_classes': 0,
-      'festyvals': 0,
-      'milongas': 0,
-      'practices': 0,
-      'tango_sсhool': 1,
+      'festyval_shedule': 0,
+      'festyvals world': 1,
+      'master_classes': 1,
+      'festyvals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_sсhool': 0,
     },
   };
 }

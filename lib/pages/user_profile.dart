@@ -49,22 +49,12 @@ class _UserProfileState extends State<UserProfile> {
         if (selectedData.length > 0) {
 
           if (calendarsJson != '') {
-            Map data = json.decode(calendarsJson as String);
+            List calendarsData = json.decode(calendarsJson as String);
 
-            Map calendarsData = data['calendars'];
+            calendarsData.forEach((value) {
+              var calendar = Calendar.fromLocalData(value);
 
-            calendarsData.forEach((key, value) {
-              var calendar = Calendar(
-                  key,
-                  value['name'],
-                  value['description'],
-                  value['type_events'],
-                  value['country'],
-                  value['city'],
-                  value['source']
-              );
-
-              if (selectedData.contains(key)) {
+              if (selectedData.contains(calendar.id)) {
                 calendar.enable = false;
                 selectedlist.add(calendar);
               }

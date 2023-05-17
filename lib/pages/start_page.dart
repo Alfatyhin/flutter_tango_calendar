@@ -38,7 +38,7 @@ class _StartPageState extends State<StartPage> {
 
   void initFirebase() async {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp().whenComplete(() => print('completed'));
+    await Firebase.initializeApp().whenComplete(() => print('init completed'));
     
     FirebaseAuth.instance
         .authStateChanges()
@@ -51,7 +51,6 @@ class _StartPageState extends State<StartPage> {
         setState(() {
           userRole = userData.role;
           userUid = user.uid!;
-          print(user.displayName);
         });
       }
     });
@@ -73,7 +72,6 @@ class _StartPageState extends State<StartPage> {
   void initState() {
     super.initState();
     initFirebase();
-
     print('int state');
     ///  без событий календарь валится
     kEventSource = {this.key: [value]};

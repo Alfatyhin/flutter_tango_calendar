@@ -9,15 +9,12 @@ class usersRepository {
   FirebaseFirestore db = FirebaseFirestore.instance;
 
   Future<void> addNewUser(UserData userData) async {
-    final user = userData.toJson();
+    final user = userData.toFirestore();
     await db.collection('usersData').doc(userData.uid).set(user);
   }
 
   Future<UserData> getUserDataByUid(userUid) async {
     var userData;
-    print('------------');
-    print(userUid);
-
     final ref = db.collection('usersData').doc(userUid).withConverter(
       fromFirestore: UserData.fromFirestore,
       toFirestore: (UserData userData, _) => userData.toFirestore(),

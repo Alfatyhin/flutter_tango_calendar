@@ -29,8 +29,6 @@ class UserData {
 
 
   factory UserData.fromLocalData(data) {
-    // Future<String?> str = localRepository().getLocalDataString('userData');
-    // var data = json.decode(str as String);
     return UserData(
       uid: data?['uid'],
       name: data?['name'],
