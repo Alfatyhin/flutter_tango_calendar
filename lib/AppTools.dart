@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:tango_calendar/repositories/calendar/calendar_repository.dart';
 import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 import 'package:tango_calendar/utils.dart';
 import 'package:crypto/crypto.dart';
@@ -247,21 +248,22 @@ class _UserRoleListState extends State<UserRoleList> {
 }
 
 Future<Map> ApiSigned() async {
-  var date = DateTime.now();
   var signedToken = {};
-  var dateString = '${date.year}-${NumFormat(date.month)}-${NumFormat(date.day)}-${NumFormat(date.hour)}';
 
-  return usersRepository().getUserTokenByUid(autshUserData.uid).then((tokenData) {
-    var string = utf8.encode('${tokenData['token']}-$dateString');
-    var signed = md5.convert(string as List<int>);
+  return CalendarRepository().getApiServerTimeSigned().then((dateString) {
+    return usersRepository().getUserTokenByUid(autshUserData.uid).then((tokenData) {
+      var string = utf8.encode('${tokenData['token']}-$dateString');
+      debugPrint('signed');
+      debugPrint('timeSigned-$dateString');
+      var signed = md5.convert(string as List<int>);
 
-    signedToken = {
-      'tokenId': tokenData['tokenId'],
-      'signed': signed
-    };
+      signedToken = {
+        'tokenId': tokenData['tokenId'],
+        'signed': signed
+      };
 
-    return signedToken;
+      return signedToken;
+    });
   });
-
 
 }

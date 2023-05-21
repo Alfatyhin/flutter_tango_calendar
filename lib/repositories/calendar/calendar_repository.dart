@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:tango_calendar/models/Event.dart';
+import '../../AppTools.dart';
 import '../localRepository.dart';
 import '../../utils.dart';
 
@@ -154,6 +155,13 @@ class CalendarRepository {
   }
 
 
+  Future<String> getApiServerTimeSigned() async {
+    final response = await Dio().get('${apiUrl}/api/get_time_signed');
+
+    return response.data;
+  }
+
+
   Future<Map> getApiToken(requestTokenData) async {
     final response = await Dio().post('${apiUrl}/api/get/user_token', data: requestTokenData);
 
@@ -165,11 +173,12 @@ class CalendarRepository {
   }
 
 
-  Future<List> apiAddEvent(requestTokenData) async {
+  Future<Map> apiAddEvent(requestTokenData) async {
     final response = await Dio().post('${apiUrl}/api/event_add', data: requestTokenData);
-    List data = [];
+    Map data = {};
     var dataJson = response.data;
     data = json.decode(dataJson);
+
     return data;
   }
 

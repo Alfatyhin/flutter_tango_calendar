@@ -144,9 +144,9 @@ class _FbEventsState extends State<FbEvents> {
                   eventImportMap[element['eventExportId']] = [element];
                 }
               });
+              setState(() {});
 
             });
-
             setState(() {
               eventsUrl = eventsUrl;
               Events = Events;
@@ -188,9 +188,11 @@ class _FbEventsState extends State<FbEvents> {
             if (selectedData.contains(calendar.id)) {
               calendar.enable = false;
               selectedCalendars.add(calendar);
-              setState(() {});
             }
           });
+
+          print(selectedCalendars);
+          setState(() {});
         } else {
           if (autshUserData.role != 'user' ) {
             CalendarRepository().getUserCalendarsPermissions(autshUserData.uid).then((UserCalendarsPermission) {
@@ -392,23 +394,35 @@ class _FbEventsState extends State<FbEvents> {
         Navigator.pop(context);
 
         CalendarRepository().apiAddEvent(requestTokenData).then((request) {
-          request.forEach((item) {
-            var importData = {
-              'eventExportSourceId': 'fecebookEvents',
-              'eventExportId': fbEvent.eventId,
-              'eventImportSourceId': item['calId'],
-              'eventImportId': item['eventId'],
-            };
 
-            CalendarRepository().addImportEventData(importData).then((value) {
-              shortMessage(context, value, 2);
-              eventImportMap[fbEvent.eventId].add(importData);
-              calendarImportList.add(item['calId']);
-              setState(() {
-                
+          if (request.containsKey('errorMessage')) {
+            shortMessage(context, "message - ${request['errorMessage']}", 2);
+            debugPrint("error message - ${request['errorMessage']}");
+            debugPrint("timeSighed - ${request['timeSighed']}");
+          } else {
+            debugPrint("response sugess");
+            request['data'].forEach((item) {
+              var importData = {
+                'eventExportSourceId': 'fecebookEvents',
+                'eventExportId': fbEvent.eventId,
+                'eventImportSourceId': item['calId'],
+                'eventImportId': item['eventId'],
+              };
+
+              CalendarRepository().addImportEventData(importData).then((value) {
+                shortMessage(context, value, 2);
+                if (eventImportMap.containsKey(fbEvent.eventId)) {
+                  eventImportMap[fbEvent.eventId].add(importData);
+                } else {
+                  eventImportMap[fbEvent.eventId] = [importData];
+                }
+                calendarImportList.add(item['calId']);
+                setState(() {});
               });
             });
-          });
+          }
+
+
         });
 
       });
