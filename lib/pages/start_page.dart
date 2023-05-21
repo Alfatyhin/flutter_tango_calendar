@@ -10,6 +10,7 @@ import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 
 
 import '../AppTools.dart';
+import '../models/Calendar.dart';
 import '../models/table_calendar.dart';
 import '../models/Event.dart';
 import '../models/UserData.dart';
@@ -30,6 +31,10 @@ class _StartPageState extends State<StartPage> {
 
   var userUid = '';
   var userRole = '';
+  var CalendarPermEventRedact = GlobalPermissions().redactEventToCalendar;
+  var CalendarPermEventDelete = GlobalPermissions().deleteEventToCalendar;
+  Map selectedCalendars = {};
+  Map userCalendarsPermissions = {};
   var key = DateTime.now();
   var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'start page');
   var kEvents;
@@ -58,11 +63,13 @@ class _StartPageState extends State<StartPage> {
         if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
           usersRepository().getStatementsCount().then((value) {
             statmensCount = value;
-            setState(() {
-
-            });
+            setState(() {});
           });
         }
+
+        CalendarRepository().getUserCalendarsPermissions(autshUserData.uid).then((value) {
+          userCalendarsPermissions = value;
+        });
 
         setState(() {
           userRole = userData.role;
@@ -101,6 +108,37 @@ class _StartPageState extends State<StartPage> {
 
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+
+
+
+    CalendarRepository().getLocalDataJson('selectedCalendars').then((selectedCalendarsJson) {
+
+      CalendarRepository().getLocalDataJson('calendars').then((calendarsJson) {
+
+        var selectedlist = {};
+        var selectedData = [];
+        if (selectedCalendarsJson != '') {
+          selectedData = json.decode(selectedCalendarsJson as String);
+        }
+        if (selectedData.length > 0) {
+
+          if (calendarsJson != '') {
+            List calendarsData = json.decode(calendarsJson as String);
+
+            calendarsData.forEach((value) {
+              var calendar = Calendar.fromLocalData(value);
+
+              if (selectedData.contains(calendar.id)) {
+                selectedCalendars[calendar.id] = calendar;
+              }
+
+            });
+          }
+        }
+
+      });
+
+    });
 
   }
 
@@ -227,6 +265,15 @@ class _StartPageState extends State<StartPage> {
   void _eventOpen(Event event) {
 
     openEvent = event;
+
+    print(event.calendarId);
+    if((userCalendarsPermissions.containsKey(key)
+        && userCalendarsPermissions[openEvent.calendarId]['delete'] > 0
+        && CalendarPermEventDelete[autshUserData.role] > 1)
+        || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid) {
+      print('delete true');
+    }
+
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
@@ -278,22 +325,64 @@ class _StartPageState extends State<StartPage> {
             ),
 
             bottomNavigationBar: BottomNavigationBar(
-              items: const <BottomNavigationBarItem>[
+              items:  <BottomNavigationBarItem>[
 
                 BottomNavigationBarItem(
                   icon: Icon(Icons.upload_outlined),
                   label: 'export',
                 ),
 
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.delete),
-                  label: 'delete',
-                ),
+                if((userCalendarsPermissions.containsKey(key)
+                    && userCalendarsPermissions[event.calendarId]['delete'] > 0
+                    && CalendarPermEventDelete[autshUserData.role] > 1)
+                    || selectedCalendars[event.calendarId].creator == autshUserData.uid)
 
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long),
-                  label: 'redact',
-                ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.delete, color: Colors.green,),
+                    label: 'delete',
+                  )
+                else if (userCalendarsPermissions.containsKey(event.calendarId)
+                    && userCalendarsPermissions[event.calendarId]['delete'] > 0
+                    && CalendarPermEventDelete[autshUserData.role] == 1)
+
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.delete, color: Colors.blue,),
+                    label: 'delete',
+                  )
+
+                else
+
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.delete, color: Colors.grey[300],),
+                    label: 'delete',
+                  ),
+
+                if((userCalendarsPermissions.containsKey(key)
+                    && userCalendarsPermissions[event.calendarId]['redact'] > 0
+                    && CalendarPermEventRedact[autshUserData.role] > 1)
+                    || selectedCalendars[event.calendarId].creator == autshUserData.uid)
+
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.receipt_long, color: Colors.green,),
+                    label: 'redact',
+                  )
+
+                else if((userCalendarsPermissions.containsKey(key)
+                    && userCalendarsPermissions[event.calendarId]['redact'] > 0
+                    && CalendarPermEventRedact[autshUserData.role] > 1)
+                    || CalendarPermEventRedact[autshUserData.role] == 1)
+
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.receipt_long, color: Colors.blue,),
+                    label: 'redact',
+                  )
+
+                else
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.receipt_long, color: Colors.grey,),
+                    label: 'redact',
+                  )
+
               ],
 
               currentIndex: _selectedIndexEventOpen,
@@ -570,33 +659,42 @@ class _StartPageState extends State<StartPage> {
         break;
       case 1:
 
-        ApiSigned().then((signedData) {
+        if((userCalendarsPermissions.containsKey(key)
+            && userCalendarsPermissions[openEvent.calendarId]['delete'] > 0
+            && CalendarPermEventDelete[autshUserData.role] > 1)
+            || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid) {
+          print('delete true');
+
+          ApiSigned().then((signedData) {
 
 
-          var requestTokenData = {
-            'tokenId': signedData['tokenId'],
-            'signed': '${signedData['signed']}',
-            'calId': openEvent.calendarId,
-            'eventId':openEvent.eventId
-          };
+            var requestTokenData = {
+              'tokenId': signedData['tokenId'],
+              'signed': '${signedData['signed']}',
+              'calId': openEvent.calendarId,
+              'eventId':openEvent.eventId
+            };
 
-          Navigator.pop(context);
+            Navigator.pop(context);
 
-          CalendarRepository().apiDeleteEvent(requestTokenData).then((value) async {
+            CalendarRepository().apiDeleteEvent(requestTokenData).then((value) async {
 
-            CalendarRepository().importDeleteEvent(openEvent.calendarId, openEvent.eventId);
-            CalendarRepository().getEventsList().then((value) {
-              setState(() {
-                kEvents = value;
+              CalendarRepository().importDeleteEvent(openEvent.calendarId, openEvent.eventId);
+              CalendarRepository().getEventsList().then((value) {
+                setState(() {
+                  kEvents = value;
+                });
+                _selectedEvents.value = _getEventsForDay(_selectedDay!);
               });
-              _selectedEvents.value = _getEventsForDay(_selectedDay!);
+              shortMessage(context, 'delete complit', 2);
+
             });
-            shortMessage(context, 'delete complit', 2);
 
           });
 
-        });
-
+        } else {
+          shortMessage(context, 'delete not permission', 2);
+        }
 
         break;
       case 2:

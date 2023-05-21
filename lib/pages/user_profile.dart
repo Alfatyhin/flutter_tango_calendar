@@ -336,7 +336,7 @@ class _UserProfileState extends State<UserProfile> {
                         style: TextStyle(
                             fontSize: 16
                         ),),
-                      Text("${selectedCalendars[index].typeEvents}",
+                      Text("${selectedCalendars[index].typeEvents} - ${selectedCalendars[index].id}",
                         style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[700]
@@ -346,36 +346,44 @@ class _UserProfileState extends State<UserProfile> {
                   Column(
                     children: [
 
-                      if (userCalendarsPermissions.containsKey(selectedCalendars[index].id))
+                      if (userCalendarsPermissions.containsKey(selectedCalendars[index].id)
+                          || selectedCalendars[index].creator == autshUserData.uid)
                         Row(
                           children: [
-                            if(userCalendarsPermissions[selectedCalendars[index].id]['add'] > 0)
+                            if((userCalendarsPermissions.containsKey(selectedCalendars[index].id)
+                                && userCalendarsPermissions[selectedCalendars[index].id]['add'] > 0)
+                                || selectedCalendars[index].creator == autshUserData.uid)
                               Icon(Icons.add, color: Colors.green,)
                             else
                               Icon(Icons.add, color: Colors.grey,),
 
 
-                            if((userCalendarsPermissions[selectedCalendars[index].id]['redact'] > 0
+                            if((userCalendarsPermissions.containsKey(selectedCalendars[index].id)
+                                && userCalendarsPermissions[selectedCalendars[index].id]['redact'] > 0
                                 && CalendarPermEventRedact[userData.role] > 1)
                                 || selectedCalendars[index].creator == autshUserData.uid)
                               Icon(Icons.app_registration, color: Colors.green,)
-                            else if(userCalendarsPermissions[selectedCalendars[index].id]['redact'] > 0
+                            else if(userCalendarsPermissions.containsKey(selectedCalendars[index].id)
+                                && userCalendarsPermissions[selectedCalendars[index].id]['redact'] > 0
                                 && CalendarPermEventRedact[userData.role] == 1)
                               Icon(Icons.app_registration, color: Colors.blue,)
                             else
                               Icon(Icons.app_registration, color: Colors.grey,),
 
 
-                            if((userCalendarsPermissions[selectedCalendars[index].id]['delete'] > 0
+                            if((userCalendarsPermissions.containsKey(selectedCalendars[index].id)
+                                && userCalendarsPermissions[selectedCalendars[index].id]['delete'] > 0
                                 && CalendarPermEventDelete[userData.role] > 1)
                                 || selectedCalendars[index].creator == autshUserData.uid)
                               Icon(Icons.delete, color: Colors.green,)
-                            else if (userCalendarsPermissions[selectedCalendars[index].id]['delete'] > 0
+                            else if (userCalendarsPermissions.containsKey(selectedCalendars[index].id)
+                                && userCalendarsPermissions[selectedCalendars[index].id]['delete'] > 0
                                 && CalendarPermEventDelete[userData.role] == 1)
                               Icon(Icons.delete, color: Colors.blue,)
                             else
                               Icon(Icons.delete, color: Colors.grey,),
 
+                            if (selectedCalendars[index].creator != autshUserData.uid)
                             Checkbox(
                                 value: true,
                                 onChanged: (bool? newValue) {

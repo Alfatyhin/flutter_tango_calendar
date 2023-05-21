@@ -191,23 +191,21 @@ class _FbEventsState extends State<FbEvents> {
             }
           });
 
-          print(selectedCalendars);
-          setState(() {});
         } else {
           if (autshUserData.role != 'user' ) {
             CalendarRepository().getUserCalendarsPermissions(autshUserData.uid).then((UserCalendarsPermission) {
 
               calendarsData.forEach((value) {
                 var calendar = Calendar.fromLocalData(value);
-                if (selectedData.contains(calendar.id)
+                if ((selectedData.contains(calendar.id)
                     && UserCalendarsPermission.containsKey(calendar.id)
-                    && UserCalendarsPermission[calendar.id]['add'] == 1) {
+                    && UserCalendarsPermission[calendar.id]['add'] == 1)
+                    || calendar.creator == autshUserData.uid) {
 
                   calendar.enable = false;
                   selectedCalendars.add(calendar);
                 }
               });
-              setState(() {});
 
             });
           }
