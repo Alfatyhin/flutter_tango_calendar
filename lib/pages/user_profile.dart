@@ -29,13 +29,17 @@ class _UserProfileState extends State<UserProfile> {
   var userUid;
   var userData;
   var CalendarPermEventAdd = GlobalPermissions().addEventToCalendar;
+  var CalendarPermEventRedact = GlobalPermissions().redactEventToCalendar;
+  var CalendarPermEventDelete = GlobalPermissions().deleteEventToCalendar;
   List selectedCalendars = [];
+  var CalendarStatmentRules = EventTypes().CalendarStatmentRules;
+  Map userCalendarsPermissions = {};
 
   int _selectedIndex = 0;
 
   void setUserData(userUid) {
 
-
+    debugPrint("-------setUserData-------");
 
     CalendarRepository().getLocalDataJson('selectedCalendars').then((selectedCalendarsJson) {
 
@@ -51,17 +55,37 @@ class _UserProfileState extends State<UserProfile> {
           if (calendarsJson != '') {
             List calendarsData = json.decode(calendarsJson as String);
 
+            debugPrint("-------selectedCalendars-------");
+            debugPrint("autshUserData.role - ${autshUserData.role}");
+
             calendarsData.forEach((value) {
               var calendar = Calendar.fromLocalData(value);
 
               if (selectedData.contains(calendar.id)) {
-                calendar.enable = false;
-                selectedlist.add(calendar);
+                var typeEvents = calendar.typeEvents;
+
+                debugPrint("typeEvents - $typeEvents");
+                debugPrint("CalendarStatmentRules - ${CalendarStatmentRules[autshUserData.role][typeEvents]}");
+                debugPrint("calendar.creator - ${calendar.creator}");
+
+                if (CalendarStatmentRules[autshUserData.role][typeEvents] > 0
+                    || calendar.creator == autshUserData.uid) {
+                  calendar.enable = false;
+                  selectedlist.add(calendar);
+
+                  debugPrint("calendar add - ${calendar.name}");
+                } else {
+
+                  debugPrint("calendar not add - ${calendar.name}");
+                }
               }
 
             });
 
+            debugPrint("${selectedData.length} / ${selectedlist.length}");
+
             selectedCalendars = selectedlist;
+            debugPrint("----------------------");
 
           }
         }
@@ -74,6 +98,11 @@ class _UserProfileState extends State<UserProfile> {
     usersRepository().getUserDataByUid(userUid).then((value) {
       userData = value as UserData;
       fbProfileController.text = userData.fbProfile;
+
+      CalendarRepository().getUserCalendarsPermissions(userData.uid).then((value) {
+        userCalendarsPermissions = value;
+
+      });
 
       setState(() {});
 
@@ -179,7 +208,7 @@ class _UserProfileState extends State<UserProfile> {
 
               ElevatedButton(onPressed: () {
                 _changeFbUrl();
-              }, child: Text('change fb url',
+              }, child: Text('change profile fb url',
                 style: TextStyle(
                     fontSize: 20
                 ),),),
@@ -189,6 +218,7 @@ class _UserProfileState extends State<UserProfile> {
 
               const SizedBox(height: 20),
 
+              if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
               ElevatedButton(onPressed: () {
                 _calendarsStatmentOpen();
               }, child: Text('calendar permissins',
@@ -224,18 +254,32 @@ class _UserProfileState extends State<UserProfile> {
 
           const SizedBox(height: 8.0),
 
-          Text('access level',
-            style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 18,
-                color: Colors.black
-            ),
-          ),
 
+          if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
+
+            Text('access level',
+              style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: Colors.black
+              ),
+            ),
+
+          if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
           UserRoleList(),
+
+          if (autshUserData.role == 'admin' || autshUserData.role == 'su_admin')
+            Text('access level <<${autshUserData.role}>>',
+              style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  color: Colors.black
+              ),
+            ),
 
           const SizedBox(height: 20),
 
+          if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
           ElevatedButton(onPressed: () {
             _changeRoleStatment(userData.uid);
           }, child: Text('statement',
@@ -286,20 +330,78 @@ class _UserProfileState extends State<UserProfile> {
                 textDirection: TextDirection.ltr,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("${selectedCalendars[index].name} - ${selectedCalendars[index].typeEvents}",
-                    style: TextStyle(
-                        fontSize: 15
-                    ),),
-                  Checkbox(
-                      value: selectedCalendars[index].enable,
-                      onChanged: (bool? newValue) {
-                        selectedList[index].enable = newValue!;
-                        setState(() {
-                        });
+                  Column(
+                    children: [
+                      Text("${selectedCalendars[index].name}",
+                        style: TextStyle(
+                            fontSize: 16
+                        ),),
+                      Text("${selectedCalendars[index].typeEvents}",
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[700]
+                        ),),
+                    ],
+                  ),
+                  Column(
+                    children: [
 
-                        Navigator.pop(context);
-                        _calendarsStatmentOpen();
-                      })
+                      if (userCalendarsPermissions.containsKey(selectedCalendars[index].id))
+                        Row(
+                          children: [
+                            if(userCalendarsPermissions[selectedCalendars[index].id]['add'] > 0)
+                              Icon(Icons.add, color: Colors.green,)
+                            else
+                              Icon(Icons.add, color: Colors.grey,),
+
+
+                            if((userCalendarsPermissions[selectedCalendars[index].id]['redact'] > 0
+                                && CalendarPermEventRedact[userData.role] > 1)
+                                || selectedCalendars[index].creator == autshUserData.uid)
+                              Icon(Icons.app_registration, color: Colors.green,)
+                            else if(userCalendarsPermissions[selectedCalendars[index].id]['redact'] > 0
+                                && CalendarPermEventRedact[userData.role] == 1)
+                              Icon(Icons.app_registration, color: Colors.blue,)
+                            else
+                              Icon(Icons.app_registration, color: Colors.grey,),
+
+
+                            if((userCalendarsPermissions[selectedCalendars[index].id]['delete'] > 0
+                                && CalendarPermEventDelete[userData.role] > 1)
+                                || selectedCalendars[index].creator == autshUserData.uid)
+                              Icon(Icons.delete, color: Colors.green,)
+                            else if (userCalendarsPermissions[selectedCalendars[index].id]['delete'] > 0
+                                && CalendarPermEventDelete[userData.role] == 1)
+                              Icon(Icons.delete, color: Colors.blue,)
+                            else
+                              Icon(Icons.delete, color: Colors.grey,),
+
+                            Checkbox(
+                                value: true,
+                                onChanged: (bool? newValue) {
+                                  selectedList[index].enable = newValue!;
+                                  setState(() {
+                                  });
+
+                                  Navigator.pop(context);
+                                  _calendarsStatmentOpen();
+                                })
+                          ],
+                        )
+                      else
+                        Checkbox(
+                            value: selectedCalendars[index].enable,
+                            onChanged: (bool? newValue) {
+                              selectedList[index].enable = newValue!;
+                              setState(() {
+                              });
+
+                              Navigator.pop(context);
+                              _calendarsStatmentOpen();
+                            })
+                    ],
+                  ),
+
                 ],
               );
             },
@@ -384,7 +486,10 @@ class _UserProfileState extends State<UserProfile> {
 
         break;
       case 2:
-        setUserData(userUid);
+        CalendarRepository().updateCalendarsData().then((value) {
+
+          setUserData(userUid);
+        });
 
         break;
     }

@@ -14,10 +14,26 @@ class Event{
   final dynamic creatorName;
   final String organizerEmail;
   final dynamic organizerName;
-  var calendarId;
+  final calendarId;
   var colorHash = 0xFF000000;
 
-  Event(this.eventId, this.name, this.description, this.location, this.timeUse, this.dateStart, this.timeStart, this.dateEnd, this.timeEnd, this.update, this.creatorEmail, this.creatorName, this.organizerEmail, this.organizerName);
+  Event(
+      this.eventId,
+      this.name,
+      this.description,
+      this.location,
+      this.timeUse,
+      this.dateStart,
+      this.timeStart,
+      this.dateEnd,
+      this.timeEnd,
+      this.update,
+      this.creatorEmail,
+      this.creatorName,
+      this.organizerEmail,
+      this.organizerName,
+      this.calendarId
+      );
 
 
   String timePeriod() {
@@ -54,6 +70,7 @@ class Event{
     return string;
   }
 
+
   @override
-  String toString() => "$eventId | $name | $location";
+  String toString() => "$eventId || $name || $location";
 }

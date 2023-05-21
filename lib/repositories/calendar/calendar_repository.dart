@@ -24,6 +24,49 @@ class CalendarRepository {
 
   }
 
+  Future<String> addImportEventData(data) async {
+
+    return db.collection('calendarsImports').add(data).then((documentSnapshot) {
+      return "Added import data sugess";
+    }).onError((e, _) {
+      return "error add import data";
+    });
+  }
+
+  Future<List> getImportEventDataIds(List fbEventsIdsList) async {
+
+    return db.collection('calendarsImports')
+        .where('eventExportId', whereIn: fbEventsIdsList)
+        .get().then(
+          (querySnapshot) {
+        List data = [];
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          data.add(docSnapshot.data());
+        }
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+  Future<List> getImportEventData(eventId) async {
+
+    return db.collection('calendarsImports')
+        .where('eventExportId', isEqualTo: eventId)
+        .get().then(
+          (querySnapshot) {
+        List data = [];
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          data.add(docSnapshot.data());
+        }
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
   Future<Map> getEventsList() async {
 
     var res;
@@ -50,6 +93,10 @@ class CalendarRepository {
             var data = json.decode(dataJson);
             if (data is Map) {
               data.forEach((key, value) {
+                for(var i = 0; i < value.length; i++) {
+                  value[i]['calId'] = calendarId;
+                }
+
                 if (dataSaver.containsKey(key)) {
                   List oldData = dataSaver[key];
                   oldData.addAll(value);
@@ -117,6 +164,48 @@ class CalendarRepository {
     return data;
   }
 
+
+  Future<List> apiAddEvent(requestTokenData) async {
+    final response = await Dio().post('${apiUrl}/api/event_add', data: requestTokenData);
+    List data = [];
+    var dataJson = response.data;
+    data = json.decode(dataJson);
+    return data;
+  }
+
+
+  Future<void> apiDeleteEvent(requestTokenData) async {
+    final response = await Dio().post('${apiUrl}/api/event_delete', data: requestTokenData);
+    var dataJson = response.data;
+
+    print(dataJson);
+    return dataJson;
+  }
+
+
+  Future<void> importDeleteEvent(calId, eventId) async {
+    return db.collection("calendarsImports")
+        .where('eventImportId', isEqualTo: eventId)
+        .where('eventImportSourceId', isEqualTo: calId)
+        .get().then(
+          (querySnapshot) {
+
+        for (var docSnapshot in querySnapshot.docs) {
+          var importDataId = docSnapshot.id;
+          db.collection("calendarsImports").doc(importDataId).delete().then(
+                (doc) => print("Document deleted"),
+            onError: (e) => print("Error updating document $e"),
+          );
+        }
+
+
+      },
+    onError: (e) => print("Error updating document $e"),
+    );
+  }
+
+
+
   Map<DateTime, List<Event>> getKeventToDataMap(data) {
 
     Map<DateTime, List<Event>> kEventSource = {};
@@ -140,7 +229,8 @@ class CalendarRepository {
             eventData['creatorEmail'],
             eventData['creatorName'],
             eventData['organizerEmail'],
-            eventData['organizerName']
+            eventData['organizerName'],
+            eventData['calId']
         );
         values.add(cEvent);
       }
@@ -163,4 +253,24 @@ class CalendarRepository {
     return json;
   }
 
+  Future<Map> getUserCalendarsPermissions(userUid) {
+    return db.collection("calendarPermissions").where('userUid', isEqualTo: userUid)
+        .get()
+        .then(
+          (querySnapshot) {
+        Map data = {};
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          var doc = docSnapshot.data();
+          data[doc['calId']] = {
+            'add': doc['add'],
+            'redact': doc['redact'],
+            'delete': doc['delete']
+          };
+        };
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
 }

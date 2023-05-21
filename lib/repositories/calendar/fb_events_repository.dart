@@ -47,7 +47,8 @@ class FbEventsRepository {
             eventData['creatorEmail'],
             eventData['creatorName'],
             eventData['organizerEmail'],
-            eventData['organizerName']
+            eventData['organizerName'],
+            'facebook'
         );
         values.add(cEvent);
       }

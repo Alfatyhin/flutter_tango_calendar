@@ -106,6 +106,21 @@ class usersRepository {
 
 
 
+  Future<int> getStatementsCount() async {
+
+    return db.collection("statements")
+        .where("status", isEqualTo: 'new')
+        .count()
+        .get().then(
+          (res) {
+        return res.count;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+
+
   Future<String> changeStatmentData(id, data) async {
     return db.collection("statements")
         .doc(id)

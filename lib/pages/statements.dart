@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import '../models/Calendar.dart';
 import '../models/UserData.dart';
@@ -54,7 +52,11 @@ class _StatementsListState extends State<StatementsList> {
 
           setState(() {});
         });
+      } else {
+
+        setState(() {});
       }
+
     });
   }
 

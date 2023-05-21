@@ -261,7 +261,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
       case 1:
         await CalendarRepository().clearLocalDataJson('eventsJson');
         await CalendarRepository().clearLocalDataJson('calendars');
-        await CalendarRepository().clearLocalDataJson('selectedCalendars');
         setState(() {});
         _shortMessage('calendars deleted', 2);
         break;

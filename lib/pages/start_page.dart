@@ -31,14 +31,22 @@ class _StartPageState extends State<StartPage> {
   var userUid = '';
   var userRole = '';
   var key = DateTime.now();
-  var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event');
+  var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'start page');
   var kEvents;
   int _selectedIndex = 0;
+  int _selectedIndexEventOpen = 0;
+  late Event openEvent;
+  int statmensCount = 0;
+
 
 
   void initFirebase() async {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp().whenComplete(() => print('init completed'));
+    await Firebase.initializeApp().whenComplete(() {
+      print('init completed');
+      ///  загрузка событий из локального хранилища
+      setlocaleJsonData();
+    });
     
     FirebaseAuth.instance
         .authStateChanges()
@@ -47,6 +55,14 @@ class _StartPageState extends State<StartPage> {
         UserData userData = await usersRepository().getUserDataByUid(user.uid!);
 
         autshUserData = userData;
+        if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
+          usersRepository().getStatementsCount().then((value) {
+            statmensCount = value;
+            setState(() {
+
+            });
+          });
+        }
 
         setState(() {
           userRole = userData.role;
@@ -82,8 +98,6 @@ class _StartPageState extends State<StartPage> {
     )..addAll(kEventSource);
     //////////////////////////////////
 
-    ///  загрузка событий из локального хранилища
-    setlocaleJsonData();
 
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
@@ -97,6 +111,7 @@ class _StartPageState extends State<StartPage> {
         MaterialPageRoute(builder: (BuildContext context) {
 
           if (userUid == '') {
+
             return Scaffold(
               appBar: AppBar(title: Text(title),),
               body:
@@ -123,100 +138,77 @@ class _StartPageState extends State<StartPage> {
                 ],
               ),
             );
+
           } else {
-            if (userRole == 'su_admin') {
-              return Scaffold(
-                appBar: AppBar(title: Text(title),),
-                body:
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
-                    }, child: Text('Facebook Events',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      _logOut();
-                      Navigator.pop(context);
-                    }, child: Text('Log out',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
+            return Scaffold(
+              appBar: AppBar(title: Text(title),),
+              body:
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
+                  }, child: Text('Facebook Events',
+                    style: TextStyle(
+                        fontSize: 20
+                    ),),),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/users', (route) => false);
-                    }, child: Text('Users',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {
+                    _logOut();
+                    Navigator.pop(context);
+                  }, child: Text('Log out',
+                    style: TextStyle(
+                        fontSize: 20
+                    ),),),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/user_profile', (route) => false, arguments: userUid);
-                    }, child: Text('My Profile',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/statements', (route) => false);
-                    }, child: Text('Statements',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
-                  ],
-                ),
-              );
-            } else {
-              return Scaffold(
-                appBar: AppBar(title: Text(title),),
-                body:
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
-                    }, child: Text('Facebook Events',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(context, '/user_profile', (route) => false, arguments: userUid);
+                  }, child: Text('My Profile',
+                    style: TextStyle(
+                        fontSize: 20
+                    ),),),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/user_profile', (route) => false, arguments: userUid);
-                    }, child: Text('My Profile',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () {
-                      _logOut();
-                      Navigator.pop(context);
-                    }, child: Text('Log out',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
-                  ],
-                ),
-              );
-            }
+                  if (userRole == 'su_admin')
+                    Container(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+
+                          const SizedBox(height: 20),
+                          ElevatedButton(onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamedAndRemoveUntil(context, '/users', (route) => false);
+                          }, child: Text('Users',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),),),
+
+
+                          const SizedBox(height: 20),
+                          ElevatedButton(onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamedAndRemoveUntil(context, '/statements', (route) => false);
+                          }, child: Text('Statements',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),),),
+
+                        ],
+                      ),
+                    ),
+
+                ],
+              ),
+            );
 
           }
 
@@ -233,6 +225,8 @@ class _StartPageState extends State<StartPage> {
   }
 
   void _eventOpen(Event event) {
+
+    openEvent = event;
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
@@ -281,7 +275,31 @@ class _StartPageState extends State<StartPage> {
                   ),
                 ],
               ),
-            )
+            ),
+
+            bottomNavigationBar: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.upload_outlined),
+                  label: 'export',
+                ),
+
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.delete),
+                  label: 'delete',
+                ),
+
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.receipt_long),
+                  label: 'redact',
+                ),
+              ],
+
+              currentIndex: _selectedIndexEventOpen,
+              selectedItemColor: Colors.lightBlueAccent[800],
+              onTap: _onEventOpenItemTapped,
+            ),
           );
         })
     );
@@ -290,23 +308,24 @@ class _StartPageState extends State<StartPage> {
 
   @override
   Future<void> setlocaleJsonData() async {
-    // CalendarRepository().setLocalDataJson('test', 'test 1');
+    CalendarRepository()
+        .getLocalDataJson('eventsJson')
+        .then((oldJson) {
 
-    var oldJson = await CalendarRepository().getLocalDataJson('eventsJson');
-    if (oldJson != '') {
+      if (oldJson != '') {
+        var data = json.decode(oldJson as String);
+        kEventSource = CalendarRepository().getKeventToDataMap(data) as Map<DateTime, List<Event>>;
 
-      var data = json.decode(oldJson as String);
-      kEventSource = CalendarRepository().getKeventToDataMap(data) as Map<DateTime, List<Event>>;
+        /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+        kEvents = LinkedHashMap<DateTime, List<Event>>(
+          equals: isSameDay,
+          hashCode: getHashCode,
+        )..addAll(kEventSource);
+        setState(() {});
+        _selectedEvents.value = _getEventsForDay(_selectedDay!);
 
-      /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-      kEvents = LinkedHashMap<DateTime, List<Event>>(
-        equals: isSameDay,
-        hashCode: getHashCode,
-      )..addAll(kEventSource);
-      setState(() {});
-      _selectedEvents.value = _getEventsForDay(_selectedDay!);
-
-    }
+      }
+    });
   }
 
   @override
@@ -367,7 +386,8 @@ class _StartPageState extends State<StartPage> {
     if (userUid == '') {
       return Icon(Icons.verified_user, size: 0,);
     } else {
-      return Icon(Icons.verified_user, color: Colors.lightGreenAccent[700],);
+      return  Icon(Icons.verified_user, color: Colors.lightGreenAccent[700],);
+
     }
   }
 
@@ -382,6 +402,14 @@ class _StartPageState extends State<StartPage> {
           Container(
             child: _appBarLogin(),
           ),
+          if (statmensCount > 0)
+            Text('$statmensCount',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 20,
+                color: Colors.yellow[700]
+              ),
+            ),
           IconButton(
             icon: Icon(Icons.menu),
             onPressed: _menuOpen,
@@ -442,18 +470,23 @@ class _StartPageState extends State<StartPage> {
                       ),
                       child: ListTile(
                         onTap: () => _eventOpen(value[index]),
-                        title: Row(
-                          textDirection: TextDirection.ltr,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        title: Column(
                           children: [
-                            Column(
+                            Row(
                               children: [
-                                Text(value[index].name, style: TextStyle(
-                                  fontWeight: FontWeight.w600
-                                ),),
                                 Text(value[index].timePeriod()),
                               ],
-                            )
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child:
+                                  Text(value[index].name, style: TextStyle(
+                                      fontWeight: FontWeight.w600
+                                  ),),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                         subtitle: Text('${value[index].locationString()}'),
@@ -508,16 +541,67 @@ class _StartPageState extends State<StartPage> {
           _selectedEvents.value = _getEventsForDay(_selectedDay!);
           _selectedIndex = index;
         });
-        shortMessage(context as BuildContext, 'events deleted', 2);
+        shortMessage(context, 'events deleted', 2);
         break;
       case 2:
-        shortMessage(context as BuildContext, 'upload events', 2);
+        if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
+          usersRepository().getStatementsCount().then((value) {
+            setState(() {
+              statmensCount = value;
+            });
+          });
+        }
+        shortMessage(context, 'upload events', 2);
         kEvents = await CalendarRepository().getEventsList();
         setState(() {
           _selectedIndex = index;
         });
         _selectedEvents.value = _getEventsForDay(_selectedDay!);
-        shortMessage(context as BuildContext, 'upload complit', 2);
+        shortMessage(context, 'upload complit', 2);
+        break;
+    }
+
+  }
+
+  void _onEventOpenItemTapped(int index) async {
+    switch (index) {
+      case 0:
+
+        break;
+      case 1:
+
+        ApiSigned().then((signedData) {
+
+
+          var requestTokenData = {
+            'tokenId': signedData['tokenId'],
+            'signed': '${signedData['signed']}',
+            'calId': openEvent.calendarId,
+            'eventId':openEvent.eventId
+          };
+
+          Navigator.pop(context);
+
+          CalendarRepository().apiDeleteEvent(requestTokenData).then((value) async {
+
+            CalendarRepository().importDeleteEvent(openEvent.calendarId, openEvent.eventId);
+            CalendarRepository().getEventsList().then((value) {
+              setState(() {
+                kEvents = value;
+              });
+              _selectedEvents.value = _getEventsForDay(_selectedDay!);
+            });
+            shortMessage(context, 'delete complit', 2);
+
+          });
+
+        });
+
+
+        break;
+      case 2:
+
+        shortMessage(context, 'upload complit', 2);
         break;
     }
 

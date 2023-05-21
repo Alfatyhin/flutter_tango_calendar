@@ -13,73 +13,100 @@ class EventTypes {
     'user': {},
     'volunteer': {},
     'organizer': {
-      'festyval_shedule': 1,
-      'festyvals world': 0,
+      'festival_shedule': 1,
+      'festivals world': 0,
       'master_classes': 0,
-      'festyvals': 0,
+      'festivals': 0,
       'milongas': 0,
       'practices': 0,
-      'tango_sсhool': 1,
+      'tango_school': 1,
     },
     'admin': {
-      'festyval_shedule': 1,
-      'festyvals world': 0,
+      'festival_shedule': 1,
+      'festivals world': 0,
       'master_classes': 1,
-      'festyvals': 1,
+      'festivals': 1,
       'milongas': 1,
       'practices': 1,
-      'tango_sсhool': 1,
+      'tango_school': 1,
     },
     'su_admin': {
-      'festyval_shedule': 1,
-      'festyvals world': 0,
+      'festival_shedule': 1,
+      'festivals world': 0,
       'master_classes': 1,
-      'festyvals': 1,
+      'festivals': 1,
       'milongas': 1,
       'practices': 1,
-      'tango_sсhool': 1,
+      'tango_school': 1,
     },
   };
 
   // 0 - доступно  для создателя календаря
   // 1 - может подать заявку
   Map CalendarStatmentRules = {
-    'user': {},
+    'user': {
+      'festival_shedule': 0,
+      'festivals world': 0,
+      'master_classes': 0,
+      'festivals': 0,
+      'milongas': 0,
+      'practices': 0,
+      'tango_school': 0,
+    },
     'volunteer': {
-      'festyval_shedule': 0,
-      'festyvals world': 1,
+      'festival_shedule': 0,
+      'festivals world': 1,
       'master_classes': 1,
-      'festyvals': 1,
+      'festivals': 1,
       'milongas': 1,
       'practices': 1,
-      'tango_sсhool': 0,},
+      'tango_school': 0,
+    },
     'organizer': {
-      'festyval_shedule': 0,
-      'festyvals world': 1,
+      'festival_shedule': 0,
+      'festivals world': 1,
       'master_classes': 1,
-      'festyvals': 1,
+      'festivals': 1,
       'milongas': 1,
       'practices': 1,
-      'tango_sсhool': 0,
+      'tango_school': 0,
+    },
+    'admin': {
+      'festival_shedule': 0,
+      'festivals world': 0,
+      'master_classes': 1,
+      'festivals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_school': 0,
+    },
+    'su_admin': {
+      'festival_shedule': 0,
+      'festivals world': 0,
+      'master_classes': 1,
+      'festivals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_school': 0,
     },
   };
 }
 
 class CalendarTypes {
   List calendarTypes = [
-    'festyval_shedule',
-    'festyvals world',
+    'festival_shedule',
+    'festivals world',
     'master_classes',
-    'festyvals',
+    'festivals',
     'milongas',
     'practices',
-    'tango_sсhool',
+    'tango_school',
   ];
 }
 
 class GlobalPermissions {
   // 1 - festyval shedule, lessens sсhool
-  // 2 - festyval shedule, lessens sсhool, milongas city, practices city, festyvals city
+  // 2 - festyval shedule, lessens sсhool, milongas city, practices city, festivals city
   // 3 - all CalendarTypes
   Map createCalendar = {
     'user': 0,
