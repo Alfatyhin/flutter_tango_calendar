@@ -136,9 +136,14 @@ class _FbEventsState extends State<FbEvents> {
 
             print("fbEventsIdsList size start - ${fbEventsIdsList.length}");
 
-            while(fbEventsIdsList.length > 10 ) {
-              List list = fbEventsIdsList.sublist(0, 10);
-              fbEventsIdsList.removeRange(0, 10);
+            while(fbEventsIdsList.length > 0 ) {
+              int size = 10;
+              if (fbEventsIdsList.length < 10) {
+                size = fbEventsIdsList.length;
+              }
+              List list = fbEventsIdsList.sublist(0, size);
+
+              fbEventsIdsList.removeRange(0, size);
 
               CalendarRepository().getImportEventDataIds(list as List).then((value) {
                 value.forEach((element) {
@@ -151,21 +156,10 @@ class _FbEventsState extends State<FbEvents> {
                   }
                 });
 
+                setState(() {});
               });
             }
 
-            CalendarRepository().getImportEventDataIds(fbEventsIdsList).then((value) {
-              value.forEach((element) {
-
-                if (eventImportMap.containsKey(element['eventExportId'])) {
-                  eventImportMap[element['eventExportId']].add(element);
-                } else {
-                  eventImportMap[element['eventExportId']] = [element];
-                }
-              });
-
-              setState(() {});
-            });
 
             setState(() {
               eventsUrl = eventsUrl;
