@@ -134,8 +134,6 @@ class _FbEventsState extends State<FbEvents> {
             );
 
 
-            print("fbEventsIdsList size start - ${fbEventsIdsList.length}");
-
             while(fbEventsIdsList.length > 0 ) {
               int size = 10;
               if (fbEventsIdsList.length < 10) {
@@ -148,7 +146,6 @@ class _FbEventsState extends State<FbEvents> {
               CalendarRepository().getImportEventDataIds(list as List).then((value) {
                 value.forEach((element) {
 
-                  print(element);
                   if (eventImportMap.containsKey(element['eventExportId'])) {
                     eventImportMap[element['eventExportId']].add(element);
                   } else {
