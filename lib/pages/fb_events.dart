@@ -62,17 +62,16 @@ class _FbEventsState extends State<FbEvents> {
 
     FbEventsRepository().getLocalDataString('eventsUrl').then((value){
       eventsUrl = value!;
-      print(eventsUrl);
 
       if (eventsUrl != '') {
         FbEventsRepository().getLocalDataString('fbEvents').then((value){
           String fbCalendar = value as String;
 
-
           if (fbCalendar != '') {
             final now = DateTime.now().toLocal();
             final iCalendar = ICalendar.fromString(fbCalendar);
             Events = [];
+
             iCalendar.data.forEach((element) {
 
 
@@ -135,6 +134,26 @@ class _FbEventsState extends State<FbEvents> {
             );
 
 
+            print("fbEventsIdsList size start - ${fbEventsIdsList.length}");
+
+            while(fbEventsIdsList.length > 10 ) {
+              List list = fbEventsIdsList.sublist(0, 10);
+              fbEventsIdsList.removeRange(0, 10);
+
+              CalendarRepository().getImportEventDataIds(list as List).then((value) {
+                value.forEach((element) {
+
+                  print(element);
+                  if (eventImportMap.containsKey(element['eventExportId'])) {
+                    eventImportMap[element['eventExportId']].add(element);
+                  } else {
+                    eventImportMap[element['eventExportId']] = [element];
+                  }
+                });
+
+              });
+            }
+
             CalendarRepository().getImportEventDataIds(fbEventsIdsList).then((value) {
               value.forEach((element) {
 
@@ -144,9 +163,10 @@ class _FbEventsState extends State<FbEvents> {
                   eventImportMap[element['eventExportId']] = [element];
                 }
               });
-              setState(() {});
 
+              setState(() {});
             });
+
             setState(() {
               eventsUrl = eventsUrl;
               Events = Events;
@@ -388,7 +408,6 @@ class _FbEventsState extends State<FbEvents> {
           'event': fbEvent.importToApi()
         };
 
-        print(requestTokenData);
         Navigator.pop(context);
 
         CalendarRepository().apiAddEvent(requestTokenData).then((request) {
