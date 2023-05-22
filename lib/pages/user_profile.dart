@@ -99,11 +99,6 @@ class _UserProfileState extends State<UserProfile> {
       userData = value as UserData;
       fbProfileController.text = userData.fbProfile;
 
-      CalendarRepository().getUserCalendarsPermissions(userData.uid).then((value) {
-        userCalendarsPermissions = value;
-
-      });
-
       setState(() {});
 
     });
@@ -310,7 +305,24 @@ class _UserProfileState extends State<UserProfile> {
 
   Widget _calendarsAdd() {
 
-    var selectedList = selectedCalendars;
+    if (userCalendarsPermissions.length == 0) {
+      CalendarRepository().getUserCalendarsPermissions(userData.uid).then((value) {
+        userCalendarsPermissions = value;
+        _calendarsAdd();
+      });
+    } else {
+
+      int x = 0;
+      selectedCalendars.forEach((value) {
+        if (userCalendarsPermissions.containsKey(value.id)) {
+          value.enable = true;
+          selectedCalendars[x] = value;
+        }
+      });
+
+    }
+
+
     if (CalendarPermEventAdd[autshUserData.role] > 0) {
       return ListView(
         // shrinkWrap: true,
@@ -336,7 +348,7 @@ class _UserProfileState extends State<UserProfile> {
                         style: TextStyle(
                             fontSize: 16
                         ),),
-                      Text("${selectedCalendars[index].typeEvents} - ${selectedCalendars[index].id}",
+                      Text("${selectedCalendars[index].typeEvents}",
                         style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[700]
@@ -385,9 +397,9 @@ class _UserProfileState extends State<UserProfile> {
 
                             if (selectedCalendars[index].creator != autshUserData.uid)
                             Checkbox(
-                                value: true,
+                                value: selectedCalendars[index].enable,
                                 onChanged: (bool? newValue) {
-                                  selectedList[index].enable = newValue!;
+                                  selectedCalendars[index].enable = newValue!;
                                   setState(() {
                                   });
 
@@ -400,7 +412,7 @@ class _UserProfileState extends State<UserProfile> {
                         Checkbox(
                             value: selectedCalendars[index].enable,
                             onChanged: (bool? newValue) {
-                              selectedList[index].enable = newValue!;
+                              selectedCalendars[index].enable = newValue!;
                               setState(() {
                               });
 
@@ -453,24 +465,27 @@ class _UserProfileState extends State<UserProfile> {
   Future<void> _calendarsStatments(String uid) async {
     var date = DateTime.now();
     var selectedList = [];
+
+    print('start');
     selectedCalendars.forEach((element) {
       if (element.enable) {
+        print(element.name);
         selectedList.add(element.id);
       }
     });
 
-    if (selectedList.length > 0) {
-      var data = {
-        "userUid": uid,
-        "type": 'calendars',
-        "value": selectedList,
-        "status": 'new',
-        "createdDt": date,
-        "updatedDt": date,
-      };
-      usersRepository().statementsAdd(data);
-      shortMessage(context as BuildContext, 'statement send', 2);
-    }
+    // if (selectedList.length > 0) {
+    //   var data = {
+    //     "userUid": uid,
+    //     "type": 'calendars',
+    //     "value": selectedList,
+    //     "status": 'new',
+    //     "createdDt": date,
+    //     "updatedDt": date,
+    //   };
+    //   usersRepository().statementsAdd(data);
+    //   shortMessage(context as BuildContext, 'statement send', 2);
+    // }
 
   }
 

@@ -12,7 +12,6 @@ import '../../utils.dart';
 
 class CalendarRepository {
 
-  FirebaseFirestore db = FirebaseFirestore.instance;
   final String apiUrl = 'https://tango-calendar.it-alex.net.ua';
 
 

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tango_calendar/repositories/calendar/calendar_repository.dart';
 import 'package:tango_calendar/repositories/users/users_reposirory.dart';
@@ -7,6 +8,9 @@ import 'package:tango_calendar/utils.dart';
 import 'package:crypto/crypto.dart';
 
 import 'models/UserData.dart';
+
+
+FirebaseFirestore db = FirebaseFirestore.instance;
 
 class EventTypes {
   List eventTypes = ['festyval', 'milonga', 'practice', 'lessen sсhool', 'master class'];
