@@ -87,6 +87,7 @@ class _UserProfileState extends State<UserProfile> {
             selectedCalendars = selectedlist;
             debugPrint("----------------------");
 
+            setState(() {});
           }
         }
 
@@ -308,18 +309,25 @@ class _UserProfileState extends State<UserProfile> {
     if (userCalendarsPermissions.length == 0) {
       CalendarRepository().getUserCalendarsPermissions(userData.uid).then((value) {
         userCalendarsPermissions = value;
-        _calendarsAdd();
+        _calendarsStatmentOpen();
+
+        print(selectedCalendars);
+        print('get permissions user calendars finish');
       });
     } else {
 
       int x = 0;
       selectedCalendars.forEach((value) {
+        print(value.name);
         if (userCalendarsPermissions.containsKey(value.id)) {
           value.enable = true;
-          selectedCalendars[x] = value;
         }
+        selectedCalendars[x] = value;
+        x++;
       });
 
+      print(selectedCalendars);
+      print(userCalendarsPermissions);
     }
 
 
@@ -466,26 +474,24 @@ class _UserProfileState extends State<UserProfile> {
     var date = DateTime.now();
     var selectedList = [];
 
-    print('start');
     selectedCalendars.forEach((element) {
       if (element.enable) {
-        print(element.name);
         selectedList.add(element.id);
       }
     });
 
-    // if (selectedList.length > 0) {
-    //   var data = {
-    //     "userUid": uid,
-    //     "type": 'calendars',
-    //     "value": selectedList,
-    //     "status": 'new',
-    //     "createdDt": date,
-    //     "updatedDt": date,
-    //   };
-    //   usersRepository().statementsAdd(data);
-    //   shortMessage(context as BuildContext, 'statement send', 2);
-    // }
+    if (selectedList.length > 0) {
+      var data = {
+        "userUid": uid,
+        "type": 'calendars',
+        "value": selectedList,
+        "status": 'new',
+        "createdDt": date,
+        "updatedDt": date,
+      };
+      usersRepository().statementsAdd(data);
+      shortMessage(context as BuildContext, 'statement send', 2);
+    }
 
   }
 

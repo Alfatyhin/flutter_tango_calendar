@@ -22,7 +22,9 @@ class _StatementsListState extends State<StatementsList> {
   List statementsNew = [];
   Map statmensUsersData = {};
   var selectedCalendars = [];
+  var calendarsMap = {};
   var statmentOpenIndex;
+  var statmentOpenId;
 
   Map addEventToCalendar = GlobalPermissions().addEventToCalendar;
   Map redactEventToCalendar = GlobalPermissions().redactEventToCalendar;
@@ -58,6 +60,17 @@ class _StatementsListState extends State<StatementsList> {
       }
 
     });
+
+    CalendarRepository().getLocalDataJson('calendars').then((calendarsJson) {
+      if (calendarsJson != '') {
+        List calendarsData = json.decode(calendarsJson as String);
+        calendarsData.forEach((value) {
+          var calendar = Calendar.fromLocalData(value);
+          calendarsMap[calendar.id] = calendar;
+        });
+      }
+    });
+
   }
 
   int _selectedIndex = 0;
@@ -73,33 +86,23 @@ class _StatementsListState extends State<StatementsList> {
   void _userStaitmensOpen(UserData data, statement) {
     userRole = data.role;
 
+    print(statement);
 
-    if (statement['type'] == 'calendars' && selectedCalendars.length == 0) {
-      CalendarRepository().getLocalDataJson('calendars').then((calendarsJson) {
+    if (statement['type'] == 'calendars') {
 
-        if (calendarsJson != '') {
-
-          List calendarsData = json.decode(calendarsJson as String);
-
-          calendarsData.forEach((value) {
-            var calendar = Calendar.fromLocalData(value);
-
-            if (statement['value'].contains(calendar.id)) {
-              calendar.enable = true;
-              selectedCalendars.add(calendar);
-            }
-
-            setState(() {
-            });
-
-            Navigator.pop(context);
-            _userStaitmensOpen(data, statement);
-          });
-
-        }
-      });
+      if (statmentOpenId != statement['id']) {
+        selectedCalendars = [];
+        statement['value'].forEach((value) {
+          if (calendarsMap.containsKey(value)) {
+            Calendar calendar = calendarsMap[value];
+            calendar.enable = true;
+            selectedCalendars.add(calendar);
+          }
+        });
+      }
 
 
+      statmentOpenId = statement['id'];
     }
 
 
@@ -196,8 +199,6 @@ class _StatementsListState extends State<StatementsList> {
 
   Widget _calendarsAdd(userData, statement) {
 
-    var selectedList = selectedCalendars;
-
     return ListView(
       shrinkWrap: true,
       children: [
@@ -216,7 +217,7 @@ class _StatementsListState extends State<StatementsList> {
               textDirection: TextDirection.ltr,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("${selectedCalendars[index].name} - ${selectedCalendars[index].typeEvents}",
+                Text("${selectedCalendars[index].name}",
                   style: TextStyle(
                       fontSize: 15
                   ),),
@@ -224,7 +225,6 @@ class _StatementsListState extends State<StatementsList> {
                     value: selectedCalendars[index].enable,
                     onChanged: (bool? newValue) {
 
-                      selectedList[index].enable = newValue!;
                       selectedCalendars[index].enable = newValue!;
                       setState(() {
                       });
