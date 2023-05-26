@@ -86,6 +86,31 @@ class usersRepository {
     db.collection('statements').doc(key).set(applicateData);
   }
 
+  Future addFbEventImportSettings(Map<String, dynamic> applicateData) async {
+    var key = '${applicateData['calId']}-${applicateData['eventId']}';
+
+    db.collection('fbEventImportSettings').doc(key).set(applicateData);
+  }
+
+  Future<Map> getFbEventImportSettingsByCalId(calId) async {
+    Map importSettings = {};
+    return db.collection('fbEventImportSettings')
+        .where('calId', isEqualTo: calId)
+        .get()
+        .then(
+          (querySnapshot) {
+        for (var docSnapshot in querySnapshot.docs) {
+          var eventId = docSnapshot['eventId'];
+
+          importSettings[eventId] = docSnapshot.data();
+        }
+
+        return importSettings;
+      },
+      onError: (e) => print("Error updating document $e"),
+    );
+  }
+
 
 
   Future<List> getNewStatements() async {

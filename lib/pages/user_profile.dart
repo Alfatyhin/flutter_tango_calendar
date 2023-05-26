@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -26,14 +27,13 @@ class UserProfile extends StatefulWidget {
 class _UserProfileState extends State<UserProfile> {
 
   TextEditingController fbProfileController = TextEditingController();
+  TextEditingController fbOrgNameController = TextEditingController();
   var userUid;
   var userData;
-  var CalendarPermEventAdd = GlobalPermissions().addEventToCalendar;
-  var CalendarPermEventRedact = GlobalPermissions().redactEventToCalendar;
-  var CalendarPermEventDelete = GlobalPermissions().deleteEventToCalendar;
   List selectedCalendars = [];
   var CalendarStatmentRules = EventTypes().CalendarStatmentRules;
   Map userCalendarsPermissions = {};
+  var permissionsGet = false;
 
   int _selectedIndex = 0;
 
@@ -209,6 +209,10 @@ class _UserProfileState extends State<UserProfile> {
                     fontSize: 20
                 ),),),
 
+
+              const SizedBox(height: 20),
+
+
               _userLoleChange(),
 
 
@@ -306,11 +310,12 @@ class _UserProfileState extends State<UserProfile> {
 
   Widget _calendarsAdd() {
 
-    if (userCalendarsPermissions.length == 0) {
+    if (permissionsGet == false) {
       CalendarRepository().getUserCalendarsPermissions(userData.uid).then((value) {
         userCalendarsPermissions = value;
+        permissionsGet = true;
+        Navigator.pop(context);
         _calendarsStatmentOpen();
-
         print(selectedCalendars);
         print('get permissions user calendars finish');
       });
@@ -351,6 +356,7 @@ class _UserProfileState extends State<UserProfile> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("${selectedCalendars[index].name}",
                         style: TextStyle(
@@ -504,6 +510,7 @@ class _UserProfileState extends State<UserProfile> {
     });
 
   }
+
 
   void _onItemTapped(int index) async {
     switch (index) {

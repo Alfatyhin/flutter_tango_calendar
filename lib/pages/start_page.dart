@@ -31,16 +31,10 @@ class _StartPageState extends State<StartPage> {
 
   var userUid = '';
   var userRole = '';
-  var CalendarPermEventRedact = GlobalPermissions().redactEventToCalendar;
-  var CalendarPermEventDelete = GlobalPermissions().deleteEventToCalendar;
-  Map selectedCalendars = {};
-  Map userCalendarsPermissions = {};
   var key = DateTime.now();
   var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'start page');
-  var kEvents;
   int _selectedIndex = 0;
   int _selectedIndexEventOpen = 0;
-  late Event openEvent;
   int statmensCount = 0;
 
 
@@ -115,7 +109,6 @@ class _StartPageState extends State<StartPage> {
 
       CalendarRepository().getLocalDataJson('calendars').then((calendarsJson) {
 
-        var selectedlist = {};
         var selectedData = [];
         if (selectedCalendarsJson != '') {
           selectedData = json.decode(selectedCalendarsJson as String);
@@ -215,7 +208,31 @@ class _StartPageState extends State<StartPage> {
                     ),),),
 
 
-                  if (userRole == 'su_admin')
+                  if (autshUserData.role == 'su_admin'
+                      || autshUserData.role == 'admin'
+                      || autshUserData.role == 'organizer')
+
+                    Container(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+
+                          const SizedBox(height: 20),
+                          ElevatedButton(onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamedAndRemoveUntil(context, '/create_event', (route) => false);
+                          }, child: Text('create event',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),),),
+                        ],
+                      ),
+                    ),
+
+
+
+
+                  if (autshUserData.role == 'su_admin')
                     Container(
                       child: ListView(
                         shrinkWrap: true,
@@ -267,12 +284,9 @@ class _StartPageState extends State<StartPage> {
     openEvent = event;
 
     print(event.calendarId);
-    if((userCalendarsPermissions.containsKey(key)
-        && userCalendarsPermissions[openEvent.calendarId]['delete'] > 0
-        && CalendarPermEventDelete[autshUserData.role] > 1)
-        || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid) {
-      print('delete true');
-    }
+    print(event.eventId);
+    print(selectedCalendars[event.calendarId]?.gcalendarId);
+
 
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
@@ -327,15 +341,23 @@ class _StartPageState extends State<StartPage> {
             bottomNavigationBar: BottomNavigationBar(
               items:  <BottomNavigationBarItem>[
 
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.upload_outlined),
-                  label: 'export',
-                ),
+
+                if ((autshUserData.role == 'su_admin' || autshUserData.role == 'admin'))
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.settings),
+                    label: 'import',
+                  )
+                else
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.settings, color: Colors.grey[300],),
+                    label: 'import',
+                  ),
 
                 if((userCalendarsPermissions.containsKey(key)
                     && userCalendarsPermissions[event.calendarId]['delete'] > 0
                     && CalendarPermEventDelete[autshUserData.role] > 1)
-                    || selectedCalendars[event.calendarId].creator == autshUserData.uid)
+                    || selectedCalendars[event.calendarId].creator == autshUserData.uid
+                    || CalendarPermEventDelete[autshUserData.role] > 1)
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.delete, color: Colors.green,),
@@ -360,7 +382,8 @@ class _StartPageState extends State<StartPage> {
                 if((userCalendarsPermissions.containsKey(key)
                     && userCalendarsPermissions[event.calendarId]['redact'] > 0
                     && CalendarPermEventRedact[autshUserData.role] > 1)
-                    || selectedCalendars[event.calendarId].creator == autshUserData.uid)
+                    || selectedCalendars[event.calendarId].creator == autshUserData.uid
+                    || CalendarPermEventDelete[autshUserData.role] > 1)
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.green,),
@@ -578,7 +601,21 @@ class _StartPageState extends State<StartPage> {
                             ),
                           ],
                         ),
-                        subtitle: Text('${value[index].locationString()}'),
+                        subtitle: Row(
+                          children: [
+                            Expanded(
+                              child:
+                              Text('${value[index].locationString()}'),
+                            ),
+
+                            Text("${selectedCalendars[value[index].calendarId].name}",
+                              style: TextStyle(
+                                color: Colors.blueAccent,
+                                fontWeight: FontWeight.w600
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     );
                   },
@@ -655,15 +692,19 @@ class _StartPageState extends State<StartPage> {
   void _onEventOpenItemTapped(int index) async {
     switch (index) {
       case 0:
-
+        if ((autshUserData.role == 'su_admin' || autshUserData.role == 'admin')) {
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, '/event_settings', (route) => false);
+        }
         break;
       case 1:
 
         if((userCalendarsPermissions.containsKey(key)
             && userCalendarsPermissions[openEvent.calendarId]['delete'] > 0
             && CalendarPermEventDelete[autshUserData.role] > 1)
-            || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid) {
-          print('delete true');
+            || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid
+            || CalendarPermEventDelete[autshUserData.role] > 1) {
+          print('delete permission true');
 
           ApiSigned().then((signedData) {
 

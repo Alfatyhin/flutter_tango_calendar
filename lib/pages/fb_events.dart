@@ -4,11 +4,14 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tango_calendar/AppTools.dart';
+import 'package:tango_calendar/models/Event.dart';
 import 'package:tango_calendar/models/FbEvent.dart';
 import 'package:tango_calendar/models/Calendar.dart';
+import 'package:tango_calendar/models/UserData.dart';
 import 'package:tango_calendar/repositories/calendar/fb_events_repository.dart';
 
 import 'package:tango_calendar/icalendar_parser.dart';
+import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 import '../repositories/calendar/calendar_repository.dart';
 import '../utils.dart';
 
@@ -26,10 +29,12 @@ class _FbEventsState extends State<FbEvents> {
   String eventsUrl = '';
   int _selectedIndex = 0;
   bool _isLoading = false;
-  List selectedCalendars = [];
+  List<Calendar> selectedCalendars = [];
   Map eventImportMap = {};
   List calendarImportList = [];
   late FbEvent activeEvent;
+  Map FbImportSettings = {};
+  Map calendarsImportData = {};
 
   var icon = Icon(Icons.add);
 
@@ -75,15 +80,15 @@ class _FbEventsState extends State<FbEvents> {
             iCalendar.data.forEach((element) {
 
 
-              var dateTimeStart = DateTime.parse(element['dtstart'].dt).add(Duration(hours: 3));
+              var dateTimeStart = DateTime.parse(element['dtstart'].dt).toLocal();
               var dateStart = DateFormatDate(dateTimeStart);
               var timeStart = DateFormatTime(dateTimeStart);
 
-              var dateTimeEnd = DateTime.parse(element['dtend'].dt).add(Duration(hours: 3));
+              var dateTimeEnd = DateTime.parse(element['dtend'].dt).toLocal();
               var dateEnd = DateFormatDate(dateTimeEnd);
               var timeEnd = DateFormatTime(dateTimeEnd);
 
-              var date = DateTime.parse(element['lastModified'].dt).add(Duration(hours: 3));
+              var date = DateTime.parse(element['lastModified'].dt).toLocal();
               var modifedDate = DateFormatDate(date);
               var modifedtime = DateFormatTime(date);
 
@@ -199,6 +204,10 @@ class _FbEventsState extends State<FbEvents> {
             if (selectedData.contains(calendar.id)) {
               calendar.enable = false;
               selectedCalendars.add(calendar);
+
+              usersRepository().getFbEventImportSettingsByCalId(calendar.id).then((calImportSettings){
+                FbImportSettings[calendar.id] = calImportSettings;
+              });
             }
           });
 
@@ -215,6 +224,9 @@ class _FbEventsState extends State<FbEvents> {
 
                   calendar.enable = false;
                   selectedCalendars.add(calendar);
+                  usersRepository().getFbEventImportSettingsByCalId(calendar.id).then((calImportSettings){
+                    FbImportSettings[calendar.id] = calImportSettings;
+                  });
                 }
               });
 
@@ -276,12 +288,12 @@ class _FbEventsState extends State<FbEvents> {
                     ),
                     const SizedBox(height: 8.0),
                     Center(
-                      child:  Text("${event.organizerName}",
+                      child:  SelectableText("organizer - ${event.organizerName}",
                           textDirection: TextDirection.ltr,
                           style: TextStyle(fontSize: 20),
-                          softWrap: true
                       ),
                     ),
+                    const SizedBox(height: 20.0),
                   ],
                 ),
               )
@@ -292,6 +304,8 @@ class _FbEventsState extends State<FbEvents> {
 
   void _eventImport(FbEvent event) {
     calendarImportList = [];
+    calendarsImportData = {};
+
     if (eventImportMap.containsKey(event.eventId)) {
       List eventImportsData = eventImportMap[event.eventId];
 
@@ -299,6 +313,88 @@ class _FbEventsState extends State<FbEvents> {
         calendarImportList.add(element['eventImportSourceId']);
       });
     }
+
+    var eventDate = DateTime.parse(event.dateStart);
+
+    print(eventDate);
+    print("${event.dateStart} - ${event.dateEnd}");
+
+    if (FbImportSettings.length == 0 || FbImportSettings.length < selectedCalendars.length) {
+      selectedCalendars.forEach((calendar) async {
+
+        if (!FbImportSettings.containsKey(calendar.id)) {
+
+          print('get import settings - ${calendar.id}');
+          usersRepository().getFbEventImportSettingsByCalId(calendar.id).then((calImportSettings){
+            FbImportSettings[calendar.id] = calImportSettings;
+
+            Navigator.pop(context);
+            _eventImport(event);
+          });
+        }
+
+
+      });
+
+      print('import prepeare ${selectedCalendars.length} / ${FbImportSettings.length}');
+
+    } else {
+
+      print('import prepeare ${selectedCalendars.length} / ${FbImportSettings.length}');
+      selectedCalendars.forEach((calendar) {
+        if (FbImportSettings.containsKey(calendar.id)
+            && FbImportSettings[calendar.id].length > 0) {
+          List dayEvents = kEvents[eventDate];
+
+          dayEvents.forEach((value) {
+            Event dayEvent = value;
+            if (dayEvent.calendarId == calendar.id
+                && FbImportSettings[calendar.id].containsKey(dayEvent.eventId)
+                && event.dateStart == event.dateEnd
+                && FbImportSettings[calendar.id][dayEvent.eventId]['fbOrgName'] == event.organizerName) {
+
+              print("------------");
+              print(dayEvent.eventId);
+              print(FbImportSettings[calendar.id][dayEvent.eventId]);
+              print(FbImportSettings[calendar.id][dayEvent.eventId]['importRules']);
+              print("------------");
+
+              calendarsImportData[calendar.id] = {
+                'evName': dayEvent.name,
+                'eventId': dayEvent.eventId,
+                'userUid': FbImportSettings[calendar.id][dayEvent.eventId]['userUid'],
+                'importEventData': {}
+              };
+
+              if (FbImportSettings[calendar.id][dayEvent.eventId]['importRules']['name'] != true) {
+                calendarsImportData[calendar.id]['importEventData']['name'] = dayEvent.name;
+              }
+
+              if (FbImportSettings[calendar.id][dayEvent.eventId]['importRules']['location'] != true) {
+                calendarsImportData[calendar.id]['importEventData']['location'] = dayEvent.locationString();
+              }
+
+              if (FbImportSettings[calendar.id][dayEvent.eventId]['importRules']['description'] != true) {
+                calendarsImportData[calendar.id]['importEventData']['description'] = dayEvent.description;
+              }
+
+              if (FbImportSettings[calendar.id][dayEvent.eventId]['userUid'] != autshUserData.uid) {
+                print('get user org');
+                usersRepository().getUserDataByUid(FbImportSettings[calendar.id][dayEvent.eventId]['userUid']).then((orgUserData) {
+                  calendarsImportData[calendar.id]['importEventData']['organizer'] = {
+                    'name': orgUserData.name,
+                    'email': orgUserData.email
+                  };
+                });
+              }
+            }
+          });
+
+        }
+      });
+    }
+
+
 
 
     Navigator.of(context).push(
@@ -329,27 +425,57 @@ class _FbEventsState extends State<FbEvents> {
                         textDirection: TextDirection.ltr,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                            Text(selectedCalendars[index].name,
-                              style: TextStyle(
-                                  fontSize: 15
-                              ),),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
 
-                          if (calendarImportList.contains(selectedCalendars[index].id))
-                            Container(
-                                margin: const EdgeInsets.all(10.0),
-                                child: Icon(Icons.verified, color: Colors.green,)
-                            )
-                          else
-                            Checkbox(
-                                value: selectedCalendars[index].enable,
-                                onChanged: (bool? newValue) {
-                                   selectedCalendars[index].enable = newValue!;
-                                  setState(() {
-                                  });
+                              Text("${selectedCalendars[index].name}",
+                                style: TextStyle(
+                                    fontSize: 15
+                                ),),
 
-                                  Navigator.pop(context);
-                                  _eventImport(event);
-                                })
+                              if (calendarsImportData.containsKey(selectedCalendars[index].id))
+                                Text("to ${calendarsImportData[selectedCalendars[index].id]['evName']}",
+                                  style: TextStyle(
+                                      fontSize: 12
+                                  ),),
+
+                              Text(selectedCalendars[index].typeEvents,
+                                style: TextStyle(
+                                    fontSize: 10,
+                                ),),
+                            ],
+                          ),
+
+                          Column(
+                            children: [
+                              if (calendarImportList.contains(selectedCalendars[index].id))
+                                Container(
+                                    margin: const EdgeInsets.all(10.0),
+                                    child: Icon(Icons.verified, color: Colors.green,)
+                                )
+                              else
+                                if((selectedCalendars[index].typeEvents != 'festivals'
+                                    && event.dateStart == event.dateEnd)
+                                    ||( event.dateStart != event.dateEnd ))
+                                  Checkbox(
+                                      value: selectedCalendars[index].enable,
+                                      onChanged: (bool? newValue) {
+                                        selectedCalendars[index].enable = newValue!;
+                                        setState(() {
+                                        });
+
+                                        Navigator.pop(context);
+                                        _eventImport(event);
+                                      })
+                                else
+                                  Container(
+                                      margin: const EdgeInsets.all(10.0),
+                                      child: Icon(Icons.not_interested, color: Colors.red,)
+                                  ),
+                            ],
+                          ),
+
                         ],
                       );
                     },
@@ -396,17 +522,22 @@ class _FbEventsState extends State<FbEvents> {
           'tokenId': signedData['tokenId'],
           'signed': '${signedData['signed']}',
           'calendars': selected,
-          'event': fbEvent.importToApi()
+          'event': fbEvent.importToApi(),
+          'calendarsImportData': calendarsImportData
         };
+
+
+        print(requestTokenData['calendarsImportData']);
+
+        // CalendarRepository().testRequest(requestTokenData);
 
         Navigator.pop(context);
 
         CalendarRepository().apiAddEvent(requestTokenData).then((request) {
 
           if (request.containsKey('errorMessage')) {
-            shortMessage(context, "message - ${request['errorMessage']}", 2);
             debugPrint("error message - ${request['errorMessage']}");
-            debugPrint("timeSighed - ${request['timeSighed']}");
+            shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
           } else {
             debugPrint("response sugess");
             request['data'].forEach((item) {
@@ -427,10 +558,9 @@ class _FbEventsState extends State<FbEvents> {
                 calendarImportList.add(item['calId']);
                 setState(() {});
               });
+
             });
           }
-
-
         });
 
       });

@@ -85,7 +85,7 @@ class FbEvent extends Event {
       "start": start,
       "end": end,
       "source": {
-        'title': 'Fb Import',
+        'title': "FbEvents - ${organizerName}",
         'url': url
       }
     };

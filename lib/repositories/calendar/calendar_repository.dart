@@ -176,9 +176,14 @@ class CalendarRepository {
     final response = await Dio().post('${apiUrl}/api/event_add', data: requestTokenData);
     Map data = {};
     var dataJson = response.data;
+    print(dataJson);
     data = json.decode(dataJson);
 
     return data;
+  }
+
+  void testRequest(requestTokenData) async {
+    final response = await Dio().post('https://webhook.site/ee8e53c6-1c9f-4334-b9dc-56a30a716e30', data: requestTokenData);
   }
 
 
