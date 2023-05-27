@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:tango_calendar/pages/add_calendar.dart';
 import 'package:tango_calendar/pages/create_event.dart';
 import 'package:tango_calendar/pages/event_import_settings.dart';
 import 'package:tango_calendar/pages/user_profile.dart';
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
         '/statements': (context)  => const StatementsList(),
         '/event_settings': (context)  => const EventSettings(),
         '/create_event': (context)  => const CreateEvent(),
+        '/add_calendar': (context)  => const AddCalendar(),
       },
     );
   }

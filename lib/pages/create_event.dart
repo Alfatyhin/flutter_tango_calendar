@@ -209,8 +209,6 @@ class _CreateEventState extends State<CreateEvent> {
 
   Future recurenceDialog(){
 
-    print(iterateRules);
-
 
     return  showDialog(
       context: context,

@@ -6,7 +6,6 @@ import 'package:tango_calendar/repositories/calendar/calendar_repository.dart';
 import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 import 'package:crypto/crypto.dart';
 
-import 'models/Calendar.dart';
 import 'models/Event.dart';
 import 'models/UserData.dart';
 
@@ -23,38 +22,8 @@ Map userCalendarsPermissions = {};
 Map selectedCalendars = {};
 
 class EventTypes {
-  List eventTypes = ['festyval', 'milonga', 'practice', 'lessen sсhool', 'master class'];
-  Map calendarCreatedRules = {
-    'user': {},
-    'volunteer': {},
-    'organizer': {
-      'festival_shedule': 1,
-      'festivals world': 0,
-      'master_classes': 0,
-      'festivals': 0,
-      'milongas': 0,
-      'practices': 0,
-      'tango_school': 1,
-    },
-    'admin': {
-      'festival_shedule': 1,
-      'festivals world': 0,
-      'master_classes': 1,
-      'festivals': 1,
-      'milongas': 1,
-      'practices': 1,
-      'tango_school': 1,
-    },
-    'su_admin': {
-      'festival_shedule': 1,
-      'festivals world': 0,
-      'master_classes': 1,
-      'festivals': 1,
-      'milongas': 1,
-      'practices': 1,
-      'tango_school': 1,
-    },
-  };
+  List eventTypes = ['festyval', 'milonga', 'practice', 'lessons sсhool', 'master class'];
+
 
   // 0 - доступно  для создателя календаря
   // 1 - может подать заявку
@@ -108,6 +77,7 @@ class EventTypes {
 }
 
 class CalendarTypes {
+
   List calendarTypes = [
     'festival_shedule',
     'festivals world',
@@ -117,6 +87,38 @@ class CalendarTypes {
     'practices',
     'tango_school',
   ];
+
+  Map<String, dynamic> calendarCreatedRules = {
+    'user': {},
+    'volunteer': {},
+    'organizer': {
+      'festival_shedule': 1,
+      'festivals world': 0,
+      'master_classes': 0,
+      'festivals': 0,
+      'milongas': 0,
+      'practices': 0,
+      'tango_school': 1,
+    },
+    'admin': {
+      'festival_shedule': 1,
+      'festivals world': 0,
+      'master_classes': 1,
+      'festivals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_school': 1,
+    },
+    'su_admin': {
+      'festival_shedule': 1,
+      'festivals world': 0,
+      'master_classes': 1,
+      'festivals': 1,
+      'milongas': 1,
+      'practices': 1,
+      'tango_school': 1,
+    },
+  };
 }
 
 class GlobalPermissions {

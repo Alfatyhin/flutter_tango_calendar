@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -208,28 +209,6 @@ class _StartPageState extends State<StartPage> {
                     ),),),
 
 
-                  if (autshUserData.role == 'su_admin'
-                      || autshUserData.role == 'admin'
-                      || autshUserData.role == 'organizer')
-
-                    Container(
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-
-                          const SizedBox(height: 20),
-                          ElevatedButton(onPressed: () {
-                            Navigator.pop(context);
-                            Navigator.pushNamedAndRemoveUntil(context, '/create_event', (route) => false);
-                          }, child: Text('create event',
-                            style: TextStyle(
-                                fontSize: 20
-                            ),),),
-                        ],
-                      ),
-                    ),
-
-
 
 
                   if (autshUserData.role == 'su_admin')
@@ -257,6 +236,50 @@ class _StartPageState extends State<StartPage> {
                                 fontSize: 20
                             ),),),
 
+                        ],
+                      ),
+                    ),
+
+
+                  if (autshUserData.role == 'su_admin'
+                      || autshUserData.role == 'admin'
+                      || autshUserData.role == 'organizer')
+
+                    Container(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+
+                          const SizedBox(height: 20),
+                          ElevatedButton(onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamedAndRemoveUntil(context, '/add_calendar', (route) => false);
+                          }, child: Text('add calendar',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),),),
+                        ],
+                      ),
+                    ),
+
+
+                  if (autshUserData.role == 'su_admin'
+                      || autshUserData.role == 'admin'
+                      || autshUserData.role == 'organizer')
+
+                    Container(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+
+                          const SizedBox(height: 20),
+                          ElevatedButton(onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamedAndRemoveUntil(context, '/create_event', (route) => false);
+                          }, child: Text('create event',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),),),
                         ],
                       ),
                     ),
@@ -577,7 +600,8 @@ class _StartPageState extends State<StartPage> {
                         vertical: 4.0,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(),
+                        border: Border.all(
+                        ),
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: ListTile(
@@ -608,6 +632,7 @@ class _StartPageState extends State<StartPage> {
                               Text('${value[index].locationString()}'),
                             ),
 
+                            if (selectedCalendars.containsKey(value[index].calendarId))
                             Text("${selectedCalendars[value[index].calendarId].name}",
                               style: TextStyle(
                                 color: Colors.blueAccent,
