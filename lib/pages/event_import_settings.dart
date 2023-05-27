@@ -186,15 +186,16 @@ class _EventSettingsState extends State<EventSettings> {
 
   Future<void> _addFbOrgName() async {
 
+    var evenIdData = openEvent.eventId.split('_');
+
     var applicateData = {
-      'eventId': openEvent.eventId,
+      'eventId': evenIdData[0],
       'calId': openEvent.calendarId,
       'fbOrgName': fbOrgNameController.text,
       'userUid': autshUserData.uid,
       'importRules': importRules,
       'autoImport': false
     };
-
 
     await usersRepository().addFbEventImportSettings(applicateData)
         .then((value) {
