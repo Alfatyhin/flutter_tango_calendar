@@ -815,7 +815,7 @@ class _StartPageState extends State<StartPage> {
             CalendarRepository().apiDeleteEvent(requestTokenData).then((value) async {
 
               CalendarRepository().importDeleteEvent(openEvent.calendarId, openEvent.eventId);
-              CalendarRepository().getEventsList().then((value) {
+              CalendarRepository().getEventsListForMonth(_focusedDay).then((value) {
                 CalEvents = value;
                 setState(() {
                   kEvents = value;

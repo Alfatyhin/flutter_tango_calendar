@@ -345,61 +345,65 @@ class _FbEventsState extends State<FbEvents> {
       selectedCalendars.forEach((calendar) {
         if (FbImportSettings.containsKey(calendar.id)
             && FbImportSettings[calendar.id].length > 0) {
-          List dayEvents = kEvents[eventDate];
 
-          print(calendar.name);
+          if (kEvents.containsKey(eventDate)) {
+            List dayEvents = kEvents[eventDate];
 
-          dayEvents.forEach((value) {
-            Event dayEvent = value;
-            var checkEventId = dayEvent.eventId;
+            print(calendar.name);
 
-            var eventIdData = dayEvent.eventId.split('_');
-            if (eventIdData.length > 0) {
-              checkEventId = eventIdData[0];
-            }
+            dayEvents.forEach((value) {
+              Event dayEvent = value;
+              var checkEventId = dayEvent.eventId;
 
-
-            if (dayEvent.calendarId == calendar.id
-                && FbImportSettings[calendar.id].containsKey(checkEventId)
-                && event.dateStart == event.dateEnd
-                && FbImportSettings[calendar.id][checkEventId]['fbOrgName'] == event.organizerName) {
-
-              // print("------------");
-              // print(dayEvent.eventId);
-              // print(FbImportSettings[calendar.id][checkEventId]);
-              // print(FbImportSettings[calendar.id][checkEventId]['importRules']);
-              // print("------------");
-
-              calendarsImportData[calendar.id] = {
-                'evName': dayEvent.name,
-                'eventId': dayEvent.eventId,
-                'userUid': FbImportSettings[calendar.id][checkEventId]['userUid'],
-                'importEventData': {}
-              };
-
-              if (FbImportSettings[calendar.id][checkEventId]['importRules']['name'] != true) {
-                calendarsImportData[calendar.id]['importEventData']['name'] = dayEvent.name;
+              var eventIdData = dayEvent.eventId.split('_');
+              if (eventIdData.length > 0) {
+                checkEventId = eventIdData[0];
               }
 
-              if (FbImportSettings[calendar.id][checkEventId]['importRules']['location'] != true) {
-                calendarsImportData[calendar.id]['importEventData']['location'] = dayEvent.locationString();
-              }
 
-              if (FbImportSettings[calendar.id][checkEventId]['importRules']['description'] != true) {
-                calendarsImportData[calendar.id]['importEventData']['description'] = dayEvent.description;
-              }
+              if (dayEvent.calendarId == calendar.id
+                  && FbImportSettings[calendar.id].containsKey(checkEventId)
+                  && event.dateStart == event.dateEnd
+                  && FbImportSettings[calendar.id][checkEventId]['fbOrgName'] == event.organizerName) {
 
-              if (FbImportSettings[calendar.id][checkEventId]['userUid'] != autshUserData.uid) {
-                print('get user org');
-                usersRepository().getUserDataByUid(FbImportSettings[calendar.id][checkEventId]['userUid']).then((orgUserData) {
-                  calendarsImportData[calendar.id]['importEventData']['organizer'] = {
-                    'name': orgUserData.name,
-                    'email': orgUserData.email
-                  };
-                });
+                // print("------------");
+                // print(dayEvent.eventId);
+                // print(FbImportSettings[calendar.id][checkEventId]);
+                // print(FbImportSettings[calendar.id][checkEventId]['importRules']);
+                // print("------------");
+
+                calendarsImportData[calendar.id] = {
+                  'evName': dayEvent.name,
+                  'eventId': dayEvent.eventId,
+                  'userUid': FbImportSettings[calendar.id][checkEventId]['userUid'],
+                  'importEventData': {}
+                };
+
+                if (FbImportSettings[calendar.id][checkEventId]['importRules']['name'] != true) {
+                  calendarsImportData[calendar.id]['importEventData']['name'] = dayEvent.name;
+                }
+
+                if (FbImportSettings[calendar.id][checkEventId]['importRules']['location'] != true) {
+                  calendarsImportData[calendar.id]['importEventData']['location'] = dayEvent.locationString();
+                }
+
+                if (FbImportSettings[calendar.id][checkEventId]['importRules']['description'] != true) {
+                  calendarsImportData[calendar.id]['importEventData']['description'] = dayEvent.description;
+                }
+
+                if (FbImportSettings[calendar.id][checkEventId]['userUid'] != autshUserData.uid) {
+                  print('get user org');
+                  usersRepository().getUserDataByUid(FbImportSettings[calendar.id][checkEventId]['userUid']).then((orgUserData) {
+                    calendarsImportData[calendar.id]['importEventData']['organizer'] = {
+                      'name': orgUserData.name,
+                      'email': orgUserData.email
+                    };
+                  });
+                }
               }
-            }
-          });
+            });
+
+          }
 
         }
       });
@@ -716,7 +720,6 @@ class _FbEventsState extends State<FbEvents> {
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         break;
       case 1:
-        FbEventsRepository().clearLocalDataJson('eventsUrl');
         FbEventsRepository().clearLocalDataJson('fbEvents');
         setState(() {
           Events = [];

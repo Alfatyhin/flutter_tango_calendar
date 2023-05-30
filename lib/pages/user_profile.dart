@@ -4,11 +4,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:tango_calendar/repositories/localRepository.dart';
 
 import '../models/Calendar.dart';
 import '../models/UserData.dart';
 import '../repositories/calendar/calendar_repository.dart';
+import '../repositories/localRepository.dart';
 import '../repositories/users/users_reposirory.dart';
 import '../AppTools.dart';
 
@@ -28,6 +28,7 @@ class _UserProfileState extends State<UserProfile> {
 
   TextEditingController fbProfileController = TextEditingController();
   TextEditingController fbOrgNameController = TextEditingController();
+  TextEditingController fbUrlController = TextEditingController();
   var userUid;
   var userData;
   List selectedCalendars = [];
@@ -37,7 +38,9 @@ class _UserProfileState extends State<UserProfile> {
 
   int _selectedIndex = 0;
 
-  void setUserData(userUid) {
+  Future<void> setUserData(userUid) async {
+
+    fbUrlController.text = (await localRepository().getLocalDataString('eventsUrl'))!;
 
     debugPrint("-------setUserData-------");
 
@@ -205,6 +208,34 @@ class _UserProfileState extends State<UserProfile> {
               ElevatedButton(onPressed: () {
                 _changeFbUrl();
               }, child: Text('change profile fb url',
+                style: TextStyle(
+                    fontSize: 20
+                ),),),
+
+
+              const SizedBox(height: 10.0),
+              TextFormField(
+                controller: fbUrlController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter Facebook events URL',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter some text';
+                  }
+                  return null;
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(onPressed: () {
+                localRepository().setLocalDataString('eventsUrl', fbUrlController.text).then((value) {
+
+                  shortMessage(context, 'fb events url changed', 2);
+                });
+              }, child: Text('change events fb url',
                 style: TextStyle(
                     fontSize: 20
                 ),),),
