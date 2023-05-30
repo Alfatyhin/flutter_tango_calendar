@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:tango_calendar/AppTools.dart';
 import 'package:tango_calendar/models/Event.dart';
 import 'package:tango_calendar/models/FbEvent.dart';
@@ -288,9 +289,27 @@ class _FbEventsState extends State<FbEvents> {
                     ),
                     const SizedBox(height: 8.0),
                     Center(
+                      child:  ElevatedButton(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: event.url));
+                        },
+                        child: Text('copy url event'),
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    Center(
                       child:  SelectableText("organizer - ${event.organizerName}",
                           textDirection: TextDirection.ltr,
                           style: TextStyle(fontSize: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 20.0),
+                    Center(
+                      child:  ElevatedButton(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: event.organizerName));
+                        },
+                        child: Text('copy organizer Name'),
                       ),
                     ),
                     const SizedBox(height: 20.0),
@@ -418,6 +437,24 @@ class _FbEventsState extends State<FbEvents> {
               body: ListView(
                 children: [
 
+                  Center(
+                      child: SelectableText("${event.name}",
+                        textDirection: TextDirection.ltr,
+                        style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w600
+                        ),
+                      )
+                  ),
+                  const SizedBox(height: 8.0),
+                  Center(
+                    child:  SelectableText("${event.timePeriod()}",
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+
                   if (selectedCalendars.length > 0)
                   Row (
                     children: [
@@ -496,6 +533,17 @@ class _FbEventsState extends State<FbEvents> {
                   ),
 
                   if (selectedCalendars.length > 0)
+
+                    Container(
+                        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                        child:    Divider(
+                          height: 10,
+                          color: Colors.blueAccent,
+                          thickness: 3,
+                        ),
+                    ),
+
+                  if (selectedCalendars.length > 0)
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
                     child:   ElevatedButton(
@@ -508,7 +556,42 @@ class _FbEventsState extends State<FbEvents> {
                         ],
                       ),
                     ),
-                  )
+                  ),
+
+
+                  const SizedBox(height: 50.0),
+                  Divider(
+                    height: 10,
+                    color: Colors.blueAccent,
+                    thickness: 3,
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                    child: SelectableText("organizer - ${event.organizerName}",
+                      textDirection: TextDirection.ltr,
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                    child:    Row (
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: event.url));
+                          },
+                          child: Text('copy url event'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: event.organizerName));
+                          },
+                          child: Text('copy organizer Name'),
+                        ),
+                      ],
+                    ),
+                  ),
 
                 ],
               ),
