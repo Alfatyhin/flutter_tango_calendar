@@ -24,6 +24,17 @@ class CalendarRepository {
 
   }
 
+
+  Future<Map> addGCalendarToApi(requestTokenData) async {
+    final response = await Dio().post('${apiUrl}/api/add_calendar', data: requestTokenData);
+
+    var dataJson = response.data;
+    print(dataJson);
+    Map data = json.decode(dataJson);
+
+    return data;
+  }
+
   Future<String> addImportEventData(data) async {
 
     return db.collection('calendarsImports').add(data).then((documentSnapshot) {
@@ -86,6 +97,73 @@ class CalendarRepository {
         var calendarId = selectedCalendars[x];
         final response = await Dio().get('${apiUrl}/api/get/events/$calendarId');
 
+        if (response.statusCode == 200) {
+          dataJson = response.data;
+
+          if (dataJson is String) {
+            var data = json.decode(dataJson);
+            if (data is Map) {
+              data.forEach((key, value) {
+                for(var i = 0; i < value.length; i++) {
+                  value[i]['calId'] = calendarId;
+                }
+
+                if (dataSaver.containsKey(key)) {
+                  List oldData = dataSaver[key];
+                  oldData.addAll(value);
+                  dataSaver[key] = oldData;
+                } else {
+                  dataSaver[key] = value;
+                }
+              });
+
+            }
+          }
+        }
+      }
+      kEventSource = getKeventToDataMap(dataSaver);
+
+      /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+      res = LinkedHashMap<DateTime, List<Event>>(
+        equals: isSameDay,
+        hashCode: getHashCode,
+      )..addAll(kEventSource);
+
+      dataJson = json.encode(dataSaver);
+      setLocalDataJson('eventsJson', dataJson);
+
+    }
+
+    return res;
+  }
+
+  Future<Map> getEventsListForMonth(date) async {
+
+    var dateFormat = DateFormatDate(date);
+    Map<dynamic, dynamic> res = {};
+    var dataJson;
+    Map dataSaver = {};
+
+    List selectedCalendars = [];
+    Map<DateTime, List<Event>> kEventSource = {};
+    var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
+
+    if (selectedCalendarsJson != '') {
+      selectedCalendars = json.decode(selectedCalendarsJson as String);
+    }
+
+    if (selectedCalendars.length > 0) {
+
+      var oldJson = await CalendarRepository().getLocalDataJson('eventsJson');
+
+      if (oldJson != '') {
+        dataSaver = json.decode(oldJson as String);
+      }
+
+
+      for(var x = 0; x < selectedCalendars.length; x++) {
+        var calendarId = selectedCalendars[x];
+        var response = await Dio().get('${apiUrl}/api/get/events/$calendarId?month=$dateFormat');
         if (response.statusCode == 200) {
           dataJson = response.data;
 
@@ -213,7 +291,7 @@ class CalendarRepository {
 
 
       },
-    onError: (e) => print("Error updating document $e"),
+      onError: (e) => print("Error updating document $e"),
     );
   }
 
@@ -261,8 +339,8 @@ class CalendarRepository {
     localRepository().setLocalDataString(key, data);
   }
 
-  Future<String?> getLocalDataJson(key) async {
-    var json = await localRepository().getLocalDataString(key);
+  Future<String?> getLocalDataJson(key)  {
+    var json = localRepository().getLocalDataString(key);
     return json;
   }
 

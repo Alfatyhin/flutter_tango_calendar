@@ -171,7 +171,7 @@ class _RegisterUserState extends State<RegisterUser> {
           await user.updateDisplayName(nameController.text);
           var userData = UserData(
             uid: user.uid,
-            name: user.displayName,
+            name: nameController.text,
             email: user.email,
             role: 'user',
             phone: '',

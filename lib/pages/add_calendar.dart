@@ -17,17 +17,23 @@ class AddCalendar extends StatefulWidget {
 
 class _AddCalendarState extends State<AddCalendar> {
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  TextEditingController calendarNameController = TextEditingController();
+  TextEditingController calendarDescriptionController = TextEditingController();
+
   Map countriesCalendars = {};
   Map cityesCalendars = {};
 
   var countryValue;
+  var countryName = '';
   var stateValue;
-  var cityValue;
+  var cityValue = '';
 
   List calendarTypes = CalendarTypes().calendarTypes;
   Map calendarsCreatedrules = CalendarTypes().calendarCreatedRules;
 
-  var calendarName;
+  var selectCalendarDisplayName;
   var selectCalendarType;
 
   int _selectedIndex = 0;
@@ -50,28 +56,25 @@ class _AddCalendarState extends State<AddCalendar> {
       calendarsData.forEach((value) {
         var calendar = Calendar.fromLocalData(value);
 
-        if (countriesCalendars.containsKey(calendar.country) && calendar.city == ''
-            && calendar.country != 'All') {
-
-
-          Map item = countriesCalendars[calendar.country];
-          item[calendar.typeEvents] = calendar;
-          countriesCalendars[calendar.country].add(item);
-        } else {
-          if (calendar.country != 'All') {
-            countriesCalendars[calendar.country] = [];
-            Map item = countriesCalendars[calendar.country];
-            item[calendar.typeEvents] = calendar;
-            countriesCalendars[calendar.country].add(item);
+        if (calendar.country != 'All' && calendar.city == '') {
+          if (countriesCalendars.containsKey(calendar.country) ) {
+            countriesCalendars[calendar.country].add(calendar.typeEvents);
+          } else {
+              countriesCalendars[calendar.country] = [];
+              countriesCalendars[calendar.country].add(calendar.typeEvents);
           }
         }
 
-        if (cityesCalendars.containsKey(calendar.city) && calendar.city != '') {
 
-          cityesCalendars[calendar.city][calendar.typeEvents] = calendar;
-        } else {
-          cityesCalendars[calendar.city] = {};
-          cityesCalendars[calendar.city][calendar.typeEvents] = calendar;
+        if (calendar.city != '') {
+          if (cityesCalendars.containsKey(calendar.city)) {
+
+            cityesCalendars[calendar.city].add(calendar.typeEvents);
+          } else {
+            cityesCalendars[calendar.city] = [];
+            cityesCalendars[calendar.city].add(calendar.typeEvents);
+          }
+
         }
 
 
@@ -83,10 +86,10 @@ class _AddCalendarState extends State<AddCalendar> {
 
   Future calendarTypeDialog(){
 
-    setCalendarsMap();
     List selectedList = [];
 
     print(countriesCalendars);
+    print(cityesCalendars);
 
     Map userCalendarCreateRules = calendarsCreatedrules[autshUserData.role];
 
@@ -97,16 +100,25 @@ class _AddCalendarState extends State<AddCalendar> {
        Map type = {
          'type': calType,
          'typeDisplay': calTypeName,
-         'enable': false,
-         'selected': false
+         'isset': false,
+         'enable': false
        };
+       if (selectCalendarType == calType) {
+         type['enable'] = true;
+       }
 
        if ((calType == 'festivals' || calType == 'master_classes')
            && countryValue != null) {
 
          var countryData = countryValue.split('    ');
-         print(countryData);
          type['name'] = "$calTypeName in ${countryData[1]}";
+         countryName = countryData[1];
+
+         if (countriesCalendars.containsKey(countryData[1])
+             && countriesCalendars[countryData[1]].contains(calType)) {
+           type['isset'] = true;
+         }
+
          selectedList.add(type);
 
        }
@@ -117,8 +129,13 @@ class _AddCalendarState extends State<AddCalendar> {
            || calType == 'tango_school')
            && cityValue != null) {
 
-         type['name'] = "$calTypeName"
-             " in $cityValue";
+         type['name'] = "$calTypeName in $cityValue";
+
+         if (cityesCalendars.containsKey(cityValue)
+             && cityesCalendars[cityValue].contains(calType)
+             && (calType == 'milongas' || calType == 'practices')) {
+           type['isset'] = true;
+         }
          selectedList.add(type);
 
        }
@@ -158,25 +175,39 @@ class _AddCalendarState extends State<AddCalendar> {
 
                         Column(
                           children: [
-                            Checkbox(
-                                value: selectedList[index]['enable'],
-                                onChanged: (bool? newValue) {
+                            if (selectedList[index]['isset'])
+                              Text('isset',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600
+                                ),
+                              )
+                            else
+                              Checkbox(
+                                  value: selectedList[index]['enable'],
+                                  onChanged: (bool? newValue) {
 
-                                  selectCalendarType = selectedList[index]['type'];
-                                  calendarName = selectedList[index]['name'];
-                                  int x = 0;
-                                  selectedList.forEach((value) {
-                                    selectedList[x]['enable'] = false;
-                                    x++;
-                                  });
-                                  selectedList[index]['enable'] = newValue!;
+                                    selectCalendarType = selectedList[index]['type'];
+                                    if (selectCalendarType == 'festival_shedule'
+                                        || selectCalendarType == 'tango_school') {
+                                      calendarNameController.text = '';
+                                    } else {
+                                      calendarNameController.text = selectedList[index]['name'];
+                                    }
+                                    selectCalendarDisplayName = selectedList[index]['name'];
+                                    int x = 0;
+                                    selectedList.forEach((value) {
+                                      selectedList[x]['enable'] = false;
+                                      x++;
+                                    });
+                                    selectedList[index]['enable'] = newValue!;
 
-                                  setState(() {
-                                  });
+                                    setState(() {
+                                    });
 
-                                  Navigator.of(context).pop();
+                                    Navigator.of(context).pop();
 
-                                })
+                                  })
                           ],
                         ),
 
@@ -220,6 +251,7 @@ class _AddCalendarState extends State<AddCalendar> {
       body: Container(
         padding: EdgeInsets.all(20),
         child: ListView(
+          shrinkWrap: true,
           children: [
             SelectState(
               onCountryChanged: (value) {
@@ -240,29 +272,95 @@ class _AddCalendarState extends State<AddCalendar> {
             ),
 
             const SizedBox(height: 20.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (calendarName != null)
-                  Expanded (
-                    child: Text(calendarName),
-                  )
-                else
-                  Expanded (
-                    child: Text('select type calendar'),
-                  ),
+            Form(
+              key: _formKey,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (selectCalendarDisplayName != null)
+                          Expanded (
+                            child: Text(selectCalendarDisplayName),
+                          )
+                        else
+                          Expanded (
+                            child: Text('select type calendar'),
+                          ),
 
-                ElevatedButton(
-                  onPressed: () {
-                    calendarTypeDialog();
-                  }, child: Text('select',
-                  style: TextStyle(
-                      fontSize: 20
-                  ),),),
-              ],
+                        ElevatedButton(
+                          onPressed: () {
+                            calendarTypeDialog();
+                          }, child: Text('select',
+                          style: TextStyle(
+                              fontSize: 20
+                          ),),),
+                      ],
+                    ),
+                    const SizedBox(height: 20.0),
+
+                    if (selectCalendarType == 'festival_shedule'
+                        || selectCalendarType == 'tango_school')
+                      TextFormField(
+                        controller: calendarNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'calendar name',
+                          disabledBorder: OutlineInputBorder(),
+                          hintText: 'Name Calendar',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (String? value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter some text';
+                          }
+                          return null;
+                        },
+                      ),
+
+                    const SizedBox(height: 20.0),
+
+                    if (selectCalendarType == 'festival_shedule'
+                        || selectCalendarType == 'tango_school')
+                      Container(
+                        height: 200,
+                        child: TextField(
+                          controller: calendarDescriptionController,
+                          decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Event Description'
+                          ),
+                          keyboardType: TextInputType.multiline,
+                          maxLines: null,
+                          expands: true, // <-- SEE HERE
+                        ),
+                      ),
+
+
+                  ],
+                )
             ),
-            const SizedBox(height: 20.0),
 
+            const SizedBox(height: 20.0),
+            if (selectCalendarDisplayName != null)
+            ElevatedButton(
+              onPressed: () {
+
+                if (selectCalendarType == 'festival_shedule'
+                    || selectCalendarType == 'tango_school') {
+                  if (_formKey.currentState!.validate()) {
+
+                    addCalendar();
+                    shortMessage(context, 'process added', 2);
+                  }
+                } else {
+                  addCalendar();
+                  shortMessage(context, 'process added', 2);
+                }
+
+              }, child: Text('create calendar',
+              style: TextStyle(
+                  fontSize: 20
+              ),),),
           ],
         ),
       ),
@@ -272,10 +370,6 @@ class _AddCalendarState extends State<AddCalendar> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete, color: Colors.white,),
-            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.refresh),
@@ -289,6 +383,72 @@ class _AddCalendarState extends State<AddCalendar> {
     );
   }
 
+  void addCalendar() {
+
+    ApiSigned().then((signedData) {
+
+      selectCalendarDisplayName = null;
+      setState(() {});
+
+      var data = {
+        'name': calendarNameController.text,
+        'description': calendarDescriptionController.text,
+        'country': countryName,
+        'city': cityValue,
+        'type_events': selectCalendarType,
+        'source': autshUserData.role
+      };
+
+      print(data);
+      var requestTokenData = {
+        'tokenId': signedData['tokenId'],
+        'signed': '${signedData['signed']}',
+        'data': data
+      };
+
+      // CalendarRepository().testRequest(requestTokenData);
+      CalendarRepository().addGCalendarToApi(requestTokenData).then((response) {
+
+        if (response.containsKey('errorMessage')) {
+          debugPrint("error message - ${response['errorMessage']}");
+          shortMessage(context, "error - ${response['errorMessage']}", 2);
+        } else {
+          Calendar calendar = new Calendar(
+            id: "${response['id']}",
+            name: calendarNameController.text,
+            description: calendarDescriptionController.text,
+            typeEvents: response['type_events'],
+            country: response['country'],
+            city: cityValue,
+            source: response['source'],
+            gcalendarId: "${response['gcalendarId']}",
+            creator: autshUserData.uid,
+          );
+        CalendarRepository().addNewCalendarToFirebase(calendar).then((value) {
+
+          shortMessage(context, 'calendar add', 2);
+
+          CalendarRepository().updateCalendarsData().then((value) {
+            countriesCalendars = {};
+            cityesCalendars = {};
+            setCalendarsMap().then((value) {
+              shortMessage(context, 'calendars updated', 2);
+              selectCalendarDisplayName = null;
+              setState(() {});
+            });
+
+          });
+
+        });
+
+        }
+      });
+
+
+    });
+
+  }
+
   void _onItemTapped(int index) async {
     switch (index) {
       case 0:
@@ -296,9 +456,16 @@ class _AddCalendarState extends State<AddCalendar> {
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         break;
       case 1:
+        countriesCalendars = {};
+        cityesCalendars = {};
+        CalendarRepository().updateCalendarsData().then((value) {
+          setCalendarsMap().then((value) {
+            shortMessage(context, 'upload complit', 2);
+            selectCalendarDisplayName = null;
+            setState(() {});
+          });
 
-        break;
-      case 2:
+        });
 
         break;
     }

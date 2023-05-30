@@ -16,7 +16,7 @@ class CalendarsPage extends StatefulWidget {
 
 
 List<TypeEvent> generateItems() {
-  List typesEventsList = ['festivals', 'master classes', 'milongas', 'tango schools'];
+  List typesEventsList = ['festivals', 'master classes', 'milongas', 'practices', 'tango schools'];
   List<TypeEvent> types = [];
   typesEventsList.forEach((element) {
     var type = TypeEvent(headerValue: element);
@@ -34,6 +34,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
   List festivals = [];
   List masterClasses = [];
   List milongas = [];
+  List practices = [];
   List tangoSchools = [];
   List countries = [];
   List cityes = [];
@@ -49,6 +50,14 @@ class _CalendarsPageState extends State<CalendarsPage> {
   Future<void> setlocaleJsonData() async {
     Map selected = {};
     List selectedCalendars = [];
+    calendarsList = [];
+    festivals = [];
+    masterClasses = [];
+    practices = [];
+    milongas = [];
+    tangoSchools = [];
+    countries = [];
+    cityes = [];
 
     var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
     var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
@@ -92,6 +101,9 @@ class _CalendarsPageState extends State<CalendarsPage> {
           case 'milongas':
             milongas.add(xl);
             break;
+          case 'practices':
+            practices.add(xl);
+            break;
           case 'tango_school':
             tangoSchools.add(xl);
         }
@@ -101,7 +113,8 @@ class _CalendarsPageState extends State<CalendarsPage> {
       _dataTypes[0].eventCalendars = festivals;
       _dataTypes[1].eventCalendars = masterClasses;
       _dataTypes[2].eventCalendars = milongas;
-      _dataTypes[3].eventCalendars = tangoSchools;
+      _dataTypes[3].eventCalendars = practices;
+      _dataTypes[4].eventCalendars = tangoSchools;
 
       setState(() {});
 
