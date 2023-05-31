@@ -325,6 +325,9 @@ class _FbEventsState extends State<FbEvents> {
     calendarImportList = [];
     calendarsImportData = {};
 
+    print(event.importData['location']);
+    print(event.importData['geo']);
+
     if (eventImportMap.containsKey(event.eventId)) {
       List eventImportsData = eventImportMap[event.eventId];
 
@@ -558,7 +561,6 @@ class _FbEventsState extends State<FbEvents> {
                     ),
                   ),
 
-
                   const SizedBox(height: 50.0),
                   Divider(
                     height: 10,
@@ -603,9 +605,12 @@ class _FbEventsState extends State<FbEvents> {
   
   void eventImport(event){
     List selected = [];
+    int x = 0;
     selectedCalendars.forEach((calendar) {
       if (calendar.enable) {
+        selectedCalendars[x].enable = false;
         selected.add(calendar.id);
+        x++;
       }
     });
 

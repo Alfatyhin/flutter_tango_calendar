@@ -46,9 +46,15 @@ class _AddCalendarState extends State<AddCalendar> {
   }
 
   Future<void> setCalendarsMap() async {
+
+    await CalendarRepository().updateCalendarsData();
     var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
 
     if (calendarsJson != '') {
+
+      countriesCalendars = {};
+      cityesCalendars = {};
+
       List data = json.decode(calendarsJson as String);
 
       List calendarsData = data;
@@ -80,6 +86,8 @@ class _AddCalendarState extends State<AddCalendar> {
 
       });
 
+      shortMessage(context, 'calendars updated', 2);
+      setState(() {});
     }
   }
 
@@ -101,7 +109,8 @@ class _AddCalendarState extends State<AddCalendar> {
          'type': calType,
          'typeDisplay': calTypeName,
          'isset': false,
-         'enable': false
+         'enable': false,
+         'close': false
        };
        if (selectCalendarType == calType) {
          type['enable'] = true;
@@ -127,7 +136,7 @@ class _AddCalendarState extends State<AddCalendar> {
            || calType == 'milongas'
            || calType == 'practices'
            || calType == 'tango_school')
-           && cityValue != null) {
+           && cityValue != '') {
 
          type['name'] = "$calTypeName in $cityValue";
 
@@ -428,16 +437,20 @@ class _AddCalendarState extends State<AddCalendar> {
 
           shortMessage(context, 'calendar add', 2);
 
-          CalendarRepository().updateCalendarsData().then((value) {
-            countriesCalendars = {};
-            cityesCalendars = {};
-            setCalendarsMap().then((value) {
-              shortMessage(context, 'calendars updated', 2);
-              selectCalendarDisplayName = null;
-              setState(() {});
-            });
+          if (cityValue == '') {
+            if (countriesCalendars.containsKey(countryName) ) {
+              countriesCalendars[countryName].add(selectCalendarType);
+            } else {
+              countriesCalendars[countryName] = [];
+              countriesCalendars[countryName].add(selectCalendarType);
+            }
+          }
 
-          });
+          selectCalendarDisplayName = null;
+          setState(() {});
+
+
+          setCalendarsMap();
 
         });
 
