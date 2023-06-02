@@ -811,7 +811,9 @@ class _CalendarsPageState extends State<CalendarsPage> {
         await CalendarRepository().updateCalendarsData();
         print('calendars updated');
         setlocaleJsonData();
-        setState(() {});
+        setState(() {
+          _buildPanel();
+        });
         _shortMessage('upload complit', 2);
         break;
     }
