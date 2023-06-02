@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class localRepository {
@@ -10,6 +12,12 @@ class localRepository {
   Future setLocalDataString(key, data) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(key, data);
+  }
+
+  Future setLocalDataJson(key, data) async {
+    final prefs = await SharedPreferences.getInstance();
+    String dataString = json.encode(data);
+    await prefs.setString(key, dataString);
   }
 
   Future<String?> getLocalDataString(key) async {
