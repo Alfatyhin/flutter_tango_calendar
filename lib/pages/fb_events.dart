@@ -946,9 +946,6 @@ class _FbEventsState extends State<FbEvents> {
                     ElevatedButton(
                         onPressed: ()  {
                           Navigator.of(context).pop();
-                          setState(() {
-                            _eventImport(activeEvent);
-                          });
 
                         },
                         child: Text('close')

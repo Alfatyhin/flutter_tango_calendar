@@ -40,6 +40,8 @@ class _StartPageState extends State<StartPage> {
   int _selectedIndexEventOpen = 0;
   int statmensCount = 0;
 
+  List shortFilter = [];
+
   Map uploadsEventDates = {};
 
 
@@ -93,6 +95,7 @@ class _StartPageState extends State<StartPage> {
   void initState() {
     super.initState();
     initFirebase();
+    calendarsMapped();
     print('int state');
     ///  без событий календарь валится
     kEventSource = {this.key: [value]};
@@ -457,31 +460,133 @@ class _StartPageState extends State<StartPage> {
   }
 
 
+  Future filterCalendarsDialog(){
+
+
+    List dialogList = [];
+    if (shortFilter.length == 0) {
+      selectedCalendars.forEach((key, calendar) {
+        shortFilter.add(key);
+      });
+    }
+    selectedCalendars.forEach((key, calendar) {
+      dialogList.add(key);
+    });
+
+    return  showDialog(
+      context: context,
+      builder: (_) =>  Dialog(
+        child: ListView(
+          children: [
+            ListView.builder(
+                shrinkWrap: true,
+                itemCount: dialogList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  var calId = dialogList[index];
+
+                  Calendar calendar = AllCalendars[calId] as Calendar;
+
+                  return Container (
+                    margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment
+                            .spaceBetween,
+                        children: [
+                          Expanded(child: Text(calendar.name,
+                            style: TextStyle(
+                                fontSize: 15
+                            ),)),
+
+                          Checkbox(
+                              value:  shortFilter.contains(calId),
+                              onChanged: (bool? newValue) {
+                                if (shortFilter.contains(calId)) {
+                                  shortFilter.remove(calId);
+                                } else {
+                                  shortFilter.add(calId);
+                                }
+                                Navigator.of(context).pop();
+                                setState(() {
+                                  filterCalendarsDialog();
+                                });
+                              })
+                        ]
+                    ),
+                  );
+                }),
+
+            Container (
+              margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+
+                    ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+                        },
+                        child: Text('Calendars')
+                    ),
+
+                    ElevatedButton(
+                        onPressed: ()  {
+                          Navigator.of(context).pop();
+                          setlocaleJsonData();
+                        },
+                        child: Text('close'))
+
+                  ]
+              ),
+            )
+          ],
+        ),
+      ),
+      anchorPoint: Offset(1000, 1000),
+    );
+  }
+
+
   @override
   Future<void> setlocaleJsonData() async {
-    CalendarRepository()
-        .getLocalDataJson('eventsJson')
-        .then((oldJson) {
-          print('setlocaleJsonData');
+     var oldJson = await CalendarRepository().getLocalDataJson('eventsJson');
+     print('setlocaleJsonData');
 
-          if (oldJson != '') {
-            var data = json.decode(oldJson as String);
-            kEventSource = CalendarRepository().getKeventToDataMap(data) as Map<DateTime, List<Event>>;
+     if (oldJson != '') {
+       Map data = json.decode(oldJson as String);
 
-            /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-            CalEvents = LinkedHashMap<DateTime, List<Event>>(
-              equals: isSameDay,
-              hashCode: getHashCode,
-            )..addAll(kEventSource);
+       if (shortFilter.length != 0) {
+         Map newData = {};
+         data.forEach((key, value) {
+           value as List;
+           var filtersEvents = [];
+           value.forEach((element) {
+             if(shortFilter.contains(element['calId'])) {
+               filtersEvents.add(element);
+             }
+           });
+           if (filtersEvents.length > 0 ) {
+             newData[key] = filtersEvents;
+           }
+         });
+         data = newData;
+       }
+
+       kEventSource = CalendarRepository().getKeventToDataMap(data) as Map<DateTime, List<Event>>;
+
+       /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
+       CalEvents = LinkedHashMap<DateTime, List<Event>>(
+         equals: isSameDay,
+         hashCode: getHashCode,
+       )..addAll(kEventSource);
 
 
-            setState(() {
-              print('set state');
-              kEvents = CalEvents;
-              _selectedEvents.value = _getEventsForDay(_selectedDay!);
-            });
-          }
-    });
+       setState(() {
+         print('set state');
+         kEvents = CalEvents;
+         _selectedEvents.value = _getEventsForDay(_selectedDay!);
+       });
+     }
   }
 
   @override
@@ -699,8 +804,9 @@ class _StartPageState extends State<StartPage> {
   void _onItemTapped(int index) async {
     switch (index) {
       case 0:
-        Navigator.pop(context);
-        Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+
+        filterCalendarsDialog();
+
         break;
       case 1:
 
