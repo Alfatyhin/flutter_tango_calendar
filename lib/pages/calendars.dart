@@ -80,17 +80,19 @@ class _CalendarsPageState extends State<CalendarsPage> {
     tangoSchools = [];
     typesEventsGeoMap = {};
 
-    var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
-    var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
 
-    if (selectedCalendarsJson != '') {
-      selectedCalendars = json.decode(selectedCalendarsJson as String);
-    }
 
     var filtersTypesEventsGeoMapJson = await CalendarRepository().getLocalDataJson('filtersTypesEventsGeoMap');
 
     if (filtersTypesEventsGeoMapJson != '') {
       filtersTypesEventsGeoMap = json.decode(filtersTypesEventsGeoMapJson as String);
+    }
+
+    var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
+    var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
+
+    if (selectedCalendarsJson != '') {
+      selectedCalendars = json.decode(selectedCalendarsJson as String);
     }
 
     if (selectedCalendars.length > 0) {
@@ -742,7 +744,10 @@ class _CalendarsPageState extends State<CalendarsPage> {
                 
                 if ( calendar.country == 'All'
                     || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
-                    && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0)
+                    && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                            && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0))
+                    || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                        && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities'))
                     || (!filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                         && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
                     || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')

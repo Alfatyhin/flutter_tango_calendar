@@ -6,6 +6,7 @@ import 'package:tango_calendar/repositories/calendar/calendar_repository.dart';
 import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 import 'package:crypto/crypto.dart';
 
+import 'models/Calendar.dart';
 import 'models/Event.dart';
 import 'models/UserData.dart';
 
@@ -20,6 +21,48 @@ var CalendarPermEventDelete = GlobalPermissions().deleteEventToCalendar;
 
 Map userCalendarsPermissions = {};
 Map selectedCalendars = {};
+
+Map calendarsTypesMap = {
+  'festivals': [],
+  'master_classes': [],
+  'milongas': [],
+  'practices': [],
+  'tango_school': [],
+};
+Map AllCalendars = {};
+
+
+
+Future<void> calendarsMapped() async {
+
+  calendarsTypesMap = {
+    'festivals': [],
+    'master_classes': [],
+    'milongas': [],
+    'practices': [],
+    'tango_school': [],
+  };
+  AllCalendars = {};
+
+  print('calendarsMapped');
+  var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
+
+  if (calendarsJson != '') {
+    List calendarsData = json.decode(calendarsJson as String);
+
+    calendarsData.forEach((value) {
+      Calendar calendar = Calendar.fromLocalData(value);
+      if (calendar.country != 'All') {
+        calendarsTypesMap[calendar.typeEvents].add(calendar.id);
+      } else {
+        List events = [calendar.id];
+        events.addAll(calendarsTypesMap[calendar.typeEvents]);
+        calendarsTypesMap[calendar.typeEvents] = events;
+      }
+      AllCalendars[calendar.id] = calendar;
+    });
+  }
+}
 
 class EventTypes {
   List eventTypes = ['festyval', 'milonga', 'practice', 'lessons sсhool', 'master class'];

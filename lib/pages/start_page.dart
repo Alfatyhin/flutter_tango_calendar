@@ -436,13 +436,13 @@ class _StartPageState extends State<StartPage> {
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.blue,),
-                    label: 'redact',
+                    label: 'edit',
                   )
 
                 else
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.grey,),
-                    label: 'redact',
+                    label: 'edit',
                   )
 
               ],

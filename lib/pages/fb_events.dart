@@ -29,7 +29,9 @@ class _FbEventsState extends State<FbEvents> {
   late ICalendar _iCalendar;
   String eventsUrl = '';
   int _selectedIndex = 0;
+  int _selectedImportIndex = 0;
   bool _isLoading = false;
+  var selectedData = [];
   List<Calendar> selectedCalendars = [];
   Map eventImportMap = {};
   List calendarImportList = [];
@@ -63,6 +65,10 @@ class _FbEventsState extends State<FbEvents> {
     _isLoading = true;
     selectedCalendars = [];
     eventImportMap = {};
+
+    await calendarsMapped();
+
+    print(calendarsTypesMap);
 
     List fbEventsIdsList = [];
 
@@ -183,7 +189,7 @@ class _FbEventsState extends State<FbEvents> {
     var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
 
 
-    var selectedData = [];
+    selectedData = [];
 
     if (selectedCalendarsJson != '') {
       selectedData = json.decode(selectedCalendarsJson as String);
@@ -315,7 +321,7 @@ class _FbEventsState extends State<FbEvents> {
                     const SizedBox(height: 20.0),
                   ],
                 ),
-              )
+              ),
           );
         })
     );
@@ -325,6 +331,7 @@ class _FbEventsState extends State<FbEvents> {
     calendarImportList = [];
     calendarsImportData = {};
 
+    activeEvent = event;
     print(event.importData['location']);
     print(event.importData['geo']);
 
@@ -333,6 +340,10 @@ class _FbEventsState extends State<FbEvents> {
 
       eventImportsData.forEach((element) {
         calendarImportList.add(element['eventImportSourceId']);
+        if (!selectedData.contains(element['eventImportSourceId'])) {
+          selectedData.add(element['eventImportSourceId']);
+          selectedCalendars.add(AllCalendars[element['eventImportSourceId']]);
+        }
       });
     }
 
@@ -363,6 +374,7 @@ class _FbEventsState extends State<FbEvents> {
     } else {
 
       print('import prepeare ${selectedCalendars.length} / ${FbImportSettings.length}');
+
 
       selectedCalendars.forEach((calendar) {
         if (FbImportSettings.containsKey(calendar.id)
@@ -597,6 +609,31 @@ class _FbEventsState extends State<FbEvents> {
 
                 ],
               ),
+            bottomNavigationBar: BottomNavigationBar(
+              items:  <BottomNavigationBarItem>[
+                if (autshUserData.role == 'su_admin'
+                    || autshUserData.role == 'admin'
+                    || autshUserData.role == 'organizer')
+
+                  BottomNavigationBarItem(
+                  icon: Icon(Icons.add),
+                  label: 'add calendar',
+                )
+                else
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.add, size: 0,),
+                    label: '',
+                  ),
+
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.list_alt),
+                  label: 'calendars',
+                ),
+              ],
+              currentIndex: _selectedImportIndex,
+              selectedItemColor: Colors.lightBlueAccent[800],
+              onTap: _onItemImportTapped,
+            ),
           );
         })
     );
@@ -801,6 +838,131 @@ class _FbEventsState extends State<FbEvents> {
       );
   }
 
+
+  Future allCalendarsDialog(){
+
+    List typesList = [];
+
+    calendarsTypesMap.forEach((key, value) {
+      var itemList = {
+        'type': 'string',
+        'value': "$key"
+      };
+      typesList.add(itemList);
+      value.forEach((calId) {
+
+        var itemList = {
+          'type': 'calendar',
+          'value': "$calId"
+        };
+        typesList.add(itemList);
+      });
+    });
+
+    var itemList = {
+      'type': 'close',
+      'value': ""
+    };
+    typesList.add(itemList);
+
+
+    return  showDialog(
+      context: context,
+      builder: (_) =>  Dialog(
+        child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: typesList.length,
+            itemBuilder: (BuildContext context, int index) {
+              var typeEvent = typesList[index]['type'];
+
+              if (typeEvent == 'string') {
+                return Container (
+                  margin: EdgeInsets.only(top: 0, left: 10.0, right: 10.0),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+
+                            const SizedBox(height: 8.0, ),
+
+                            Text(typesList[index]['value'],
+                              style: TextStyle(
+                                  fontSize: 15,
+                                fontWeight: FontWeight.w600
+                              ),),
+
+                          ],
+                        )
+                      ]
+                  ),
+                );
+
+              } else if (typeEvent == 'calendar') {
+                Calendar calendar = AllCalendars[typesList[index]['value']] as Calendar;
+
+                return Container (
+                  margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment
+                          .spaceBetween,
+                      children: [
+                        Expanded(child: Text(calendar.name,
+                          style: TextStyle(
+                              fontSize: 15
+                          ),)),
+
+                        Checkbox(
+                            value:  selectedData.contains(calendar.id),
+                            onChanged: (bool? newValue) {
+                              if (!selectedData.contains(calendar.id)) {
+                                selectedData.add(calendar.id);
+                                selectedCalendars.add(calendar);
+                              } else {
+                                selectedData.remove(calendar.id);
+                                selectedCalendars = [];
+                                selectedData.forEach((calId) {
+                                  selectedCalendars.add(AllCalendars[calId]);
+                                });
+                              }
+
+                              Navigator.of(context).pop();
+                              Navigator.of(context).pop();
+                              setState(() {
+                                _eventImport(activeEvent);
+                                allCalendarsDialog();
+                              });
+                            })
+
+                      ]
+                  ),
+                );
+
+              } else {
+               return Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                        onPressed: ()  {
+                          Navigator.of(context).pop();
+                          setState(() {
+                            _eventImport(activeEvent);
+                          });
+
+                        },
+                        child: Text('close')
+                    ),
+                  ],
+                );
+              }
+            }),
+        ),
+      anchorPoint: Offset(1000, 1000),
+    );
+  }
+
+
   Future<void> _onItemTapped(int index) async {
     switch (index) {
       case 0:
@@ -846,6 +1008,23 @@ class _FbEventsState extends State<FbEvents> {
           });
         }
 
+        break;
+    }
+  }
+
+  Future<void> _onItemImportTapped(int index) async {
+    switch (index) {
+      case 0:
+        if (autshUserData.role == 'su_admin'
+            || autshUserData.role == 'admin'
+            || autshUserData.role == 'organizer') {
+
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, '/add_calendar', (route) => false);
+        }
+        break;
+      case 1:
+        allCalendarsDialog();
         break;
     }
   }
