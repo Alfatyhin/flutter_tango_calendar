@@ -429,7 +429,7 @@ class _StartPageState extends State<StartPage> {
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.green,),
-                    label: 'redact',
+                    label: 'edit',
                   )
 
                 else if((userCalendarsPermissions.containsKey(key)

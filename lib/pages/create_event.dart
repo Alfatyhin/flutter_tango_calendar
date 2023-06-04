@@ -41,7 +41,7 @@ class _CreateEventState extends State<CreateEvent> {
 
   int _selectedIndex = 0;
 
-  var test = 'RRULE:FREQ=MONTHLY;BYDAY=1MO';
+  // var test = 'RRULE:FREQ=MONTHLY;BYDAY=1MO';
 
 
 
