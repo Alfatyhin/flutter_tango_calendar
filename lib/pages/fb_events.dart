@@ -38,8 +38,7 @@ class _FbEventsState extends State<FbEvents> {
   late FbEvent activeEvent;
   Map FbImportSettings = {};
   Map calendarsImportData = {};
-
-  var icon = Icon(Icons.add);
+  var seeFilter = true;
 
   @override
   void initState() {
@@ -723,6 +722,17 @@ class _FbEventsState extends State<FbEvents> {
         ],
       ),
       body: _body(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            if (seeFilter == true)
+              seeFilter = false;
+            else
+              seeFilter = true;
+          });
+        },
+        child: const Icon(Icons.remove_red_eye_rounded),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -759,81 +769,169 @@ class _FbEventsState extends State<FbEvents> {
         itemCount: Events.length,
         shrinkWrap: true,
         itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 4.0,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(),
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: ListTile(
-              onTap: () => _eventOpen(Events[index]),
-              title: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                          child: Text(Events[index].timePeriod(),
-                            textAlign: TextAlign.left,
-                          ),
-                      ),
-                    ]
-                  ),
-                  const SizedBox(height: 8.0),
-                  Row(
-                    children: [
-                      Expanded(
-                          child: Text(Events[index].name,
-                            softWrap: true,
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
+
+          if (selectedCalendars.length > 0
+              && eventImportMap.containsKey(Events[index].eventId)
+              && seeFilter) {
+
+            return Container(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 4.0,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: ListTile(
+                onTap: () => _eventOpen(Events[index]),
+                title: Column(
+                  children: [
+                    Row(
+                        children: [
+                          Expanded(
+                            child: Text(Events[index].timePeriod(),
+                              textAlign: TextAlign.left,
                             ),
-                          )
-                      ),
-                    ]
-                  ),
-                ],
-              ),
-              subtitle: Row(
-                children: [
-                  Expanded (
-                    child: Text('${Events[index].locationString()}'),
-                  ),
-
-                
-
-                  if (selectedCalendars.length > 0
-                  && eventImportMap.containsKey(Events[index].eventId))
-                    ElevatedButton(
-                      onPressed: () => _eventImport(Events[index]),
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStatePropertyAll<Color>(Colors.blue.shade900),
-                      ),
-                      child: Row(
+                          ),
+                        ]
+                    ),
+                    const SizedBox(height: 8.0),
+                    Row(
                         children: [
-                          Text('export  '),
-                          Icon(Icons.verified, color: Colors.green, size: 18,),
-                        ],
-                      ),
-                    )
-                  else
-                    ElevatedButton(
-                      onPressed: () => _eventImport(Events[index]),
-                      child: Row(
-                        children: [
-                          Text('export  '),
-                          Icon(Icons.upload_outlined, size: 15, color: Colors.white,),
-                        ],
-                      ),
-                    )
+                          Expanded(
+                              child: Text(Events[index].name,
+                                softWrap: true,
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                          ),
+                        ]
+                    ),
+                  ],
+                ),
+                subtitle: Row(
+                  children: [
+                    Expanded (
+                      child: Text('${Events[index].locationString()}'),
+                    ),
 
-                ],
+
+
+                    if (selectedCalendars.length > 0
+                        && eventImportMap.containsKey(Events[index].eventId))
+                      ElevatedButton(
+                        onPressed: () => _eventImport(Events[index]),
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStatePropertyAll<Color>(Colors.blue.shade900),
+                        ),
+                        child: Row(
+                          children: [
+                            Text('export  '),
+                            Icon(Icons.verified, color: Colors.green, size: 18,),
+                          ],
+                        ),
+                      )
+                    else
+                      ElevatedButton(
+                        onPressed: () => _eventImport(Events[index]),
+                        child: Row(
+                          children: [
+                            Text('export  '),
+                            Icon(Icons.upload_outlined, size: 15, color: Colors.white,),
+                          ],
+                        ),
+                      )
+
+                  ],
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            if (selectedCalendars.length > 0
+                && eventImportMap.containsKey(Events[index].eventId)) {
+
+              return Container();
+            } else {
+              return Container(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 4.0,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: ListTile(
+                  onTap: () => _eventOpen(Events[index]),
+                  title: Column(
+                    children: [
+                      Row(
+                          children: [
+                            Expanded(
+                              child: Text(Events[index].timePeriod(),
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ]
+                      ),
+                      const SizedBox(height: 8.0),
+                      Row(
+                          children: [
+                            Expanded(
+                                child: Text(Events[index].name,
+                                  softWrap: true,
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                )
+                            ),
+                          ]
+                      ),
+                    ],
+                  ),
+                  subtitle: Row(
+                    children: [
+                      Expanded (
+                        child: Text('${Events[index].locationString()}'),
+                      ),
+
+
+
+                      if (selectedCalendars.length > 0
+                          && eventImportMap.containsKey(Events[index].eventId))
+                        ElevatedButton(
+                          onPressed: () => _eventImport(Events[index]),
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStatePropertyAll<Color>(Colors.blue.shade900),
+                          ),
+                          child: Row(
+                            children: [
+                              Text('export  '),
+                              Icon(Icons.verified, color: Colors.green, size: 18,),
+                            ],
+                          ),
+                        )
+                      else
+                        ElevatedButton(
+                          onPressed: () => _eventImport(Events[index]),
+                          child: Row(
+                            children: [
+                              Text('export  '),
+                              Icon(Icons.upload_outlined, size: 15, color: Colors.white,),
+                            ],
+                          ),
+                        )
+
+                    ],
+                  ),
+                ),
+              );
+            }
+          }
         },
       );
   }
