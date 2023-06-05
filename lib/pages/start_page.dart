@@ -35,7 +35,7 @@ class _StartPageState extends State<StartPage> {
   var userUid = '';
   var userRole = '';
   var key = DateTime.now();
-  var value = Event('1', 'test event', 'нет событий', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'start page');
+  var value = Event('1', 'test event', 'events empty', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'start page');
   int _selectedIndex = 0;
   int _selectedIndexEventOpen = 0;
   int statmensCount = 0;
@@ -141,6 +141,16 @@ class _StartPageState extends State<StartPage> {
 
       });
 
+    });
+
+
+
+    localRepository().getLocalDataString('shortFilter').then((value){
+      if (value != '') {
+        setState(() {
+          shortFilter = json.decode(value as String);
+        });
+      }
     });
 
     localRepository().getLocalDataString('uploadsEventDates').then((value){
@@ -508,6 +518,7 @@ class _StartPageState extends State<StartPage> {
                                   } else {
                                     shortFilter.add(calId);
                                   }
+                                  localRepository().setLocalDataJson('shortFilter', shortFilter);
                                   Navigator.of(context).pop();
                                   setState(() {
                                     filterCalendarsDialog();
