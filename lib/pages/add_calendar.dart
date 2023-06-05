@@ -14,6 +14,7 @@ class AddCalendar extends StatefulWidget {
   _AddCalendarState createState() => _AddCalendarState();
 }
 
+// TODO: сделать перезапись списка стран при обновлении списка календарей
 
 class _AddCalendarState extends State<AddCalendar> {
 

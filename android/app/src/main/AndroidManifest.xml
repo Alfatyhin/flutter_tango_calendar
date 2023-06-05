@@ -1,9 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tangocalendar.tango_calendar">
+    package="com.tangocalendar.tango_calendar"
+    android:versionCode="2"
+    android:versionName="1.0.1">
+    >
    <application
         android:label="Tango Calendar"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -31,4 +34,5 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 </manifest>

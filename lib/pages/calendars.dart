@@ -175,13 +175,17 @@ class _CalendarsPageState extends State<CalendarsPage> {
         xl++;
       });
 
-      _dataTypes[0].eventCalendars = festivals;
-      _dataTypes[1].eventCalendars = masterClasses;
-      _dataTypes[2].eventCalendars = milongas;
-      _dataTypes[3].eventCalendars = practices;
-      _dataTypes[4].eventCalendars = tangoSchools;
 
-      setState(() {});
+      setState(() {
+
+        _dataTypes[0].eventCalendars = festivals;
+        _dataTypes[1].eventCalendars = masterClasses;
+        _dataTypes[2].eventCalendars = milongas;
+        _dataTypes[3].eventCalendars = practices;
+        _dataTypes[4].eventCalendars = tangoSchools;
+
+        typesEventsGeoMap = typesEventsGeoMap;
+      });
 
     }
   }
@@ -204,9 +208,9 @@ class _CalendarsPageState extends State<CalendarsPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Center(
-                  child: Text('Geo filters',
+                  child: Text('Geo filters to Calendars List',
                     style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Colors.blue
                     ),
@@ -318,107 +322,107 @@ class _CalendarsPageState extends State<CalendarsPage> {
       builder: (_) =>  Dialog(
         child: Container(
             padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: ListView(
               children: [
                 Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Center(
-                      child: Text('countries',
-                        style: TextStyle(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Center(
+                          child: Text('countries',
+                            style: TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue
+                            ),
+                          ),
                         ),
-                      ),
+
+                        Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('All',
+                                style: TextStyle(
+                                    fontSize: 15
+                                ),),
+                              Checkbox(
+                                  value:  all,
+                                  onChanged: (bool? newValue) {
+                                    filtersTypesEventsGeoMap[typeEvent]['countries'] = [];
+                                    print(filtersTypesEventsGeoMap[typeEvent]['countries']);
+                                    setState(() {
+                                      Navigator.pop(context);
+                                      filterCoutriesSettingsDialog(typeEvent, countries);
+                                    });
+                                  })
+                            ]
+                        ),
+                        Divider(
+                          height: 10,
+                          color: Colors.blueAccent,
+                          thickness: 3,
+                        ),
+
+                        Column(
+                          children: List<Widget>.generate(
+                              countries.length,
+                                  (int index) {
+                                return Column(
+                                  children: [
+                                    Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(countries[index],
+                                            style: TextStyle(
+                                                fontSize: 15
+                                            ),),
+                                          Checkbox(
+                                              value: filtersTypesEventsGeoMap[typeEvent]['countries'].contains(countries[index]),
+                                              onChanged: (bool? newValue) {
+                                                if (!filtersTypesEventsGeoMap[typeEvent]['countries'].contains(countries[index])) {
+                                                  filtersTypesEventsGeoMap[typeEvent]['countries'].add(countries[index]);
+                                                } else {
+                                                  filtersTypesEventsGeoMap[typeEvent]['countries'].remove(countries[index]);
+                                                }
+                                                print(filtersTypesEventsGeoMap[typeEvent]['countries']);
+                                                setState(() {
+                                                  Navigator.pop(context);
+                                                  filterCoutriesSettingsDialog(typeEvent, countries);
+                                                });
+                                              })
+                                        ]
+                                    ),
+
+                                    Divider(
+                                      height: 10,
+                                      color: Colors.blueAccent,
+                                      thickness: 3,
+                                    ),
+                                  ],
+                                );
+                              }
+                          ),
+                        ),
+
+                      ],
                     ),
+
 
                     Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('All',
-                            style: TextStyle(
-                                fontSize: 15
-                            ),),
-                          Checkbox(
-                              value:  all,
-                              onChanged: (bool? newValue) {
-                                filtersTypesEventsGeoMap[typeEvent]['countries'] = [];
-                                print(filtersTypesEventsGeoMap[typeEvent]['countries']);
-                                setState(() {
-                                  Navigator.pop(context);
-                                  filterCoutriesSettingsDialog(typeEvent, countries);
-                                });
-                              })
-                        ]
-                    ),
-                    Divider(
-                      height: 10,
-                      color: Colors.blueAccent,
-                      thickness: 3,
-                    ),
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                            onPressed: ()  {
+                              Navigator.of(context).pop();
 
-                    ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: countries.length,
-                        itemBuilder: (BuildContext context, int index) {
-
-                          return Container(
-                            child: ListView(
-                              shrinkWrap: true,
-                              children: [
-
-                                Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(countries[index],
-                                        style: TextStyle(
-                                            fontSize: 15
-                                        ),),
-                                      Checkbox(
-                                          value: filtersTypesEventsGeoMap[typeEvent]['countries'].contains(countries[index]),
-                                          onChanged: (bool? newValue) {
-                                            if (!filtersTypesEventsGeoMap[typeEvent]['countries'].contains(countries[index])) {
-                                              filtersTypesEventsGeoMap[typeEvent]['countries'].add(countries[index]);
-                                            } else {
-                                              filtersTypesEventsGeoMap[typeEvent]['countries'].remove(countries[index]);
-                                            }
-                                            print(filtersTypesEventsGeoMap[typeEvent]['countries']);
-                                            setState(() {
-                                              Navigator.pop(context);
-                                              filterCoutriesSettingsDialog(typeEvent, countries);
-                                            });
-                                          })
-                                    ]
-                                ),
-
-                                Divider(
-                                  height: 10,
-                                  color: Colors.blueAccent,
-                                  thickness: 3,
-                                ),
-
-                              ],
-                            ),
-                          );
-
-                        }),
-                  ],
-                ),
-
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                        onPressed: ()  {
-                          Navigator.of(context).pop();
-
-                          calendarGeoSettingsDialog(true);
-                        },
-                        child: Text('close')
-                    ),
+                              calendarGeoSettingsDialog(true);
+                            },
+                            child: Text('close')
+                        ),
+                      ],
+                    )
                   ],
                 )
               ],
@@ -428,6 +432,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
       anchorPoint: Offset(1000, 1000),
     );
   }
+
 
 
   Future filterCitiesSettingsDialog(typeEvent, Map citiesData){
@@ -615,38 +620,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
     CalendarRepository().getEventsList();
   }
 
-  void _menuOpen() {
-    Navigator.of(context).push(
-        MaterialPageRoute(builder: (BuildContext context) {
-          return Scaffold(
-            appBar: AppBar(title: Text('Меню'),),
-            body:  Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                }, child: Text('на главную',
-                  style: TextStyle(
-                      fontSize: 20
-                  ),)
-                ),
-                ElevatedButton(onPressed: () async {
-                  await CalendarRepository().clearLocalDataJson('calendars');
-                  await CalendarRepository().clearLocalDataJson('selectedCalendars');
-                  setState(() {});
-                }, child: Text('очистить список салендарей',
-                  style: TextStyle(
-                      fontSize: 20
-                  ),)
-                )
-              ],
-            ),
-          );
-        })
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -655,10 +628,10 @@ class _CalendarsPageState extends State<CalendarsPage> {
           child: Text('Calendars'),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: _menuOpen,
-          )
+          // IconButton(
+          //   icon: Icon(Icons.menu),
+          //   onPressed: _menuOpen,
+          // )
         ],
       ),
       body: Center(
@@ -808,17 +781,16 @@ class _CalendarsPageState extends State<CalendarsPage> {
       case 1:
         await CalendarRepository().clearLocalDataJson('eventsJson');
         await CalendarRepository().clearLocalDataJson('calendars');
-        setState(() {});
+        await localRepository().clearLocalData('filtersTypesEventsGeoMap');
+        Navigator.pop(context);
+        Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
         _shortMessage('calendars deleted', 2);
         break;
       case 2:
         _shortMessage('upload calendars', 2);
         await CalendarRepository().updateCalendarsData();
         print('calendars updated');
-        setlocaleJsonData();
-        setState(() {
-          _buildPanel();
-        });
+        await setlocaleJsonData();
         _shortMessage('upload complit', 2);
         break;
     }

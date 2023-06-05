@@ -75,6 +75,8 @@ class _StartPageState extends State<StartPage> {
           userRole = userData.role;
           userUid = user.uid!;
         });
+      } else {
+        autshUserData = UserData();
       }
     });
   }
@@ -157,7 +159,7 @@ class _StartPageState extends State<StartPage> {
 
   void _menuOpen() {
 
-    var title = 'Меню';
+    var title = 'Menu';
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
 
@@ -484,36 +486,52 @@ class _StartPageState extends State<StartPage> {
                 itemBuilder: (BuildContext context, int index) {
                   var calId = dialogList[index];
 
-                  Calendar calendar = AllCalendars[calId] as Calendar;
+                  if (AllCalendars.containsKey(calId)) {
+                    Calendar calendar = AllCalendars[calId] as Calendar;
 
-                  return Container (
-                    margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment
-                            .spaceBetween,
-                        children: [
-                          Expanded(child: Text(calendar.name,
-                            style: TextStyle(
-                                fontSize: 15
-                            ),)),
+                    return Container (
+                      margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment
+                              .spaceBetween,
+                          children: [
+                            Expanded(child: Text(calendar.name,
+                              style: TextStyle(
+                                  fontSize: 15
+                              ),)),
 
-                          Checkbox(
-                              value:  shortFilter.contains(calId),
-                              onChanged: (bool? newValue) {
-                                if (shortFilter.contains(calId)) {
-                                  shortFilter.remove(calId);
-                                } else {
-                                  shortFilter.add(calId);
-                                }
-                                Navigator.of(context).pop();
-                                setState(() {
-                                  filterCalendarsDialog();
-                                });
-                              })
-                        ]
-                    ),
-                  );
+                            Checkbox(
+                                value:  shortFilter.contains(calId),
+                                onChanged: (bool? newValue) {
+                                  if (shortFilter.contains(calId)) {
+                                    shortFilter.remove(calId);
+                                  } else {
+                                    shortFilter.add(calId);
+                                  }
+                                  Navigator.of(context).pop();
+                                  setState(() {
+                                    filterCalendarsDialog();
+                                  });
+                                })
+                          ]
+                      ),
+                    );
+                  } else {
+                    return Container();
+                  }
+
                 }),
+
+            if (AllCalendars.length == 0)
+            Container(
+              margin: EdgeInsets.only(top: 40, left: 20.0, right: 20.0, bottom: 40),
+              child: Column(
+                children: [
+                  Text('Go to Calendars and upload Calendars List')
+
+                ],
+              ),
+            ),
 
             Container (
               margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
@@ -842,7 +860,7 @@ class _StartPageState extends State<StartPage> {
 
   Future<void> updateData() async {
 
-    if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
+    if ((autshUserData.role == 'su_admin' || autshUserData.role == 'admin')) {
       usersRepository().getStatementsCount().then((value) {
         setState(() {
           statmensCount = value;

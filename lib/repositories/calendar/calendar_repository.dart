@@ -206,29 +206,24 @@ class CalendarRepository {
 
 
   Future<void> updateCalendarsData() async {
-    db.collection("calendars").withConverter(
+    var querySnapshot = await db.collection("calendars").withConverter(
       fromFirestore: Calendar.fromFirestore,
       toFirestore: (Calendar calendar, _) => calendar.toFirestore(),
-    ).get().then(
-          (querySnapshot) {
-        List calendars = [];
-        print("Successfully completed");
-        for (var docSnapshot in querySnapshot.docs) {
-          var calendarData = docSnapshot.data().toJson();
-          calendars.add(calendarData);
-        }
-        var dataJson = json.encode(calendars);
+    ).get();
+    
+    List calendars = [];
+    print("Successfully completed");
+    for (var docSnapshot in querySnapshot.docs) {
+      var calendarData = docSnapshot.data().toJson();
+      calendars.add(calendarData);
+    }
+    var dataJson = json.encode(calendars);
 
-        if (dataJson is String) {
-          setLocalDataJson('calendars', dataJson);
-        } else {
-          print('is not string');
-        }
-
-      },
-      onError: (e) => print("Error completing: $e"),
-    );
-
+    if (dataJson is String) {
+      setLocalDataJson('calendars', dataJson);
+    } else {
+      print('is not string');
+    }
   }
 
 

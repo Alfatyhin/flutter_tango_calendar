@@ -715,10 +715,10 @@ class _FbEventsState extends State<FbEvents> {
           child: Text('My Fb Events'),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: _menuOpen,
-          )
+          // IconButton(
+          //   icon: Icon(Icons.menu),
+          //   onPressed: _menuOpen,
+          // )
         ],
       ),
       body: _body(),
@@ -1124,26 +1124,4 @@ class _FbEventsState extends State<FbEvents> {
     }
   }
 
-  void _menuOpen() {
-    Navigator.of(context).push(
-        MaterialPageRoute(builder: (BuildContext context) {
-          return Scaffold(
-            appBar: AppBar(title: Text('Меню'),),
-            body:  Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                }, child: Text('на главную',
-                  style: TextStyle(
-                      fontSize: 20
-                  ),)
-                ),
-              ],
-            ),
-          );
-        })
-    );
-  }
 }

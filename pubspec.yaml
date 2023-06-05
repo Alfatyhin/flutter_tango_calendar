@@ -25,6 +25,7 @@ dependencies:
   crypto: ^3.0.3
   flutter_timezone: ^1.0.6
   country_state_city_picker: ^1.2.8
+  flutter_launcher_icons: ^0.13.1
 #  flutter_facebook_auth: ^5.0.11
 
 dev_dependencies:
