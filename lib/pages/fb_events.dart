@@ -12,6 +12,7 @@ import 'package:tango_calendar/models/UserData.dart';
 import 'package:tango_calendar/repositories/calendar/fb_events_repository.dart';
 
 import 'package:tango_calendar/icalendar_parser.dart';
+import 'package:tango_calendar/repositories/localRepository.dart';
 import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 import '../repositories/calendar/calendar_repository.dart';
 import '../utils.dart';
@@ -40,6 +41,8 @@ class _FbEventsState extends State<FbEvents> {
   Map calendarsImportData = {};
   var seeFilter = true;
 
+  var filterIcon;
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +67,8 @@ class _FbEventsState extends State<FbEvents> {
     _isLoading = true;
     selectedCalendars = [];
     eventImportMap = {};
+
+    seeFilter = await localRepository().getLocalDataBool('seeFilter');
 
     await calendarsMapped();
 
@@ -244,6 +249,19 @@ class _FbEventsState extends State<FbEvents> {
       setState(() {});
 
     }
+    setFilterIcon();
+  }
+
+  void setFilterIcon(){
+    if (seeFilter) {
+      filterIcon = Icon(Icons.remove_red_eye_rounded,);
+    }
+    else {
+      filterIcon = Icon(Icons.disabled_visible, color: Colors.black,);
+    }
+    setState(() {
+      filterIcon = filterIcon;
+    });
   }
 
 
@@ -725,13 +743,17 @@ class _FbEventsState extends State<FbEvents> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            if (seeFilter == true)
+            if (seeFilter == true) {
               seeFilter = false;
-            else
+            }
+            else {
               seeFilter = true;
+            }
+            setFilterIcon();
           });
+          localRepository().setLocalDataBool('seeFilter', seeFilter);
         },
-        child: const Icon(Icons.remove_red_eye_rounded),
+        child: filterIcon,
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[

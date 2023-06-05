@@ -9,6 +9,17 @@ class localRepository {
     await prefs.remove(key);
   }
 
+  Future setLocalDataBool(key, data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, data);
+  }
+
+  Future getLocalDataBool(key) async {
+    final prefs = await SharedPreferences.getInstance();
+    var res = await prefs.getBool(key);
+    return res;
+  }
+
   Future setLocalDataString(key, data) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(key, data);
