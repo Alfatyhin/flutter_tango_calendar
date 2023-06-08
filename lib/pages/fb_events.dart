@@ -257,6 +257,13 @@ class _FbEventsState extends State<FbEvents> {
 
     }
     setFilterIcon();
+
+    if (backCommand['comand'] == 'import open') {
+      _eventImport(backCommand['argument']);
+      backCommand['comand'] = '';
+      backCommand['argument'] = false;
+
+    }
   }
 
   Future<void> setFilterIcon() async {
@@ -1170,6 +1177,9 @@ class _FbEventsState extends State<FbEvents> {
             || autshUserData.role == 'admin'
             || autshUserData.role == 'organizer') {
 
+          backRout = '/fb_events';
+          backCommand['comand'] = 'import open';
+          backCommand['argument'] = activeEvent;
           Navigator.pop(context);
           Navigator.pushNamedAndRemoveUntil(context, '/add_calendar', (route) => false);
         }

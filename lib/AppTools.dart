@@ -31,6 +31,12 @@ Map calendarsTypesMap = {
 };
 Map AllCalendars = {};
 
+String backRout = '';
+
+Map backCommand = {
+  'comand': '',
+  'argument': false
+};
 
 
 Future<void> calendarsMapped() async {

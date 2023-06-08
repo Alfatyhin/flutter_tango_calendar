@@ -385,11 +385,20 @@ class _AddCalendarState extends State<AddCalendar> {
       ),
 
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
-          ),
+        items:  <BottomNavigationBarItem>[
+
+          if (backRout != '')
+            BottomNavigationBarItem(
+              icon: Icon(Icons.arrow_back),
+              label: 'back',
+            )
+          else
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+
+
           BottomNavigationBarItem(
             icon: Icon(Icons.refresh),
             label: 'update',
@@ -475,8 +484,15 @@ class _AddCalendarState extends State<AddCalendar> {
   void _onItemTapped(int index) async {
     switch (index) {
       case 0:
-        Navigator.pop(context);
-        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        if (backRout != '') {
+          String redirect = backRout;
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, redirect, (route) => false);
+        } else {
+
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        }
         break;
       case 1:
         countriesCalendars = {};
