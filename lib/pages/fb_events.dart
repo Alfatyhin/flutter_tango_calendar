@@ -750,7 +750,9 @@ class _FbEventsState extends State<FbEvents> {
   }
 
   Future<void> _launchUrl(url) async {
-    if (!await launchUrl(url)) {
+    if (!await launchUrl(url,
+      mode: LaunchMode.externalApplication,
+    )) {
       throw Exception('Could not launch $url');
     }
   }
