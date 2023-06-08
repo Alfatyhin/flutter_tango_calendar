@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/link.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:tango_calendar/AppTools.dart';
 import 'package:tango_calendar/models/Event.dart';
 import 'package:tango_calendar/models/FbEvent.dart';
@@ -16,6 +18,7 @@ import 'package:tango_calendar/repositories/localRepository.dart';
 import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 import '../repositories/calendar/calendar_repository.dart';
 import '../utils.dart';
+
 
 class FbEvents extends StatefulWidget {
   const FbEvents({Key? key}) : super(key: key);
@@ -39,13 +42,14 @@ class _FbEventsState extends State<FbEvents> {
   late FbEvent activeEvent;
   Map FbImportSettings = {};
   Map calendarsImportData = {};
-  var seeFilter = true;
+  var seeFilter = false;
 
   var filterIcon;
 
   @override
   void initState() {
     super.initState();
+    setFilterIcon();
     getEvents();
   }
 
@@ -69,6 +73,8 @@ class _FbEventsState extends State<FbEvents> {
     eventImportMap = {};
 
     seeFilter = await localRepository().getLocalDataBool('seeFilter');
+
+    print("test - $seeFilter");
 
     await calendarsMapped();
 
@@ -175,6 +181,7 @@ class _FbEventsState extends State<FbEvents> {
 
 
             setState(() {
+              print(eventsUrl);
               eventsUrl = eventsUrl;
               Events = Events;
               _iCalendar = iCalendar;
@@ -252,12 +259,12 @@ class _FbEventsState extends State<FbEvents> {
     setFilterIcon();
   }
 
-  void setFilterIcon(){
+  Future<void> setFilterIcon() async {
+
     if (seeFilter) {
-      filterIcon = Icon(Icons.remove_red_eye_rounded,);
-    }
-    else {
       filterIcon = Icon(Icons.disabled_visible, color: Colors.black,);
+    } else {
+      filterIcon = Icon(Icons.remove_red_eye_rounded,);
     }
     setState(() {
       filterIcon = filterIcon;
@@ -553,9 +560,32 @@ class _FbEventsState extends State<FbEvents> {
                                       })
                                 else
                                   Container(
-                                      margin: const EdgeInsets.all(10.0),
-                                      child: Icon(Icons.not_interested, color: Colors.red,)
+                                    // margin: const EdgeInsets.all(10.0),
+                                    child:  Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+
+                                              Icon(Icons.warning_amber_outlined,
+                                                color: Colors.amber[900],
+                                              ),
+                                              Checkbox(
+                                                  value: selectedCalendars[index].enable,
+                                                  onChanged: (bool? newValue) {
+                                                    selectedCalendars[index].enable = newValue!;
+                                                    setState(() {
+                                                    });
+
+                                                    Navigator.pop(context);
+                                                    _eventImport(event);
+                                                  })
+                                            ],
+                                          )
+                                        ]
+                                    ),
                                   ),
+
                             ],
                           ),
 
@@ -575,27 +605,8 @@ class _FbEventsState extends State<FbEvents> {
                         ),
                     ),
 
-                  if (selectedCalendars.length > 0)
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                    child:   ElevatedButton(
-                      onPressed: () => eventImport(event),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('export'),
-                          Icon(Icons.upload_outlined, size: 15, color: Colors.white,),
-                        ],
-                      ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 50.0),
-                  Divider(
-                    height: 10,
-                    color: Colors.blueAccent,
-                    thickness: 3,
-                  ),
+                  const SizedBox(height: 20.0),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
                     child: SelectableText("organizer - ${event.organizerName}",
@@ -610,9 +621,16 @@ class _FbEventsState extends State<FbEvents> {
                       children: [
                         ElevatedButton(
                           onPressed: () {
+                            Uri url = Uri.parse(event.url);
+                            _launchUrl(url);
+                          },
+                          child: Text('go event'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
                             Clipboard.setData(ClipboardData(text: event.url));
                           },
-                          child: Text('copy url event'),
+                          child: Text('copy url'),
                         ),
                         ElevatedButton(
                           onPressed: () {
@@ -639,8 +657,14 @@ class _FbEventsState extends State<FbEvents> {
                 else
                   BottomNavigationBarItem(
                     icon: Icon(Icons.add, size: 0,),
-                    label: '',
+                    label: 'export',
                   ),
+
+                BottomNavigationBarItem(
+
+                  icon: Icon(Icons.upload_rounded, color: Colors.green, ),
+                  label: 'export',
+                ),
 
                 BottomNavigationBarItem(
                   icon: Icon(Icons.list_alt),
@@ -664,8 +688,8 @@ class _FbEventsState extends State<FbEvents> {
       if (calendar.enable) {
         selectedCalendars[x].enable = false;
         selected.add(calendar.id);
-        x++;
       }
+      x++;
     });
 
     if (selected.length > 0) {
@@ -725,6 +749,12 @@ class _FbEventsState extends State<FbEvents> {
     }
   }
 
+  Future<void> _launchUrl(url) async {
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -743,15 +773,16 @@ class _FbEventsState extends State<FbEvents> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
+
             if (seeFilter == true) {
               seeFilter = false;
-            }
-            else {
+            } else {
               seeFilter = true;
             }
+
+            localRepository().setLocalDataBool('seeFilter', seeFilter);
             setFilterIcon();
           });
-          localRepository().setLocalDataBool('seeFilter', seeFilter);
         },
         child: filterIcon,
       ),
@@ -794,7 +825,9 @@ class _FbEventsState extends State<FbEvents> {
 
           if (selectedCalendars.length > 0
               && eventImportMap.containsKey(Events[index].eventId)
-              && seeFilter) {
+              && seeFilter == false) {
+            var importList = eventImportMap[Events[index].eventId] as List;
+            print(importList.length);
 
             return Container(
               margin: const EdgeInsets.symmetric(
@@ -851,7 +884,7 @@ class _FbEventsState extends State<FbEvents> {
                         ),
                         child: Row(
                           children: [
-                            Text('export  '),
+                            Text('export  ${importList.length}'),
                             Icon(Icons.verified, color: Colors.green, size: 18,),
                           ],
                         ),
@@ -1047,12 +1080,11 @@ class _FbEventsState extends State<FbEvents> {
                                 });
                               }
 
-                              Navigator.of(context).pop();
-                              Navigator.of(context).pop();
-                              setState(() {
-                                _eventImport(activeEvent);
-                                allCalendarsDialog();
-                              });
+                              Navigator.pop(context);
+                              Navigator.pop(context);
+                              _eventImport(activeEvent);
+
+
                             })
 
                       ]
@@ -1141,6 +1173,10 @@ class _FbEventsState extends State<FbEvents> {
         }
         break;
       case 1:
+        if (selectedCalendars.length > 0)
+          eventImport(activeEvent);
+        break;
+      case 2:
         allCalendarsDialog();
         break;
     }

@@ -298,13 +298,33 @@ class _CreateEventState extends State<CreateEvent> {
 
 
   Future<void> showTimeDialog(timeCommand) async {
-    final TimeOfDay? result =
-    await showTimePicker(context: context, initialTime: TimeOfDay.now());
+    final TimeOfDay? result = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (BuildContext context, Widget? child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+
     if (result != null) {
+
+      var hour = "${result.hour}";
+      if (result.hour < 10) {
+        hour = "0${result.hour}";
+      }
+      var minute = "${result.minute}";
+      if (result.minute < 10) {
+        minute = "0${result.minute}";
+      }
+      var time = "$hour:$minute";
+
       if (timeCommand == 'start') {
-        timeStartStringController.text = result.format(context);
+        timeStartStringController.text = time;
       } else {
-        timeEndStringController.text = result.format(context);
+        timeEndStringController.text = time;
       }
       setState(() {});
     }
@@ -562,7 +582,11 @@ class _CreateEventState extends State<CreateEvent> {
               const SizedBox(height: 20.0),
               ElevatedButton(
                 onPressed: () {
-                  addEvent();
+                  if (_form.currentState!.validate()) {
+                    addEvent();
+                  } else {
+                    shortMessage(context, "error form field", 2);
+                  }
                 },
                 child: const Text(
                   'Send',
@@ -629,6 +653,14 @@ class _CreateEventState extends State<CreateEvent> {
       };
 
 
+      eventTitleController.text = '';
+      iterateTitle = 'newer';
+      iterateValue = '';
+      eventTitleController.text = '';
+      eventDescriptionController.text = '';
+      calendarNameController.text = '';
+      eventLocationnController.text = '';
+
       print(requestTokenData['event']);
 
       CalendarRepository().apiAddEvent(requestTokenData).then((request) {
@@ -637,10 +669,13 @@ class _CreateEventState extends State<CreateEvent> {
           debugPrint("error message - ${request['errorMessage']}");
           shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
         } else {
-          debugPrint("response sugess");
 
+          shortMessage(context, "event creaded", 2);
           print(request);
-          // setState(() {});
+
+          setState(() {
+
+          });
 
         }
       });

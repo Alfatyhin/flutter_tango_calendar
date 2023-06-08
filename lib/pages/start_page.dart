@@ -7,8 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:tango_calendar/repositories/localRepository.dart';
-import 'package:tango_calendar/repositories/users/users_reposirory.dart';
 
 
 import '../AppTools.dart';
@@ -17,6 +15,8 @@ import '../models/table_calendar.dart';
 import '../models/Event.dart';
 import '../models/UserData.dart';
 import '../repositories/calendar/calendar_repository.dart';
+import '../repositories/localRepository.dart';
+import '../repositories/users/users_reposirory.dart';
 import '../utils.dart';
 
 late final FirebaseApp app;
@@ -31,11 +31,10 @@ class StartPage extends StatefulWidget {
 
 class _StartPageState extends State<StartPage> {
 
-  var CalEvents;
+  var CalEvents = {};
   var userUid = '';
   var userRole = '';
   var key = DateTime.now();
-  var value = Event('1', 'test event', 'events empty', 'test event', 0, 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'test event', 'start page');
   int _selectedIndex = 0;
   int _selectedIndexEventOpen = 0;
   int statmensCount = 0;
@@ -58,6 +57,7 @@ class _StartPageState extends State<StartPage> {
         .listen((User? user) async {
       if (user != null) {
         UserData userData = await usersRepository().getUserDataByUid(user.uid!);
+        // UserData userData = await usersRepository().getUserDataByUid('');
 
         autshUserData = userData;
         if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
@@ -73,7 +73,7 @@ class _StartPageState extends State<StartPage> {
 
         setState(() {
           userRole = userData.role;
-          userUid = user.uid!;
+          userUid = userData.uid!;
         });
       } else {
         autshUserData = UserData();
@@ -99,16 +99,8 @@ class _StartPageState extends State<StartPage> {
     initFirebase();
     calendarsMapped();
     print('int state');
-    ///  без событий календарь валится
-    kEventSource = {this.key: [value]};
-    /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-    CalEvents = LinkedHashMap<DateTime, List<Event>>(
-      equals: isSameDay,
-      hashCode: getHashCode,
-    )..addAll(kEventSource);
-    //////////////////////////////////
-
     kEvents = CalEvents;
+    //////////////////////////////////
 
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
@@ -552,7 +544,7 @@ class _StartPageState extends State<StartPage> {
 
                     ElevatedButton(
                         onPressed: () {
-                          Navigator.pop(context);
+                          // Navigator.pop(context);
                           Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
                         },
                         child: Text('Calendars')
@@ -743,6 +735,68 @@ class _StartPageState extends State<StartPage> {
               updateData();
             },
           ),
+
+          if (AllCalendars.length == 0)
+
+            Column(
+              children: [
+                const SizedBox(height: 8.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Calendar lIst empty',
+                      style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 20
+                      ),
+                    ),
+
+                    TextButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+                    },
+                        child: Text('go load calendars',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 20,
+                          ),
+                        )
+                    )
+                  ],
+                ),
+              ],
+            ),
+
+          if (selectedCalendars.length == 0 && AllCalendars.length != 0)
+            Column(
+              children: [
+                const SizedBox(height: 8.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Calendars not selected',
+                      style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 20
+                      ),
+                    ),
+
+                    TextButton(onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+                    },
+                        child: Text('go select calendars',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 20,
+                          ),
+                        )
+                    )
+                  ],
+                ),
+              ],
+            ),
+
           const SizedBox(height: 8.0),
           Expanded(
             child: ValueListenableBuilder<List<Event>>(
@@ -834,7 +888,14 @@ class _StartPageState extends State<StartPage> {
     switch (index) {
       case 0:
 
-        filterCalendarsDialog();
+        if (AllCalendars.length == 0) {
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+
+        } else {
+
+          filterCalendarsDialog();
+        }
 
         break;
       case 1:
@@ -842,13 +903,8 @@ class _StartPageState extends State<StartPage> {
         uploadsEventDates = {};
         await CalendarRepository().clearLocalDataJson('eventsJson');
         setState(() {
-          kEventSource = {this.key: [value]};
           /// Using a [LinkedHashMap] is highly recommended if you decide to use a map.
-          CalEvents = LinkedHashMap<DateTime, List<Event>>(
-            equals: isSameDay,
-            hashCode: getHashCode,
-          )..addAll(kEventSource);
-
+          CalEvents = {};
           kEvents = CalEvents;
 
           _selectedEvents.value = _getEventsForDay(_selectedDay!);
@@ -857,6 +913,8 @@ class _StartPageState extends State<StartPage> {
         shortMessage(context, 'events deleted', 2);
         break;
       case 2:
+
+        shortMessage(context, 'download sterted', 2);
         uploadsEventDates = {};
         await CalendarRepository().clearLocalDataJson('eventsJson');
         updateData();
@@ -908,7 +966,7 @@ class _StartPageState extends State<StartPage> {
   Future<void> uploadEvents() async {
     await CalendarRepository().getEventsListForMonth(_focusedDay);
     setlocaleJsonData();
-    shortMessage(context, 'upload complit', 2);
+    shortMessage(context, 'download complit', 2);
     print('save uploadsDates');
     Map uploadsDates = {};
     uploadsDates['minDate'] = "${uploadsEventDates['minDate']}";

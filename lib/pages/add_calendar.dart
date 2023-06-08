@@ -99,10 +99,17 @@ class _AddCalendarState extends State<AddCalendar> {
 
     print(countriesCalendars);
     print(cityesCalendars);
+    print(countryValue);
+
 
     Map userCalendarCreateRules = calendarsCreatedrules[autshUserData.role];
 
     calendarTypes.forEach((calType) {
+
+      print(autshUserData.role);
+      print(calType);
+      print(userCalendarCreateRules[calType]);
+
      if (userCalendarCreateRules.containsKey(calType) && userCalendarCreateRules[calType] > 0 ) {
 
        var calTypeName = calType.replaceAll(RegExp(r'_'), ' ');
@@ -152,6 +159,8 @@ class _AddCalendarState extends State<AddCalendar> {
 
      }
     });
+
+    print(selectedList);
 
 
     return  showDialog(
@@ -434,7 +443,7 @@ class _AddCalendarState extends State<AddCalendar> {
             gcalendarId: "${response['gcalendarId']}",
             creator: autshUserData.uid,
           );
-        CalendarRepository().addNewCalendarToFirebase(calendar).then((value) {
+        CalendarRepository().addNewCalendarToFirebase(calendar).then((value) async {
 
           shortMessage(context, 'calendar add', 2);
 
@@ -450,7 +459,7 @@ class _AddCalendarState extends State<AddCalendar> {
           selectCalendarDisplayName = null;
           setState(() {});
 
-
+          await CalendarRepository().updateCalendarsData();
           setCalendarsMap();
 
         });

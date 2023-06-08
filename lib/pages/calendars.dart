@@ -31,6 +31,7 @@ List<TypeEvent> generateItems() {
 class _CalendarsPageState extends State<CalendarsPage> {
 
   final List<TypeEvent> _dataTypes = generateItems();
+  var AllCalendarsCount = 0;
   List calendarsList = [];
   var eventsWorld;
   List festivals = [];
@@ -66,6 +67,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
   void initState() {
     super.initState();
     setlocaleJsonData();
+    calendarsMapped();
   }
 
   @override
@@ -79,6 +81,8 @@ class _CalendarsPageState extends State<CalendarsPage> {
     milongas = [];
     tangoSchools = [];
     typesEventsGeoMap = {};
+    await calendarsMapped();
+    AllCalendarsCount = AllCalendars.length;
 
 
 
@@ -177,7 +181,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
 
       setState(() {
-
         _dataTypes[0].eventCalendars = festivals;
         _dataTypes[1].eventCalendars = masterClasses;
         _dataTypes[2].eventCalendars = milongas;
@@ -351,7 +354,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
                                   value:  all,
                                   onChanged: (bool? newValue) {
                                     filtersTypesEventsGeoMap[typeEvent]['countries'] = [];
-                                    print(filtersTypesEventsGeoMap[typeEvent]['countries']);
                                     setState(() {
                                       Navigator.pop(context);
                                       filterCoutriesSettingsDialog(typeEvent, countries);
@@ -386,7 +388,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
                                                 } else {
                                                   filtersTypesEventsGeoMap[typeEvent]['countries'].remove(countries[index]);
                                                 }
-                                                print(filtersTypesEventsGeoMap[typeEvent]['countries']);
                                                 setState(() {
                                                   Navigator.pop(context);
                                                   filterCoutriesSettingsDialog(typeEvent, countries);
@@ -437,7 +438,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
   Future filterCitiesSettingsDialog(typeEvent, Map citiesData){
 
-    print(citiesData);
     List countries = [];
 
     citiesData.forEach((key, value) {
@@ -479,7 +479,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
                           value:  all,
                           onChanged: (bool? newValue) {
                             filtersTypesEventsGeoMap[typeEvent]['cities'] = [];
-                            print(filtersTypesEventsGeoMap[typeEvent]['cities']);
                             setState(() {
                               Navigator.pop(context);
                               // filterCoutriesSettingsDialog(typeEvent, countries);
@@ -613,8 +612,13 @@ class _CalendarsPageState extends State<CalendarsPage> {
       var enable = calendarsList[x].enable;
       if (enable) {
         selected.add(calendarsList[x].id);
+        selectedCalendars[calendarsList[x].id] = calendarsList[x];
+      } else {
+        selectedCalendars.remove(calendarsList[x].id);
       }
     }
+    print(selected);
+    print(selectedCalendars);
     var data = json.encode(selected);
     CalendarRepository().setLocalDataJson('selectedCalendars', data);
     CalendarRepository().getEventsList();
@@ -638,9 +642,11 @@ class _CalendarsPageState extends State<CalendarsPage> {
         child: SingleChildScrollView(
           child: Column(
               children: [
+
                 _buildPanel(),
 
                 const SizedBox(height: 20),
+                if (AllCalendarsCount != 0)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -652,7 +658,25 @@ class _CalendarsPageState extends State<CalendarsPage> {
                         child: Text('settings geo')
                     )
                   ],
-                )
+                ),
+
+                if (selectedCalendars.length == 0)
+                  Column(
+                    children: [
+                      const SizedBox(height: 8.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Calendars not selected',
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 20
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
 
               ]
           ),
@@ -681,7 +705,24 @@ class _CalendarsPageState extends State<CalendarsPage> {
   }
 
 
+
   Widget _buildPanel() {
+
+    if (AllCalendarsCount == 0)
+      return ElevatedButton.icon(
+          onPressed: () async {
+            _shortMessage('upload calendars', 2);
+            await CalendarRepository().updateCalendarsData();
+            await setlocaleJsonData();
+            _shortMessage('upload complit', 2);
+
+            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+          },
+          icon: Icon(Icons.download_rounded),
+          label: Text('download calendars')
+      );
+    else
     return ExpansionPanelList(
       expansionCallback: (int index, bool isExpanded) {
         setState(() {
@@ -714,7 +755,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
               itemBuilder: (BuildContext context, int index) {
 
                 calendar = calendarsList[item.eventCalendars[index]] as Calendar;
-                
+
                 if ( calendar.country == 'All'
                     || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
                     && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
@@ -782,14 +823,13 @@ class _CalendarsPageState extends State<CalendarsPage> {
         await CalendarRepository().clearLocalDataJson('eventsJson');
         await CalendarRepository().clearLocalDataJson('calendars');
         await localRepository().clearLocalData('filtersTypesEventsGeoMap');
+        _shortMessage('calendars deleted', 2);
         Navigator.pop(context);
         Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
-        _shortMessage('calendars deleted', 2);
         break;
       case 2:
         _shortMessage('upload calendars', 2);
         await CalendarRepository().updateCalendarsData();
-        print('calendars updated');
         await setlocaleJsonData();
         _shortMessage('upload complit', 2);
         break;

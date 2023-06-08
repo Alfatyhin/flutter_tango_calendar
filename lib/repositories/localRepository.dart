@@ -17,6 +17,10 @@ class localRepository {
   Future getLocalDataBool(key) async {
     final prefs = await SharedPreferences.getInstance();
     var res = await prefs.getBool(key);
+    print('test $key - $res');
+    if (res == null)
+      res = false;
+
     return res;
   }
 

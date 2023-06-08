@@ -80,7 +80,7 @@ class CalendarRepository {
 
   Future<Map> getEventsList() async {
 
-    var res;
+    var res = {};
     var dataJson;
     Map dataSaver = {};
 
@@ -206,7 +206,8 @@ class CalendarRepository {
 
 
   Future<void> updateCalendarsData() async {
-    var querySnapshot = await db.collection("calendars").withConverter(
+    var querySnapshot = await db.collection("calendars").orderBy('country')
+        .withConverter(
       fromFirestore: Calendar.fromFirestore,
       toFirestore: (Calendar calendar, _) => calendar.toFirestore(),
     ).get();
