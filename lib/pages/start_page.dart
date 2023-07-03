@@ -249,6 +249,16 @@ class _StartPageState extends State<StartPage> {
                     style: TextStyle(
                         fontSize: 20
                     ),),),
+
+
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(context, '/about', (route) => false);
+                  }, child: Text('about',
+                    style: TextStyle(
+                        fontSize: 20
+                    ),),),
                 ],
               ),
             );
