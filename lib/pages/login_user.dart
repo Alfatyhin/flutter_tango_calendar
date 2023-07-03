@@ -40,94 +40,100 @@ class _LoginUserState extends State<LoginUser> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('Enter Login'),
+
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text('Enter Login'),
+          ),
+          actions: [
+            // IconButton(
+            //   icon: Icon(Icons.menu),
+            //   onPressed: _menuOpen,
+            // )
+          ],
         ),
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.menu),
-          //   onPressed: _menuOpen,
-          // )
-        ],
-      ),
-      body: Container(
-        child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                const SizedBox(height: 10.0),
-                TextFormField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your Email',
-                    border: OutlineInputBorder(),
+        body: Container(
+          child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const SizedBox(height: 10.0),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter your Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
+                    validator: (value) =>
+                    value != null && value.isNotEmpty
+                        ? null
+                        : 'Required',
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  validator: (value) =>
-                  value != null && value.isNotEmpty
-                      ? null
-                      : 'Required',
-                ),
-                const SizedBox(height: 10.0),
-                TextFormField(
-                  controller: passwordController,
-                  obscureText: true,
-                  obscuringCharacter: '*',
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your Password',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10.0),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Validate will return true if the form is valid, or false if
-                      // the form is invalid.
-                      if (_formKey.currentState!.validate()) {
-                        var email = emailController.text;
-                        var password = passwordController.text;
-
-                        _loginUser(email, password);
-
+                  const SizedBox(height: 10.0),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    obscuringCharacter: '*',
+                    decoration: const InputDecoration(
+                      hintText: 'Enter your Password',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (String? value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter some text';
                       }
+                      return null;
                     },
-                    child: const Text('Submit'),
                   ),
-                ),
-              ],
-            )
+                  const SizedBox(height: 10.0),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Validate will return true if the form is valid, or false if
+                        // the form is invalid.
+                        if (_formKey.currentState!.validate()) {
+                          var email = emailController.text;
+                          var password = passwordController.text;
+
+                          _loginUser(email, password);
+
+                        }
+                      },
+                      child: const Text('Submit'),
+                    ),
+                  ),
+                ],
+              )
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete, color: Colors.white,),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.numbers, color: Colors.white,),
-            label: '',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.delete, color: Colors.white,),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.numbers, color: Colors.white,),
+              label: '',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

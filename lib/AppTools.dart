@@ -318,8 +318,6 @@ Future<Map> ApiSigned() async {
   return CalendarRepository().getApiServerTimeSigned().then((dateString) {
     return usersRepository().getUserTokenByUid(autshUserData.uid).then((tokenData) {
       var string = utf8.encode('${tokenData['token']}-$dateString');
-      debugPrint('signed');
-      debugPrint('timeSigned-$dateString');
       var signed = md5.convert(string as List<int>);
 
       signedToken = {

@@ -15,7 +15,9 @@ class _EventSettingsState extends State<EventSettings> {
 
 
   TextEditingController fbOrgNameController = TextEditingController();
+  List fbOrgNames = [];
   int _selectedIndex = 0;
+  Map eventFbImportRules = {};
 
   Map importRules = {
     'name': true,
@@ -27,24 +29,40 @@ class _EventSettingsState extends State<EventSettings> {
   @override
   void initState() {
     super.initState();
+    getEventImportRules();
   }
 
+  Future<void> getEventImportRules() async {
+    fbOrgNames = [];
+    var evenIdData = openEvent.eventId.split('_');
+    var result = await usersRepository().getFbEventImportSettingsByEventId(evenIdData[0]);
+
+    if (result.length > 0) {
+      eventFbImportRules = result[evenIdData[0]];
+      fbOrgNames = eventFbImportRules['fbOrgName'];
+      setState(() { });
+    }
+  }
 
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('Event Settings'),
-        ),
-        actions: [
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text('Event Settings'),
+          ),
+          actions: [
 
-        ],
-      ),
-      body: ListView(
-        children: [
-          Container(
+          ],
+        ),
+        body: ListView(
+          children: [
+            Container(
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
               child: Center(
                 child:   Text(
@@ -55,11 +73,27 @@ class _EventSettingsState extends State<EventSettings> {
                   ),
                 ),
               ),
-          ),
+            ),
 
 
 
-          Container(
+
+            if (fbOrgNames.length > 0)
+
+              ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: fbOrgNames.length,
+                  itemBuilder: (BuildContext context, int index) {
+
+                    return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                          child: Text("org name - ${fbOrgNames[index]}")
+                      );
+                  }
+              ),
+
+
+            Container(
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
               child:
               TextFormField(
@@ -75,10 +109,10 @@ class _EventSettingsState extends State<EventSettings> {
                   return null;
                 },
               ),
-          ),
+            ),
 
 
-          Container(
+            Container(
               padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
               child: Row(
                 textDirection: TextDirection.ltr,
@@ -89,19 +123,19 @@ class _EventSettingsState extends State<EventSettings> {
                         fontSize: 15
                     ),),
 
-                    Checkbox(
-                        value: importRules['name'],
-                        onChanged: (bool? newValue) {
-                          importRules['name'] = newValue!;
-                          setState(() {
-                          });
-                        })
+                  Checkbox(
+                      value: importRules['name'],
+                      onChanged: (bool? newValue) {
+                        importRules['name'] = newValue!;
+                        setState(() {
+                        });
+                      })
                 ],
               ),
-          ),
+            ),
 
 
-          Container(
+            Container(
               padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
               child: Row(
                 textDirection: TextDirection.ltr,
@@ -112,19 +146,19 @@ class _EventSettingsState extends State<EventSettings> {
                         fontSize: 15
                     ),),
 
-                    Checkbox(
-                        value: importRules['location'],
-                        onChanged: (bool? newValue) {
-                          importRules['location'] = newValue!;
-                          setState(() {
-                          });
-                        })
+                  Checkbox(
+                      value: importRules['location'],
+                      onChanged: (bool? newValue) {
+                        importRules['location'] = newValue!;
+                        setState(() {
+                        });
+                      })
                 ],
               ),
-          ),
+            ),
 
 
-          Container(
+            Container(
               padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
               child: Row(
                 textDirection: TextDirection.ltr,
@@ -135,18 +169,18 @@ class _EventSettingsState extends State<EventSettings> {
                         fontSize: 15
                     ),),
 
-                    Checkbox(
-                        value: importRules['description'],
-                        onChanged: (bool? newValue) {
-                          importRules['description'] = newValue!;
-                          setState(() {
-                          });
-                        })
+                  Checkbox(
+                      value: importRules['description'],
+                      onChanged: (bool? newValue) {
+                        importRules['description'] = newValue!;
+                        setState(() {
+                        });
+                      })
                 ],
               ),
-          ),
+            ),
 
-          Container(
+            Container(
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
               child:  ElevatedButton(onPressed: () {
                 _addFbOrgName();
@@ -154,44 +188,80 @@ class _EventSettingsState extends State<EventSettings> {
                 style: TextStyle(
                     fontSize: 20
                 ),),),
-          ),
+            ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-        ],
-      ),
+          ],
+        ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete, color: Colors.white,),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: 'update',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.delete, color: Colors.white,),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.refresh),
+              label: 'update',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
 
+  List<Widget> fbOrgsList(orgs) {
+
+    return  List<Widget>.generate(
+        orgs.length,
+            (int index) {
+          return Column(
+            children: [
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(orgs[index],
+                      style: TextStyle(
+                          fontSize: 15
+                      ),),
+                  ]
+              ),
+
+              Divider(
+                height: 10,
+                color: Colors.blueAccent,
+                thickness: 3,
+              ),
+            ],
+          );
+        }
+    );
+  }
 
   Future<void> _addFbOrgName() async {
 
     var evenIdData = openEvent.eventId.split('_');
 
+    if (fbOrgNames.length == 0) {
+      fbOrgNames = [fbOrgNameController.text];
+    } else {
+      if (fbOrgNameController.text.length > 0 && !fbOrgNames.contains(fbOrgNameController.text)) {
+        fbOrgNames.add(fbOrgNameController.text);
+      }
+    }
+
     var applicateData = {
       'eventId': evenIdData[0],
       'calId': openEvent.calendarId,
-      'fbOrgName': fbOrgNameController.text,
+      'fbOrgName': fbOrgNames,
       'userUid': autshUserData.uid,
       'importRules': importRules,
       'autoImport': false
@@ -217,6 +287,7 @@ class _EventSettingsState extends State<EventSettings> {
         break;
       case 2:
 
+        getEventImportRules();
         break;
     }
 

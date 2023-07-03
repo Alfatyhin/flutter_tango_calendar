@@ -37,11 +37,9 @@ class localRepository {
 
   Future<String?> getLocalDataString(key) async {
     final prefs = await SharedPreferences.getInstance();
-    String? string;
+    String? string = '';
     if (prefs.containsKey(key)) {
       string = await prefs.getString(key);
-    } else {
-      string = '';
     }
     return string;
   }

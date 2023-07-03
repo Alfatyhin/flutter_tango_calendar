@@ -110,70 +110,76 @@ class _UsersListState extends State<UsersList> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('Users'),
-        ),
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.menu),
-          //   onPressed: _menuOpen,
-          // )
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: users.length,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 4.0,
-            ),
-            decoration: BoxDecoration(
-              border: Border.all(),
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: ListTile(
-              onTap: () => _userOpen(users[index]),
-              title: Row(
-                textDirection: TextDirection.ltr,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      Text(users[index].name, style: TextStyle(
-                          fontWeight: FontWeight.w600
-                      ),),
-                      Text(users[index].email),
-                    ],
-                  )
-                ],
-              ),
-              subtitle: Text(users[index].role),
-            ),
-          );
-        },
-      ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text('Users'),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete, color: Colors.white,),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: 'update',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+          actions: [
+            // IconButton(
+            //   icon: Icon(Icons.menu),
+            //   onPressed: _menuOpen,
+            // )
+          ],
+        ),
+        body: ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            return Container(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 4.0,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: ListTile(
+                onTap: () => _userOpen(users[index]),
+                title: Row(
+                  textDirection: TextDirection.ltr,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        Text(users[index].name, style: TextStyle(
+                            fontWeight: FontWeight.w600
+                        ),),
+                        Text(users[index].email),
+                      ],
+                    )
+                  ],
+                ),
+                subtitle: Text(users[index].role),
+              ),
+            );
+          },
+        ),
+
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.delete, color: Colors.white,),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.refresh),
+              label: 'update',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

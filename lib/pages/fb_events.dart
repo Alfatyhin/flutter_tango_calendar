@@ -44,6 +44,8 @@ class _FbEventsState extends State<FbEvents> {
   Map calendarsImportData = {};
   var seeFilter = false;
 
+  var openImportEventUpdate = false;
+
   var filterIcon;
 
   @override
@@ -82,118 +84,120 @@ class _FbEventsState extends State<FbEvents> {
 
     List fbEventsIdsList = [];
 
-    FbEventsRepository().getLocalDataString('eventsUrl').then((value){
-      eventsUrl = value!;
-
-      if (eventsUrl != '') {
-        FbEventsRepository().getLocalDataString('fbEvents').then((value){
-          String fbCalendar = value as String;
-
-          if (fbCalendar != '') {
-            final now = DateTime.now().toLocal();
-            final iCalendar = ICalendar.fromString(fbCalendar);
-            Events = [];
-
-            iCalendar.data.forEach((element) {
-
-
-              var dateTimeStart = DateTime.parse(element['dtstart'].dt).toLocal();
-              var dateStart = DateFormatDate(dateTimeStart);
-              var timeStart = DateFormatTime(dateTimeStart);
-
-              var dateTimeEnd = DateTime.parse(element['dtend'].dt).toLocal();
-              var dateEnd = DateFormatDate(dateTimeEnd);
-              var timeEnd = DateFormatTime(dateTimeEnd);
-
-              var date = DateTime.parse(element['lastModified'].dt).toLocal();
-              var modifedDate = DateFormatDate(date);
-              var modifedtime = DateFormatTime(date);
-
-              var cEvent = FbEvent(
-                  element['uid'],
-                  element['summary'],
-                  element['description'],
-                  element['location'],
-                  1,
-                  dateStart,
-                  timeStart,
-                  dateEnd,
-                  timeEnd,
-                  '$modifedDate $modifedtime',
-                  element['organizer']['mail'],
-                  element['organizer']['name'],
-                  element['organizer']['mail'],
-                  element['organizer']['name'],
-                  'facebook'
-              );
-              cEvent.url = element['url'];
-              cEvent.importData = element;
-
-              if (now.isBefore(dateTimeEnd)) {
-                Events.add(cEvent);
-                fbEventsIdsList.add(cEvent.eventId);
-              }
-              if (Events.length == 1) {
-                activeEvent = cEvent;
-              }
-
-            });
-
-            Events.sort(
-                    (a, b) {
-                  int testa = -1;
-
-                  var adate = DateTime.parse(a.dateStart);
-                  var bdate = DateTime.parse(b.dateStart);
-                  if (adate.isAfter(bdate)) {
-                    testa = 1;
-                  }
-                  if (adate.isAtSameMomentAs(bdate)) {
-                    testa = 0;
-                  }
-                  return testa;
-                }
-            );
-
-
-            while(fbEventsIdsList.length > 0 ) {
-              int size = 10;
-              if (fbEventsIdsList.length < 10) {
-                size = fbEventsIdsList.length;
-              }
-              List list = fbEventsIdsList.sublist(0, size);
-
-              fbEventsIdsList.removeRange(0, size);
-
-              CalendarRepository().getImportEventDataIds(list as List).then((value) {
-                value.forEach((element) {
-
-                  if (eventImportMap.containsKey(element['eventExportId'])) {
-                    eventImportMap[element['eventExportId']].add(element);
-                  } else {
-                    eventImportMap[element['eventExportId']] = [element];
-                  }
-                });
-
-                setState(() {});
-              });
-            }
-
-
-            setState(() {
-              print(eventsUrl);
-              eventsUrl = eventsUrl;
-              Events = Events;
-              _iCalendar = iCalendar;
-              _isLoading = false;
-            });
-          }
-
-        });
-      }
+    eventsUrl = (await FbEventsRepository().getLocalDataString('eventsUrl'))!;
+    setState(() {
 
     });
 
+    if (eventsUrl != '') {
+      String fbCalendar = await FbEventsRepository().getLocalDataString('fbEvents') as String;
+
+      if (fbCalendar != '') {
+        final now = DateTime.now().toLocal();
+
+        try {
+          final iCalendar = ICalendar.fromString(fbCalendar);
+          Events = [];
+
+          iCalendar.data.forEach((element) {
+
+
+            var dateTimeStart = DateTime.parse(element['dtstart'].dt).toLocal();
+            var dateStart = DateFormatDate(dateTimeStart);
+            var timeStart = DateFormatTime(dateTimeStart);
+
+            var dateTimeEnd = DateTime.parse(element['dtend'].dt).toLocal();
+            var dateEnd = DateFormatDate(dateTimeEnd);
+            var timeEnd = DateFormatTime(dateTimeEnd);
+
+            var date = DateTime.parse(element['lastModified'].dt);
+            var modifedDate = DateFormatDate(date);
+            var modifedtime = DateFormatTime(date);
+
+            var cEvent = FbEvent(
+                element['uid'],
+                element['summary'],
+                element['description'],
+                element['location'],
+                1,
+                dateStart,
+                timeStart,
+                dateEnd,
+                timeEnd,
+                '$modifedDate $modifedtime',
+                element['organizer']['mail'],
+                element['organizer']['name'],
+                element['organizer']['mail'],
+                element['organizer']['name'],
+                'facebook'
+            );
+            cEvent.url = element['url'];
+            cEvent.importData = element;
+
+            if (now.isBefore(dateTimeEnd)) {
+              Events.add(cEvent);
+              fbEventsIdsList.add(cEvent.eventId);
+            }
+            if (Events.length == 1) {
+              activeEvent = cEvent;
+            }
+
+          });
+
+          Events.sort(
+                  (a, b) {
+                int testa = -1;
+
+                var adate = DateTime.parse(a.dateStart);
+                var bdate = DateTime.parse(b.dateStart);
+                if (adate.isAfter(bdate)) {
+                  testa = 1;
+                }
+                if (adate.isAtSameMomentAs(bdate)) {
+                  testa = 0;
+                }
+                return testa;
+              }
+          );
+
+
+          while(fbEventsIdsList.length > 0 ) {
+            int size = 10;
+            if (fbEventsIdsList.length < 10) {
+              size = fbEventsIdsList.length;
+            }
+            List list = fbEventsIdsList.sublist(0, size);
+
+            fbEventsIdsList.removeRange(0, size);
+
+            await CalendarRepository().getImportEventDataIds(list as List).then((value) {
+              value.forEach((element) {
+
+                if (eventImportMap.containsKey(element['eventExportId'])) {
+                  eventImportMap[element['eventExportId']].add(element);
+                } else {
+                  eventImportMap[element['eventExportId']] = [element];
+                }
+              });
+
+              setState(() {});
+            });
+          }
+
+
+          setState(() {
+            print(eventsUrl);
+            eventsUrl = eventsUrl;
+            Events = Events;
+            _iCalendar = iCalendar;
+            _isLoading = false;
+          });
+        } catch(e) {
+          print(e);
+        }
+
+      }
+    }
 
     ////
     var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
@@ -258,11 +262,11 @@ class _FbEventsState extends State<FbEvents> {
     }
     setFilterIcon();
 
+    // TODO: робити прокрутку до івенту
     if (backCommand['comand'] == 'import open') {
       _eventImport(backCommand['argument']);
       backCommand['comand'] = '';
       backCommand['argument'] = false;
-
     }
   }
 
@@ -363,11 +367,15 @@ class _FbEventsState extends State<FbEvents> {
     calendarsImportData = {};
 
     activeEvent = event;
+    print("eventId - ${event.eventId}");
     print(event.importData['location']);
     print(event.importData['geo']);
 
     if (eventImportMap.containsKey(event.eventId)) {
       List eventImportsData = eventImportMap[event.eventId];
+
+      print(event.name);
+      print("${event.getHashEvent()} -- ${eventImportsData[0]['hashEvent']}");
 
       eventImportsData.forEach((element) {
         calendarImportList.add(element['eventImportSourceId']);
@@ -380,7 +388,6 @@ class _FbEventsState extends State<FbEvents> {
 
     var eventDate = DateTime.parse(event.dateStart);
 
-    print(eventDate);
     print("${event.dateStart} - ${event.dateEnd}");
 
     if (FbImportSettings.length == 0 || FbImportSettings.length < selectedCalendars.length) {
@@ -414,8 +421,6 @@ class _FbEventsState extends State<FbEvents> {
           if (kEvents.containsKey(eventDate)) {
             List dayEvents = kEvents[eventDate];
 
-            print(calendar.name);
-
             dayEvents.forEach((value) {
               Event dayEvent = value;
               var checkEventId = dayEvent.eventId;
@@ -429,13 +434,7 @@ class _FbEventsState extends State<FbEvents> {
               if (dayEvent.calendarId == calendar.id
                   && FbImportSettings[calendar.id].containsKey(checkEventId)
                   && event.dateStart == event.dateEnd
-                  && FbImportSettings[calendar.id][checkEventId]['fbOrgName'] == event.organizerName) {
-
-                // print("------------");
-                // print(dayEvent.eventId);
-                // print(FbImportSettings[calendar.id][checkEventId]);
-                // print(FbImportSettings[calendar.id][checkEventId]['importRules']);
-                // print("------------");
+                  && FbImportSettings[calendar.id][checkEventId]['fbOrgName'].contains(event.organizerName)) {
 
                 calendarsImportData[calendar.id] = {
                   'evName': dayEvent.name,
@@ -475,12 +474,90 @@ class _FbEventsState extends State<FbEvents> {
     }
 
 
-
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
-              appBar: AppBar(title: Text('event Import'),),
-              body: ListView(
+            appBar: AppBar(
+              title: Text('Import', textAlign: TextAlign.left,),
+              actions: [
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        _topBarTapped(0);
+                      },
+                      child: Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_box_outlined),
+                            Text('new calendar')
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+
+                    GestureDetector(
+                      onTap: () {
+                        _topBarTapped(1);
+                      },
+                      child: Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.upload_rounded),
+                            Text('export')
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    GestureDetector(
+                      onTap: () {
+                        _topBarTapped(2);
+                      },
+                      child: Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.list_alt),
+                            Text('calendars')
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                )
+
+              ],
+              // bottom: TabBar(
+              //   tabs: <Widget>[
+              //     Tab(
+              //       icon: const Icon(Icons.cloud_outlined),
+              //       text: 'test 1',
+              //     ),
+              //     Tab(
+              //       icon: const Icon(Icons.beach_access_sharp),
+              //       text: 'test 1',
+              //     ),
+              //     Tab(
+              //       icon: const Icon(Icons.brightness_5_sharp),
+              //       text: 'test 1',
+              //     ),
+              //   ],
+              // ),
+            ),
+            body: ListView(
                 children: [
 
                   Center(
@@ -512,92 +589,136 @@ class _FbEventsState extends State<FbEvents> {
                     padding: EdgeInsets.only(left: 20),
                     shrinkWrap: true,
                     physics: ClampingScrollPhysics(),
-                    separatorBuilder: (BuildContext context, int index) => Divider(
-                      height: 10,
-                      color: Colors.blueAccent,
-                      thickness: 3,
-                    ),
+                    separatorBuilder: (BuildContext context, int index) {
+                      if (!openImportEventUpdate || calendarImportList.contains(selectedCalendars[index].id))
+
+                        return Divider(
+                          height: 10,
+                          color: Colors.blueAccent,
+                          thickness: 3,
+                        );
+                      else
+                        return Divider(
+                          height: 0,
+                          color: Colors.white,
+                          thickness: 0,
+                        );
+                    },
                     itemBuilder: (BuildContext context, int index) {
-                      return Row(
-                        textDirection: TextDirection.ltr,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
 
-                              Text("${selectedCalendars[index].name}",
-                                style: TextStyle(
-                                    fontSize: 15
-                                ),),
+                      if (openImportEventUpdate && calendarImportList.contains(selectedCalendars[index].id)) {
+                        selectedCalendars[index].enable = true;
+                      }
 
-                              if (calendarsImportData.containsKey(selectedCalendars[index].id))
-                                Text("to ${calendarsImportData[selectedCalendars[index].id]['evName']}",
-                                  style: TextStyle(
-                                      fontSize: 12
-                                  ),),
+                      if (!openImportEventUpdate
+                          || calendarImportList.contains(selectedCalendars[index].id)
+                          || selectedCalendars[index].enable) {
 
-                              Text(selectedCalendars[index].typeEvents,
-                                style: TextStyle(
-                                    fontSize: 10,
-                                ),),
-                            ],
-                          ),
+                        return Row(
+                          textDirection: TextDirection.ltr,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (!openImportEventUpdate
+                                || calendarImportList.contains(selectedCalendars[index].id)
+                                || selectedCalendars[index].enable)
 
-                          Column(
-                            children: [
-                              if (calendarImportList.contains(selectedCalendars[index].id))
-                                Container(
-                                    margin: const EdgeInsets.all(10.0),
-                                    child: Icon(Icons.verified, color: Colors.green,)
-                                )
-                              else
-                                if((selectedCalendars[index].typeEvents != 'festivals'
-                                    && event.dateStart == event.dateEnd)
-                                    ||( event.dateStart != event.dateEnd ))
-                                  Checkbox(
-                                      value: selectedCalendars[index].enable,
-                                      onChanged: (bool? newValue) {
-                                        selectedCalendars[index].enable = newValue!;
-                                        setState(() {
-                                        });
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
 
-                                        Navigator.pop(context);
-                                        _eventImport(event);
-                                      })
-                                else
-                                  Container(
-                                    // margin: const EdgeInsets.all(10.0),
-                                    child:  Column(
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.end,
+                                  Text("${selectedCalendars[index].name}",
+                                    style: TextStyle(
+                                        fontSize: 15
+                                    ),),
+
+                                  if (calendarsImportData.containsKey(selectedCalendars[index].id))
+                                    Text("to ${calendarsImportData[selectedCalendars[index].id]['evName']}",
+                                      style: TextStyle(
+                                          fontSize: 12
+                                      ),),
+
+                                  Text(selectedCalendars[index].typeEvents,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                    ),),
+                                ],
+                              ),
+
+                            if (!openImportEventUpdate
+                                || calendarImportList.contains(selectedCalendars[index].id)
+                                || selectedCalendars[index].enable)
+                              Column(
+                                children: [
+                                  if (calendarImportList.contains(selectedCalendars[index].id))
+                                    if (openImportEventUpdate)
+                                      Checkbox(
+                                          value: selectedCalendars[index].enable,
+                                          onChanged: (bool? newValue) {
+                                            selectedCalendars[index].enable = newValue!;
+                                            setState(() {
+                                            });
+
+                                            Navigator.pop(context);
+                                            _eventImport(event);
+                                          })
+                                    else
+                                      Container(
+                                          margin: const EdgeInsets.all(10.0),
+                                          child: Icon(Icons.verified, color: Colors.green,)
+                                      )
+                                  else
+                                    if((selectedCalendars[index].typeEvents != 'festivals'
+                                        && event.dateStart == event.dateEnd)
+                                        ||( event.dateStart != event.dateEnd ))
+                                      Checkbox(
+                                          value: selectedCalendars[index].enable,
+                                          onChanged: (bool? newValue) {
+                                            selectedCalendars[index].enable = newValue!;
+                                            setState(() {
+                                            });
+
+                                            Navigator.pop(context);
+                                            _eventImport(event);
+                                          })
+                                    else
+                                      Container(
+                                        // margin: const EdgeInsets.all(10.0),
+                                        child:  Column(
                                             children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
 
-                                              Icon(Icons.warning_amber_outlined,
-                                                color: Colors.amber[900],
-                                              ),
-                                              Checkbox(
-                                                  value: selectedCalendars[index].enable,
-                                                  onChanged: (bool? newValue) {
-                                                    selectedCalendars[index].enable = newValue!;
-                                                    setState(() {
-                                                    });
+                                                  Icon(Icons.warning_amber_outlined,
+                                                    color: Colors.amber[900],
+                                                  ),
+                                                  Checkbox(
+                                                      value: selectedCalendars[index].enable,
+                                                      onChanged: (bool? newValue) {
+                                                        selectedCalendars[index].enable = newValue!;
+                                                        setState(() {
+                                                        });
 
-                                                    Navigator.pop(context);
-                                                    _eventImport(event);
-                                                  })
-                                            ],
-                                          )
-                                        ]
-                                    ),
-                                  ),
+                                                        Navigator.pop(context);
+                                                        _eventImport(event);
+                                                      })
+                                                ],
+                                              )
+                                            ]
+                                        ),
+                                      ),
 
-                            ],
-                          ),
+                                ],
+                              ),
 
-                        ],
-                      );
+                          ],
+                        );
+
+                      } else {
+
+                        return Container();
+
+                      }
                     },
                   ),
 
@@ -616,14 +737,29 @@ class _FbEventsState extends State<FbEvents> {
                   const SizedBox(height: 20.0),
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                    child: SelectableText("organizer - ${event.organizerName}",
-                      textDirection: TextDirection.ltr,
-                      style: TextStyle(fontSize: 20),
-                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child:  SelectableText("organizer - ${event.organizerName}",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        ),
+
+                        ElevatedButton(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: event.organizerName));
+                          },
+                          child: Icon(Icons.copy),
+                        ),
+                      ],
+                    )
                   ),
+
+
                   Container(
                     margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                    child:    Row (
+                    child: Row (
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         ElevatedButton(
@@ -638,12 +774,6 @@ class _FbEventsState extends State<FbEvents> {
                             Clipboard.setData(ClipboardData(text: event.url));
                           },
                           child: Text('copy url'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Clipboard.setData(ClipboardData(text: event.organizerName));
-                          },
-                          child: Text('copy organizer Name'),
                         ),
                       ],
                     ),
@@ -667,11 +797,18 @@ class _FbEventsState extends State<FbEvents> {
                     label: 'export',
                   ),
 
-                BottomNavigationBarItem(
+                if (!openImportEventUpdate)
+                    BottomNavigationBarItem(
 
-                  icon: Icon(Icons.upload_rounded, color: Colors.green, ),
-                  label: 'export',
-                ),
+                      icon: Icon(Icons.upload_rounded, color: Colors.green, ),
+                      label: 'export',
+                    )
+                else
+                    BottomNavigationBarItem(
+
+                      icon: Icon(Icons.refresh, color: Colors.green, ),
+                      label: 'update',
+                    ),
 
                 BottomNavigationBarItem(
                   icon: Icon(Icons.list_alt),
@@ -701,9 +838,19 @@ class _FbEventsState extends State<FbEvents> {
 
     if (selected.length > 0) {
 
-      ApiSigned().then((signedData) {
+      ApiSigned().then((signedData) async {
 
         FbEvent fbEvent = event;
+
+        if (openImportEventUpdate) {
+          List eventsList = eventImportMap[fbEvent.eventId];
+          print(eventsList);
+          eventsList.forEach((element) {
+            calendarsImportData[element['eventImportSourceId']] = {
+              'eventId': element['eventImportId']
+            };
+          });
+        }
 
         var requestTokenData = {
           'tokenId': signedData['tokenId'],
@@ -713,40 +860,115 @@ class _FbEventsState extends State<FbEvents> {
           'calendarsImportData': calendarsImportData
         };
 
-
-        print(requestTokenData['calendarsImportData']);
-
+        // eventImportMap = {};
         // CalendarRepository().testRequest(requestTokenData);
 
         Navigator.pop(context);
 
-        CalendarRepository().apiAddEvent(requestTokenData).then((request) {
+        await CalendarRepository().apiAddEvent(requestTokenData).then((request) {
 
           if (request.containsKey('errorMessage')) {
             debugPrint("error message - ${request['errorMessage']}");
             shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
           } else {
             debugPrint("response sugess");
-            request['data'].forEach((item) {
+
+            DateTime date = DateTime.now();
+
+            request['data'].forEach((item) async {
               var importData = {
                 'eventExportSourceId': 'fecebookEvents',
                 'eventExportId': fbEvent.eventId,
                 'eventImportSourceId': item['calId'],
                 'eventImportId': item['eventId'],
+                'endEventDate': fbEvent.dateEnd,
+                'changeDate': DateFormatDateTime(date),
+                'hashEvent': "${fbEvent.getHashEvent()}",
               };
 
-              CalendarRepository().addImportEventData(importData).then((value) {
+              await CalendarRepository().addImportEventData(importData).then((value) async {
                 shortMessage(context, value, 2);
-                if (eventImportMap.containsKey(fbEvent.eventId)) {
-                  eventImportMap[fbEvent.eventId].add(importData);
-                } else {
-                  eventImportMap[fbEvent.eventId] = [importData];
-                }
+                // await CalendarRepository().deleteImportEventDataOld(fbEvent.eventId).then((value) {
+                //   shortMessage(context, 'events cleared', 2);
+                // });
                 calendarImportList.add(item['calId']);
                 setState(() {});
               });
 
             });
+
+            setState(() {
+              _onItemTapped(2);
+              shortMessage(context, 'events reload', 2);
+            });
+          }
+        });
+
+      });
+    } else {
+      shortMessage(context, 'select calendar to import', 2);
+    }
+  }
+
+  void eventImportUpdate(event){
+    List selected = [];
+    eventImportMap[event.eventId].forEach((importItem) {
+      print(importItem);
+        selected.add(importItem['eventImportSourceId']);
+    });
+
+    if (selected.length > 0) {
+
+      ApiSigned().then((signedData) async {
+
+        FbEvent fbEvent = event;
+
+        if (openImportEventUpdate) {
+          List eventsList = eventImportMap[fbEvent.eventId];
+          print(eventsList);
+          eventsList.forEach((element) {
+            calendarsImportData[element['eventImportSourceId']] = {
+              'eventId': element['eventImportId']
+            };
+          });
+        }
+
+        var requestTokenData = {
+          'tokenId': signedData['tokenId'],
+          'signed': '${signedData['signed']}',
+          'calendars': selected,
+          'event': fbEvent.importToApi(),
+          'calendarsImportData': calendarsImportData
+        };
+
+        await CalendarRepository().apiAddEvent(requestTokenData).then((request) {
+
+          if (request.containsKey('errorMessage')) {
+            debugPrint("error message - ${request['errorMessage']}");
+            shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
+          } else {
+            debugPrint("response sugess");
+
+            DateTime date = DateTime.now();
+
+            request['data'].forEach((item) async {
+              var importData = {
+                'eventExportSourceId': 'fecebookEvents',
+                'eventExportId': fbEvent.eventId,
+                'eventImportSourceId': item['calId'],
+                'eventImportId': item['eventId'],
+                'endEventDate': fbEvent.dateEnd,
+                'changeDate': DateFormatDateTime(date),
+                'hashEvent': "${fbEvent.getHashEvent()}",
+              };
+
+              await CalendarRepository().addImportEventData(importData).then((value) async {
+                shortMessage(context, value, 2);
+
+              });
+
+            });
+
           }
         });
 
@@ -766,50 +988,55 @@ class _FbEventsState extends State<FbEvents> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('My Fb Events'),
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text('My Fb Events'),
+          ),
+          actions: [
+            // IconButton(
+            //   icon: Icon(Icons.menu),
+            //   onPressed: _menuOpen,
+            // )
+          ],
         ),
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.menu),
-          //   onPressed: _menuOpen,
-          // )
-        ],
-      ),
-      body: _body(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
+        body: _body(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            setState(() {
 
-            if (seeFilter == true) {
-              seeFilter = false;
-            } else {
-              seeFilter = true;
-            }
+              if (seeFilter == true) {
+                seeFilter = false;
+              } else {
+                seeFilter = true;
+              }
 
-            localRepository().setLocalDataBool('seeFilter', seeFilter);
-            setFilterIcon();
-          });
-        },
-        child: filterIcon,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete),
-            label: 'clear',
-          ),
-          _calendarButton(),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+              localRepository().setLocalDataBool('seeFilter', seeFilter);
+              setFilterIcon();
+            });
+          },
+          child: filterIcon,
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.delete),
+              label: 'clear',
+            ),
+            _calendarButton(),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
@@ -827,16 +1054,44 @@ class _FbEventsState extends State<FbEvents> {
         ),
       );
     else
+
+      print("Events.length ${Events.length}");
       return ListView.builder(
         itemCount: Events.length,
         shrinkWrap: true,
         itemBuilder: (context, index) {
 
-          if (selectedCalendars.length > 0
+          var updateEvent = false;
+
+          if (eventImportMap.containsKey(Events[index].eventId)) {
+
+            List importList = eventImportMap[Events[index].eventId];
+            if (importList.length > 2) {
+              // CalendarRepository().deleteImportEventDataOld(Events[index].eventId);
+            }
+            Map importFirst = importList[0];
+            DateTime dateStart = DateTime.parse(Events[index].dateStart);
+            List<Event> dayEvents = kEvents[dateStart] ?? [];
+            if (!importFirst.containsKey('hashEvent')) {
+              // print(Events[index].name);
+              // print('no hashEvent');
+              updateEvent = true;
+            }
+            if (importFirst.containsKey('hashEvent')
+                && "${Events[index].getHashEvent()}" != importFirst['hashEvent']) {
+              // print(Events[index].name);
+              // print("${Events[index].getHashEvent()} -- ${importFirst['hashEvent']}");
+              // eventImportUpdate(Events[index]);
+              updateEvent = true;
+            }
+          }
+
+          if ((selectedCalendars.length > 0
               && eventImportMap.containsKey(Events[index].eventId)
-              && seeFilter == false) {
+              && seeFilter == false)
+              || updateEvent) {
+
             var importList = eventImportMap[Events[index].eventId] as List;
-            print(importList.length);
 
             return Container(
               margin: const EdgeInsets.symmetric(
@@ -887,20 +1142,29 @@ class _FbEventsState extends State<FbEvents> {
                     if (selectedCalendars.length > 0
                         && eventImportMap.containsKey(Events[index].eventId))
                       ElevatedButton(
-                        onPressed: () => _eventImport(Events[index]),
+                        onPressed: () {
+                          openImportEventUpdate = updateEvent;
+                          _eventImport(Events[index]);
+                        },
                         style: ButtonStyle(
                           backgroundColor: MaterialStatePropertyAll<Color>(Colors.blue.shade900),
                         ),
                         child: Row(
                           children: [
-                            Text('export  ${importList.length}'),
-                            Icon(Icons.verified, color: Colors.green, size: 18,),
+                            Text('export  ${importList.length} '),
+                            if (!updateEvent)
+                              Icon(Icons.verified, color: Colors.green, size: 18,)
+                            else
+                              Icon(Icons.refresh, color: Colors.deepOrangeAccent, size: 18,)
                           ],
                         ),
                       )
                     else
                       ElevatedButton(
-                        onPressed: () => _eventImport(Events[index]),
+                        onPressed: ()  {
+                          openImportEventUpdate = updateEvent;
+                          _eventImport(Events[index]);
+                        },
                         child: Row(
                           children: [
                             Text('export  '),
@@ -913,12 +1177,15 @@ class _FbEventsState extends State<FbEvents> {
                 ),
               ),
             );
+
           } else {
+
             if (selectedCalendars.length > 0
                 && eventImportMap.containsKey(Events[index].eventId)) {
 
               return Container();
             } else {
+
               return Container(
                 margin: const EdgeInsets.symmetric(
                   horizontal: 12.0,
@@ -968,7 +1235,10 @@ class _FbEventsState extends State<FbEvents> {
                       if (selectedCalendars.length > 0
                           && eventImportMap.containsKey(Events[index].eventId))
                         ElevatedButton(
-                          onPressed: () => _eventImport(Events[index]),
+                          onPressed: ()  {
+                            openImportEventUpdate = updateEvent;
+                            _eventImport(Events[index]);
+                          },
                           style: ButtonStyle(
                             backgroundColor: MaterialStatePropertyAll<Color>(Colors.blue.shade900),
                           ),
@@ -981,7 +1251,10 @@ class _FbEventsState extends State<FbEvents> {
                         )
                       else
                         ElevatedButton(
-                          onPressed: () => _eventImport(Events[index]),
+                          onPressed: ()  {
+                            openImportEventUpdate = updateEvent;
+                            _eventImport(Events[index]);
+                          },
                           child: Row(
                             children: [
                               Text('export  '),
@@ -1078,14 +1351,22 @@ class _FbEventsState extends State<FbEvents> {
                         Checkbox(
                             value:  selectedData.contains(calendar.id),
                             onChanged: (bool? newValue) {
+
                               if (!selectedData.contains(calendar.id)) {
+                                print('test 1 ${calendar.id}');
                                 selectedData.add(calendar.id);
-                                selectedCalendars.add(calendar);
+                                calendar.enable = true;
+                                List<Calendar> selected = [calendar];
+                                selected.addAll(selectedCalendars);
+                                selectedCalendars = selected;
                               } else {
+
+                                print('test 2 ${calendar.id}');
                                 selectedData.remove(calendar.id);
                                 selectedCalendars = [];
                                 selectedData.forEach((calId) {
-                                  selectedCalendars.add(AllCalendars[calId]);
+                                  if (AllCalendars.containsKey(calId))
+                                    selectedCalendars.add(AllCalendars[calId]);
                                 });
                               }
 
@@ -1120,6 +1401,37 @@ class _FbEventsState extends State<FbEvents> {
     );
   }
 
+  Future<void> refreshEvents(index) async {
+    if (eventsUrl == '') {
+      showDialog(context: context, builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('add Facebook calendar URL'),
+          content: TextField(
+            onChanged: (String value) {
+              eventsUrl = value;
+            },
+          ),
+          actions: [
+            ElevatedButton(onPressed: () {
+              FbEventsRepository().setLocalDataJson('eventsUrl', eventsUrl);
+              setState(() {
+              });
+              Navigator.of(context).pop();
+            },
+                child: Text('save URL')
+            )
+          ],
+        );
+      });
+    } else {
+      await FbEventsRepository().getEventsList(eventsUrl);
+      await getEvents();
+      setState(() {
+        eventImportMap = eventImportMap;
+        _selectedIndex = index;
+      });
+    }
+  }
 
   Future<void> _onItemTapped(int index) async {
     switch (index) {
@@ -1136,36 +1448,34 @@ class _FbEventsState extends State<FbEvents> {
         });
         break;
       case 2:
-        if (eventsUrl == '') {
-          showDialog(context: context, builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('add Facebook calendar URL'),
-              content: TextField(
-                onChanged: (String value) {
-                  eventsUrl = value;
-                },
-              ),
-              actions: [
-                ElevatedButton(onPressed: () {
-                  FbEventsRepository().setLocalDataJson('eventsUrl', eventsUrl);
-                  setState(() {
-                    print(eventsUrl);
-                  });
-                  Navigator.of(context).pop();
-                },
-                    child: Text('save URL')
-                )
-              ],
-            );
-          });
-        } else {
-          await FbEventsRepository().getEventsList(eventsUrl);
-          getEvents();
-          setState(() {
-            _selectedIndex = index;
-          });
-        }
+        refreshEvents(index);
 
+        break;
+    }
+  }
+
+  Future<void> _topBarTapped(int index) async {
+    switch (index) {
+      case 0:
+        if (autshUserData.role == 'su_admin'
+            || autshUserData.role == 'admin'
+            || autshUserData.role == 'organizer') {
+
+          backRout = '/fb_events';
+          backCommand['comand'] = 'import open';
+          backCommand['argument'] = activeEvent;
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, '/add_calendar', (route) => false);
+        }
+        break;
+      case 1:
+        if (selectedCalendars.length > 0)
+          eventImport(activeEvent);
+        else
+          print(selectedCalendars);
+        break;
+      case 2:
+        allCalendarsDialog();
         break;
     }
   }
@@ -1187,6 +1497,8 @@ class _FbEventsState extends State<FbEvents> {
       case 1:
         if (selectedCalendars.length > 0)
           eventImport(activeEvent);
+        else
+          print(selectedCalendars);
         break;
       case 2:
         allCalendarsDialog();

@@ -1,4 +1,8 @@
 
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+
 class Event{
   final String eventId;
   final String name;
@@ -62,14 +66,29 @@ class Event{
 
   String descriptionString() {
     String string = '';
-    RegExp exp = RegExp(r"\\n");
     if (description != null) {
       string = description;
     }
+    RegExp exp = RegExp(r"\\n");
     string = string.replaceAll(exp, "\n");
     return string;
   }
 
+  Digest getHashEvent() {
+    var description = this.description;
+    RegExp exp = RegExp(r" ");
+    // description = description.replaceAll(exp, "");
+    // exp = RegExp(r"\\n");
+    // description = description.replaceAll(exp, "");
+    // exp = RegExp(r"\n");
+    // description = description.replaceAll(exp, "");
+    // print(description);
+    // var string = utf8.encode("${this.name}$description${this.dateStart}${this.dateEnd}${this.timeStart}${this.timeEnd}");
+    // print("${this.name}${this.dateStart}${this.dateEnd}${this.timeStart}${this.timeEnd}");
+    var string = utf8.encode("${this.name}${this.dateStart}${this.dateEnd}${this.timeStart}${this.timeEnd}");
+    print(string);
+    return md5.convert(string as List<int>);
+  }
 
   @override
   String toString() => "$eventId || $name || $location";

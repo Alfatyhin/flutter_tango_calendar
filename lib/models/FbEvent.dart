@@ -1,4 +1,8 @@
 
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
+import 'package:googleapis/cloudkms/v1.dart';
 import 'package:tango_calendar/models/Event.dart';
 
 import '../utils.dart';
@@ -91,4 +95,12 @@ class FbEvent extends Event {
     };
   }
 
+  @override
+  getHashEvent() {
+    var description = this.description;
+    RegExp exp = RegExp(r" ");
+   // var string = utf8.encode("${this.name}$description${this.dateStart}${this.dateEnd}${this.timeStart}${this.timeEnd}");
+    var string = utf8.encode("${this.name}${_importData['dtstart'].dt}${_importData['dtend'].dt}");
+    return md5.convert(string as List<int>);
+  }
 }

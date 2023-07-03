@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,7 +30,13 @@ class StartPage extends StatefulWidget {
   _StartPageState createState() => _StartPageState();
 }
 
+
+enum EventChangeMode { one, after, all }
+
 class _StartPageState extends State<StartPage> {
+
+  EventChangeMode? _changeMode = EventChangeMode.one;
+  String changeMode = "one";
 
   var CalEvents = {};
   var userUid = '';
@@ -38,12 +45,14 @@ class _StartPageState extends State<StartPage> {
   int _selectedIndex = 0;
   int _selectedIndexEventOpen = 0;
   int statmensCount = 0;
+  DateTime kLastDayThis = kLastDay;
 
   List shortFilter = [];
 
   Map uploadsEventDates = {};
 
-
+  Map exportData = {};
+  List exportIds = [];
 
   void initFirebase() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -71,7 +80,15 @@ class _StartPageState extends State<StartPage> {
           userCalendarsPermissions = value;
         });
 
+        if (userData.role == 'admin'
+            || userData.role == 'su_admin'
+            || userData.role == 'organizer') {
+          kLastDayThis = DateTime(kToday.year, kToday.month + 12, kToday.day);
+        } else {
+          kLastDayThis = DateTime(kToday.year, kToday.month + 6, kToday.day);
+        }
         setState(() {
+          kLastDayThis = kLastDayThis;
           userRole = userData.role;
           userUid = userData.uid!;
         });
@@ -93,12 +110,29 @@ class _StartPageState extends State<StartPage> {
 
   late Map<DateTime, List<Event>> kEventSource;
 
+
+
+
+  Future<void> firstStart() async {
+    print('test first start');
+    await CalendarRepository().updateCalendarsData();
+    await calendarsMapped();
+    List selected = [];
+    shortFilter.add("3");
+    selected.add("3");
+    await localRepository().setLocalDataJson('shortFilter', shortFilter);
+    await localRepository().setLocalDataJson('selectedCalendars', selected);
+    uploadsEventDates = {};
+    await updateData();
+  }
+
+
   @override
   void initState() {
     super.initState();
     initFirebase();
     calendarsMapped();
-    print('int state');
+    print('init state');
     kEvents = CalEvents;
     //////////////////////////////////
 
@@ -106,36 +140,43 @@ class _StartPageState extends State<StartPage> {
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
 
 
-
     CalendarRepository().getLocalDataJson('selectedCalendars').then((selectedCalendarsJson) {
 
+      print('selectedCalendars test');
+      print(selectedCalendarsJson);
       CalendarRepository().getLocalDataJson('calendars').then((calendarsJson) {
-
         var selectedData = [];
+
         if (selectedCalendarsJson != '') {
           selectedData = json.decode(selectedCalendarsJson as String);
         }
+
+
         if (selectedData.length > 0) {
+          selectedData = json.decode(selectedCalendarsJson as String);
+          if (selectedData.length > 0) {
 
-          if (calendarsJson != '') {
-            List calendarsData = json.decode(calendarsJson as String);
+            if (calendarsJson != '') {
+              List calendarsData = json.decode(calendarsJson as String);
 
-            calendarsData.forEach((value) {
-              var calendar = Calendar.fromLocalData(value);
+              calendarsData.forEach((value) {
+                var calendar = Calendar.fromLocalData(value);
 
-              if (selectedData.contains(calendar.id)) {
-                selectedCalendars[calendar.id] = calendar;
-              }
+                if (selectedData.contains(calendar.id)) {
+                  selectedCalendars[calendar.id] = calendar;
+                }
 
-            });
+              });
+            }
           }
+        } else {
+          print('first start');
+          firstStart();
         }
 
       });
 
     });
-
-
 
     localRepository().getLocalDataString('shortFilter').then((value){
       if (value != '') {
@@ -148,16 +189,34 @@ class _StartPageState extends State<StartPage> {
     localRepository().getLocalDataString('uploadsEventDates').then((value){
       if (value != '') {
         Map uploadsDates = json.decode(value as String);
-        uploadsEventDates['minDate'] = DateTime.parse(uploadsDates['minDate']);
-        uploadsEventDates['maxDate'] = DateTime.parse(uploadsDates['maxDate']);
-        print(uploadsEventDates);
-        setlocaleJsonData();
-        // _selectedEvents.value = _getEventsForDay(_selectedDay!);
-        setState(() {});
+        try {
+          uploadsEventDates['minDate'] = DateTime.parse(uploadsDates['minDate']);
+          uploadsEventDates['maxDate'] = DateTime.parse(uploadsDates['maxDate']);
+          print(uploadsEventDates);
+          setlocaleJsonData();
+          // _selectedEvents.value = _getEventsForDay(_selectedDay!);
+          setState(() {});
+        } catch(e) {
+          print(e);
+        }
+
       }
     });
 
+
+    if (backCommand['comand'] == 'refresh') {
+      backCommand['comand'] = '';
+      refreshCommand();
+    }
+
   }
+
+  Future<void> refreshCommand() async {
+    uploadsEventDates = {};
+    await CalendarRepository().clearLocalDataJson('eventsJson');
+    updateData();
+  }
+
 
   void _menuOpen() {
 
@@ -307,6 +366,16 @@ class _StartPageState extends State<StartPage> {
                       ),
                     ),
 
+
+                  const SizedBox(height: 20),
+                  ElevatedButton(onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(context, '/about', (route) => false);
+                  }, child: Text('about',
+                    style: TextStyle(
+                        fontSize: 20
+                    ),),),
+
                 ],
               ),
             );
@@ -326,13 +395,9 @@ class _StartPageState extends State<StartPage> {
   }
 
   void _eventOpen(Event event) {
-
+    _changeMode = EventChangeMode.one;
+    changeMode = "one";
     openEvent = event;
-
-    print(event.calendarId);
-    print(event.eventId);
-    print(selectedCalendars[event.calendarId]?.gcalendarId);
-
 
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
@@ -342,6 +407,7 @@ class _StartPageState extends State<StartPage> {
               margin: EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0),
               child: ListView(
                 children: [
+
                   Center(
                       child:  SelectableText("${event.name}",
                           textDirection: TextDirection.ltr,
@@ -366,6 +432,8 @@ class _StartPageState extends State<StartPage> {
                       ),
                   ),
                   const SizedBox(height: 8.0),
+
+
                   Center(
                       child: SelectableText("${event.descriptionString()}",
                           textDirection: TextDirection.ltr,
@@ -380,6 +448,42 @@ class _StartPageState extends State<StartPage> {
                           softWrap: true
                       ),
                   ),
+
+
+                  if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin')
+                    Column(
+                      children: [
+
+                        const SizedBox(height: 3.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(child: Text('id - ${event.eventId}',
+                              style: TextStyle(
+                                  fontSize: 18
+                              ),)),
+
+                            ElevatedButton(
+                              onPressed: () {
+                                Clipboard.setData(ClipboardData(text: event.eventId));
+                              },
+                              child: Icon(Icons.copy, ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text('calId - ${event.calendarId}',
+                              style: TextStyle(
+                                  fontSize: 18
+                              ),)
+                          ],
+                        ),
+                        const SizedBox(height: 8.0),
+                      ],
+                    ),
+
                 ],
               ),
             ),
@@ -399,11 +503,11 @@ class _StartPageState extends State<StartPage> {
                     label: 'import',
                   ),
 
-                if((userCalendarsPermissions.containsKey(key)
+                if(autshUserData.role != null && ((userCalendarsPermissions.containsKey(key)
                     && userCalendarsPermissions[event.calendarId]['delete'] > 0
                     && CalendarPermEventDelete[autshUserData.role] > 1)
                     || selectedCalendars[event.calendarId].creator == autshUserData.uid
-                    || CalendarPermEventDelete[autshUserData.role] > 1)
+                    || CalendarPermEventDelete[autshUserData.role] > 1))
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.delete, color: Colors.green,),
@@ -425,11 +529,11 @@ class _StartPageState extends State<StartPage> {
                     label: 'delete',
                   ),
 
-                if((userCalendarsPermissions.containsKey(key)
+                if(autshUserData.role != null && ((userCalendarsPermissions.containsKey(key)
                     && userCalendarsPermissions[event.calendarId]['redact'] > 0
                     && CalendarPermEventRedact[autshUserData.role] > 1)
                     || selectedCalendars[event.calendarId].creator == autshUserData.uid
-                    || CalendarPermEventDelete[autshUserData.role] > 1)
+                    || CalendarPermEventDelete[autshUserData.role] > 1))
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.green,),
@@ -438,8 +542,7 @@ class _StartPageState extends State<StartPage> {
 
                 else if((userCalendarsPermissions.containsKey(key)
                     && userCalendarsPermissions[event.calendarId]['redact'] > 0
-                    && CalendarPermEventRedact[autshUserData.role] > 1)
-                    || CalendarPermEventRedact[autshUserData.role] == 1)
+                    && CalendarPermEventRedact[autshUserData.role] > 1))
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.blue,),
@@ -448,7 +551,7 @@ class _StartPageState extends State<StartPage> {
 
                 else
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.receipt_long, color: Colors.grey,),
+                    icon: Icon(Icons.receipt_long, color: Colors.grey[300],),
                     label: 'edit',
                   )
 
@@ -568,6 +671,127 @@ class _StartPageState extends State<StartPage> {
   }
 
 
+  Future deleteEventDialog(){
+
+    var eventRepeat = false;
+    var uidData = openEvent.eventId.split('_');
+
+    if (uidData.length > 1) {
+      eventRepeat = true;
+    } else {
+      _changeMode = EventChangeMode.one;
+      changeMode = "one";
+    }
+
+    return  showDialog(
+      context: context,
+      builder: (_) =>  Dialog(
+        child: Center(
+          child: Column(
+            children: [
+              Container (
+                margin: EdgeInsets.all(20),
+                child:
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+
+                    Column(
+                      children: [
+
+                        Text("only this"),
+
+                        Radio<EventChangeMode>(
+                          value: EventChangeMode.one,
+                          groupValue: _changeMode,
+                          onChanged: (EventChangeMode? value) {
+                            setState(() {
+                              _changeMode = value;
+                              changeMode = "one";
+                              Navigator.of(context).pop();
+                              deleteEventDialog();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+
+
+                    if (eventRepeat)
+                    Column(
+                      children: [
+
+                        Text("this and after"),
+
+                        Radio<EventChangeMode>(
+                          value: EventChangeMode.after,
+                          groupValue: _changeMode,
+                          onChanged: (EventChangeMode? value) {
+                            setState(() {
+                              _changeMode = value;
+                              changeMode = "after";
+                              Navigator.of(context).pop();
+                              deleteEventDialog();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+
+                    if (eventRepeat)
+                    Column(
+                      children: [
+
+                        Text("all"),
+
+                        Radio<EventChangeMode>(
+                          value: EventChangeMode.all,
+                          groupValue: _changeMode,
+                          onChanged: (EventChangeMode? value) {
+                            setState(() {
+                              _changeMode = value;
+                              changeMode = "all";
+                              Navigator.of(context).pop();
+                              deleteEventDialog();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container (
+                margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+
+                      ElevatedButton(
+                          onPressed: ()  {
+                            deleteEvent();
+                          },
+                          child: Text('delete')),
+
+                      ElevatedButton(
+                          onPressed: ()  {
+                            Navigator.of(context).pop();
+                            setlocaleJsonData();
+                          },
+                          child: Text('close'))
+
+                    ]
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+      anchorPoint: Offset(1000, 1000),
+    );
+  }
+
+
   @override
   Future<void> setlocaleJsonData() async {
      var oldJson = await CalendarRepository().getLocalDataJson('eventsJson');
@@ -617,9 +841,45 @@ class _StartPageState extends State<StartPage> {
   }
 
   List<Event> _getEventsForDay(DateTime day) {
-
     // Implementation example
     return CalEvents[day] ?? [];
+  }
+
+  Future<void> getImportData(events) async {
+    print('get import Data');
+    List dayEventsIds = [];
+    events.forEach((element) {
+      if (!exportIds.contains(element.eventId)) {
+        exportIds.add(element.eventId);
+        dayEventsIds.add(element.eventId);
+        print(element.eventId);
+      }
+    });
+
+
+    while(dayEventsIds.length > 0 ) {
+      print('test');
+      int size = 10;
+      if (dayEventsIds.length < 10) {
+        size = dayEventsIds.length;
+      }
+      List list = dayEventsIds.sublist(0, size);
+
+      dayEventsIds.removeRange(0, size);
+
+      var result = await CalendarRepository().getExportEventDataIds(list);
+
+      result.forEach((element) {
+        String evId = element['eventImportId'];
+        if (!exportData.containsKey(evId)) {
+          exportData[evId] = element;
+        }
+      });
+    }
+    _selectedEvents.value = events;
+    setState(() {
+
+    });
   }
 
   List<Event> _getEventsForRange(DateTime start, DateTime end) {
@@ -641,7 +901,11 @@ class _StartPageState extends State<StartPage> {
         _rangeSelectionMode = RangeSelectionMode.toggledOff;
       });
 
-      _selectedEvents.value = _getEventsForDay(selectedDay);
+      if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
+        getImportData(_getEventsForDay(selectedDay));
+      } else {
+        _selectedEvents.value = _getEventsForDay(selectedDay);
+      }
     }
   }
 
@@ -678,7 +942,13 @@ class _StartPageState extends State<StartPage> {
     return Scaffold(
       appBar: AppBar(
         title: Center(
-          child: Text('Tango Calendar'),
+          child: Text('Tango Calendar',
+            style: TextStyle(
+                fontSize: 25,
+                fontFamily: 'Frederic'
+            ),
+          ),
+
         ),
         actions: [
           Container(
@@ -703,7 +973,7 @@ class _StartPageState extends State<StartPage> {
           TableCalendarCuston<Event>(
             locale: kLang,
             firstDay: kFirstDay,
-            lastDay: kLastDay,
+            lastDay: kLastDayThis,
             focusedDay: _focusedDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
             rangeStartDay: _rangeStart,
@@ -802,9 +1072,20 @@ class _StartPageState extends State<StartPage> {
             child: ValueListenableBuilder<List<Event>>(
               valueListenable: _selectedEvents,
               builder: (context, value, _) {
+
                 return ListView.builder(
                   itemCount: value.length,
                   itemBuilder: (context, index) {
+
+
+                    var color = 0xFF000000;
+
+                    if (!exportData.containsKey(value[index].eventId)
+                        && AllCalendars[value[index].calendarId].typeEvents == 'festivals') {
+                      if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin')
+                        color = 0xFFEA0707;
+                    }
+
                     return Container(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 12.0,
@@ -829,7 +1110,8 @@ class _StartPageState extends State<StartPage> {
                                 Expanded(
                                   child:
                                   Text(value[index].name, style: TextStyle(
-                                      fontWeight: FontWeight.w600
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(color)
                                   ),),
                                 ),
                               ],
@@ -885,6 +1167,8 @@ class _StartPageState extends State<StartPage> {
 
 
   void _onItemTapped(int index) async {
+
+    print('_onItemTapped - $index');
     switch (index) {
       case 0:
 
@@ -914,7 +1198,7 @@ class _StartPageState extends State<StartPage> {
         break;
       case 2:
 
-        shortMessage(context, 'download sterted', 2);
+        shortMessage(context, 'download started', 2);
         uploadsEventDates = {};
         await CalendarRepository().clearLocalDataJson('eventsJson');
         updateData();
@@ -975,6 +1259,45 @@ class _StartPageState extends State<StartPage> {
     localRepository().setLocalDataString('uploadsEventDates', data);
   }
 
+  void deleteEvent() {
+
+    ApiSigned().then((signedData) {
+
+
+      var requestTokenData = {
+        'tokenId': signedData['tokenId'],
+        'signed': '${signedData['signed']}',
+        'calId': openEvent.calendarId,
+        'eventId':openEvent.eventId,
+        'changeMode': changeMode
+      };
+
+      print(requestTokenData);
+
+      CalendarRepository().apiDeleteEvent(requestTokenData).then((request) async {
+
+        print('-------------');
+        print(request);
+
+        if (request.containsKey('errorMessage')) {
+          debugPrint("error message - ${request['errorMessage']}");
+
+          Navigator.pop(context);
+          shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
+        } else {
+
+          Navigator.pop(context);
+          _onItemTapped(2);
+
+          Navigator.pop(context);
+          shortMessage(context, 'delete complit', 2);
+
+        }
+
+      });
+
+    });
+  }
 
   void _onEventOpenItemTapped(int index) async {
     switch (index) {
@@ -986,40 +1309,13 @@ class _StartPageState extends State<StartPage> {
         break;
       case 1:
 
-        if((userCalendarsPermissions.containsKey(key)
+        if(autshUserData.role != null && ((userCalendarsPermissions.containsKey(key)
             && userCalendarsPermissions[openEvent.calendarId]['delete'] > 0
             && CalendarPermEventDelete[autshUserData.role] > 1)
             || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid
-            || CalendarPermEventDelete[autshUserData.role] > 1) {
-          print('delete permission true');
+            || CalendarPermEventDelete[autshUserData.role] > 1)) {
 
-          ApiSigned().then((signedData) {
-
-
-            var requestTokenData = {
-              'tokenId': signedData['tokenId'],
-              'signed': '${signedData['signed']}',
-              'calId': openEvent.calendarId,
-              'eventId':openEvent.eventId
-            };
-
-            Navigator.pop(context);
-
-            CalendarRepository().apiDeleteEvent(requestTokenData).then((value) async {
-
-              CalendarRepository().importDeleteEvent(openEvent.calendarId, openEvent.eventId);
-              CalendarRepository().getEventsListForMonth(_focusedDay).then((value) {
-                CalEvents = value;
-                setState(() {
-                  kEvents = value;
-                });
-                _selectedEvents.value = _getEventsForDay(_selectedDay!);
-              });
-              shortMessage(context, 'delete complit', 2);
-
-            });
-
-          });
+          deleteEventDialog();
 
         } else {
           shortMessage(context, 'delete not permission', 2);
@@ -1027,8 +1323,19 @@ class _StartPageState extends State<StartPage> {
 
         break;
       case 2:
+        if(autshUserData.role != null && ((userCalendarsPermissions.containsKey(key)
+            && userCalendarsPermissions[openEvent.calendarId]['redact'] > 0
+            && CalendarPermEventDelete[autshUserData.role] > 1)
+            || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid
+            || CalendarPermEventDelete[autshUserData.role] > 1)) {
 
-        shortMessage(context, 'upload complit', 2);
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, '/edit_event', (route) => false);
+
+        } else {
+          shortMessage(context, 'edit not permission', 2);
+        }
+
         break;
     }
 

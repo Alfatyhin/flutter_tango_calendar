@@ -80,6 +80,20 @@ class usersRepository {
     });
   }
 
+  Future<String> deleteUserData(userUid) async {
+    return db.collection("usersData")
+        .doc(userUid)
+        .delete()
+        .then((value) {
+      print("User Delete");
+      return 'User Delete';
+    })
+        .catchError((error) {
+      print("Failed to delete user: $error");
+      return 'Failed to delete user';
+    });
+  }
+
   Future statementsAdd(Map<String, dynamic> applicateData) async {
     var key = '${applicateData['userUid']}-${applicateData['type']}';
 
@@ -96,6 +110,25 @@ class usersRepository {
     Map importSettings = {};
     return db.collection('fbEventImportSettings')
         .where('calId', isEqualTo: calId)
+        .get()
+        .then(
+          (querySnapshot) {
+        for (var docSnapshot in querySnapshot.docs) {
+          var eventId = docSnapshot['eventId'];
+
+          importSettings[eventId] = docSnapshot.data();
+        }
+
+        return importSettings;
+      },
+      onError: (e) => print("Error updating document $e"),
+    );
+  }
+
+  Future<Map> getFbEventImportSettingsByEventId(eventId) async {
+    Map importSettings = {};
+    return db.collection('fbEventImportSettings')
+        .where('eventId', isEqualTo: eventId)
         .get()
         .then(
           (querySnapshot) {

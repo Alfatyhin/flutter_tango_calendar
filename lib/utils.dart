@@ -42,7 +42,7 @@ List<DateTime> daysInRange(DateTime first, DateTime last) {
 String kLang = 'en';
 final kToday = DateTime.now();
 final kFirstDay = DateTime(kToday.year, kToday.month - 3, kToday.day);
-final kLastDay = DateTime(kToday.year, kToday.month + 6, kToday.day);
+DateTime kLastDay = DateTime(kToday.year, kToday.month + 3, kToday.day);
 
 String NumFormat(int num) {
   String res = '$num';
@@ -59,5 +59,8 @@ String DateFormatDate(DateTime date) {
 }
 String DateFormatTime(DateTime date) {
   return '${NumFormat(date.hour)}-${NumFormat(date.minute)}';
+}
+String DateFormatDateTime(DateTime date) {
+  return '${date.year}-${NumFormat(date.month)}-${NumFormat(date.day)} ${NumFormat(date.hour)}:${NumFormat(date.minute)}';
 }
 

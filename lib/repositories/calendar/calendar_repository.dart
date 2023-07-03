@@ -37,9 +37,15 @@ class CalendarRepository {
 
   Future<String> addImportEventData(data) async {
 
-    return db.collection('calendarsImports').add(data).then((documentSnapshot) {
+    var key = "${data['eventImportSourceId']}-${data['eventExportId']}";
+    print(key);
+    return db.collection('calendarsImports')
+        .doc(key)
+        .set(data)
+        .then((documentSnapshot) {
       return "Added import data sugess";
     }).onError((e, _) {
+      print(e);
       return "error add import data";
     });
   }
@@ -48,6 +54,23 @@ class CalendarRepository {
 
     return db.collection('calendarsImports')
         .where('eventExportId', whereIn: fbEventsIdsList)
+        .get().then(
+          (querySnapshot) {
+        List data = [];
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          data.add(docSnapshot.data());
+        }
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+  Future<List> getExportEventDataIds(List fbEventsIdsList) async {
+
+    return db.collection('calendarsImports')
+        .where('eventImportId', whereIn: fbEventsIdsList)
         .get().then(
           (querySnapshot) {
         List data = [];
@@ -71,6 +94,46 @@ class CalendarRepository {
         print("Successfully completed");
         for (var docSnapshot in querySnapshot.docs) {
           data.add(docSnapshot.data());
+        }
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+  Future<List> getExportEventData(eventId) async {
+
+    return db.collection('calendarsImports')
+        .where('eventImportId', isEqualTo: eventId)
+        .get().then(
+          (querySnapshot) {
+        List data = [];
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          data.add(docSnapshot.data());
+        }
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+  Future<List> deleteImportEventDataOld(eventId) async {
+
+    return db.collection('calendarsImports')
+        // .where('hashEvent', isNotEqualTo: true)
+        .where('eventExportId', isEqualTo: eventId)
+        .get().then(
+          (querySnapshot) {
+        List data = [];
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          Map docData = docSnapshot.data();
+          data.add(docSnapshot.data());
+          if (!docData.containsKey('hashEvent')) {
+            db.collection('calendarsImports').doc(docSnapshot.id).delete();
+            print(docSnapshot.id);
+          }
         }
         return data;
       },
@@ -256,17 +319,30 @@ class CalendarRepository {
     return data;
   }
 
+
+  Future<Map> apiUpdateEvent(requestTokenData) async {
+    final response = await Dio().post('${apiUrl}/api/event_update', data: requestTokenData);
+    Map data = {};
+    var dataJson = response.data;
+    print(dataJson);
+    data = json.decode(dataJson);
+
+    return data;
+  }
+
   void testRequest(requestTokenData) async {
-    final response = await Dio().post('https://webhook.site/ee8e53c6-1c9f-4334-b9dc-56a30a716e30', data: requestTokenData);
+    final response = await Dio().post('https://webhook.site/491a5c65-c7bd-4563-a8c7-b2d989dcd38e', data: requestTokenData);
   }
 
 
-  Future<void> apiDeleteEvent(requestTokenData) async {
+  Future<Map> apiDeleteEvent(requestTokenData) async {
+    Map data = {};
     final response = await Dio().post('${apiUrl}/api/event_delete', data: requestTokenData);
     var dataJson = response.data;
 
     print(dataJson);
-    return dataJson;
+    data = json.decode(dataJson);
+    return data;
   }
 
 

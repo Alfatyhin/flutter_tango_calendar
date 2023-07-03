@@ -118,7 +118,11 @@ class _UserProfileState extends State<UserProfile> {
   Widget build(BuildContext context) {
     var uid = ModalRoute.of(context)?.settings.arguments;
 
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
         appBar: AppBar(
           title: Center(
             child: Text('Profile'),
@@ -132,24 +136,25 @@ class _UserProfileState extends State<UserProfile> {
         ),
         body: _body(uid),
 
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete, color: Colors.white,),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: 'update',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.delete, color: Colors.white,),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.refresh),
+              label: 'update',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
@@ -250,19 +255,86 @@ class _UserProfileState extends State<UserProfile> {
               const SizedBox(height: 20),
 
               if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
-              ElevatedButton(onPressed: () {
+                ElevatedButton(onPressed: () {
                 _calendarsStatmentOpen();
-              }, child: Text('calendar permissins',
+              }, child: Text('calendars permissins',
                 style: TextStyle(
                     fontSize: 20
                 ),),),
 
               const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  ElevatedButton(
+                      onPressed: () {
+                        deleteUserDialog();
+                      },
+                      child: Text('delete my profile data'))
+                ],
+              )
             ],
           ),
         );
     }
     return Text('await');
+  }
+
+
+  Future deleteUserDialog(){
+
+
+    return  showDialog(
+      context: context,
+      builder: (_) =>  Dialog(
+        child: Center(
+          child: Column(
+            children: [
+              Container (
+                margin: EdgeInsets.all(20),
+                child:
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+
+                    Column(
+                      children: [
+
+                        Text("confirm delete profile"),
+
+                      ],
+                    ),
+
+                  ],
+                ),
+              ),
+              Container (
+                margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+
+                      ElevatedButton(
+                          onPressed: ()  {
+                            userDeleteData();
+                          },
+                          child: Text('delete')),
+
+                      ElevatedButton(
+                          onPressed: ()  {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('close'))
+
+                    ]
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+      anchorPoint: Offset(1000, 1000),
+    );
   }
 
   void _calendarsStatmentOpen() {
@@ -538,6 +610,25 @@ class _UserProfileState extends State<UserProfile> {
         .then((value) {
       setUserData(userUid);
       shortMessage(context as BuildContext, value as String, 2);
+    });
+
+  }
+
+  Future<void> userDeleteData() async {
+    FirebaseAuth.instance
+        .authStateChanges()
+        .listen((User? user) async {
+      if (user != null) {
+        usersRepository().deleteUserData(user.uid).then((result) async {
+
+          shortMessage(context, result, 2);
+          if (result == 'User Delete') {
+            await user?.delete();
+            Navigator.pop(context);
+            Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+          }
+        });
+      }
     });
 
   }

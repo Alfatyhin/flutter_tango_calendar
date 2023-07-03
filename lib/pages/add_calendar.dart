@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
+import 'package:tango_calendar/repositories/localRepository.dart';
 import '../AppTools.dart';
 import '../models/Calendar.dart';
 import '../repositories/calendar/calendar_repository.dart';
@@ -16,10 +17,17 @@ class AddCalendar extends StatefulWidget {
 
 // TODO: сделать перезапись списка стран при обновлении списка календарей
 
+
+enum CalendarAddMode { newCalendar, issetCalendar }
+
 class _AddCalendarState extends State<AddCalendar> {
+
+  CalendarAddMode? _calendarAddMode = CalendarAddMode.newCalendar;
+  String calendarAddMode = "newCalendar";
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  TextEditingController calendarUidController = TextEditingController();
   TextEditingController calendarNameController = TextEditingController();
   TextEditingController calendarDescriptionController = TextEditingController();
 
@@ -258,155 +266,239 @@ class _AddCalendarState extends State<AddCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('Add Calendar'),
-        ),
-        actions: [
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text('Add Calendar'),
+          ),
+          actions: [
 
-        ],
-      ),
-      body: Container(
-        padding: EdgeInsets.all(20),
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            SelectState(
-              onCountryChanged: (value) {
-                setState(() {
-                  countryValue = value;
-                });
-              },
-              onStateChanged:(value) {
-                setState(() {
-                  stateValue = value;
-                });
-              },
-              onCityChanged:(value) {
-                setState(() {
-                  cityValue = value;
-                });
-              },
-            ),
-
-            const SizedBox(height: 20.0),
-            Form(
-              key: _formKey,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (selectCalendarDisplayName != null)
-                          Expanded (
-                            child: Text(selectCalendarDisplayName),
-                          )
-                        else
-                          Expanded (
-                            child: Text('select type calendar'),
-                          ),
-
-                        ElevatedButton(
-                          onPressed: () {
-                            calendarTypeDialog();
-                          }, child: Text('select',
-                          style: TextStyle(
-                              fontSize: 20
-                          ),),),
-                      ],
-                    ),
-                    const SizedBox(height: 20.0),
-
-                    if (selectCalendarType == 'festival_shedule'
-                        || selectCalendarType == 'tango_school')
-                      TextFormField(
-                        controller: calendarNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'calendar name',
-                          disabledBorder: OutlineInputBorder(),
-                          hintText: 'Name Calendar',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (String? value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter some text';
-                          }
-                          return null;
-                        },
-                      ),
-
-                    const SizedBox(height: 20.0),
-
-                    if (selectCalendarType == 'festival_shedule'
-                        || selectCalendarType == 'tango_school')
-                      Container(
-                        height: 200,
-                        child: TextField(
-                          controller: calendarDescriptionController,
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              labelText: 'Event Description'
-                          ),
-                          keyboardType: TextInputType.multiline,
-                          maxLines: null,
-                          expands: true, // <-- SEE HERE
-                        ),
-                      ),
-
-
-                  ],
-                )
-            ),
-
-            const SizedBox(height: 20.0),
-            if (selectCalendarDisplayName != null)
-            ElevatedButton(
-              onPressed: () {
-
-                if (selectCalendarType == 'festival_shedule'
-                    || selectCalendarType == 'tango_school') {
-                  if (_formKey.currentState!.validate()) {
-
-                    addCalendar();
-                    shortMessage(context, 'process added', 2);
-                  }
-                } else {
-                  addCalendar();
-                  shortMessage(context, 'process added', 2);
-                }
-
-              }, child: Text('create calendar',
-              style: TextStyle(
-                  fontSize: 20
-              ),),),
           ],
         ),
-      ),
+        body: Container(
+          padding: EdgeInsets.all(20),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              SelectState(
+                onCountryChanged: (value) {
+                  setState(() {
+                    countryValue = value;
+                  });
+                },
+                onStateChanged:(value) {
+                  setState(() {
+                    stateValue = value;
+                  });
+                },
+                onCityChanged:(value) {
+                  setState(() {
+                    cityValue = value;
+                  });
+                },
+              ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        items:  <BottomNavigationBarItem>[
+              const SizedBox(height: 20.0),
+              Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (selectCalendarDisplayName != null)
+                            Expanded (
+                              child: Text(selectCalendarDisplayName),
+                            )
+                          else
+                            Expanded (
+                              child: Text('select type calendar'),
+                            ),
 
-          if (backRout != '')
-            BottomNavigationBarItem(
-              icon: Icon(Icons.arrow_back),
-              label: 'back',
-            )
-          else
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'home',
-            ),
+                          ElevatedButton(
+                            onPressed: () {
+                              calendarTypeDialog();
+                            }, child: Text('select',
+                            style: TextStyle(
+                                fontSize: 20
+                            ),),),
+                        ],
+                      ),
+                      const SizedBox(height: 20.0),
+
+                      if ((selectCalendarType == 'festival_shedule'
+                          || selectCalendarType == 'tango_school'))
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+
+                            Column(
+                              children: [
+
+                                Text("create new"),
+
+                                Radio<CalendarAddMode>(
+                                  value: CalendarAddMode.newCalendar,
+                                  groupValue: _calendarAddMode,
+                                  onChanged: (CalendarAddMode? value) {
+                                    setState(() {
+                                      _calendarAddMode = value;
+                                      calendarAddMode = "newCalendar";
+
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
 
 
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: 'update',
+                            Column(
+                              children: [
+
+                                Text("add isset"),
+
+                                Radio<CalendarAddMode>(
+                                  value: CalendarAddMode.issetCalendar,
+                                  groupValue: _calendarAddMode,
+                                  onChanged: (CalendarAddMode? value) {
+                                    setState(() {
+                                      _calendarAddMode = value;
+                                      calendarAddMode = "issetCalendar";
+
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+
+                          ],
+                        ),
+
+
+
+                      if ((selectCalendarType == 'festival_shedule'
+                          || selectCalendarType == 'tango_school')
+                          && calendarAddMode == 'issetCalendar')
+                        Column(
+                          children: [
+                            const SizedBox(height: 20.0),
+
+                            TextFormField(
+                              controller: calendarUidController,
+                              decoration: const InputDecoration(
+                                labelText: 'calendar uid',
+                                disabledBorder: OutlineInputBorder(),
+                                hintText: 'UID Calendar',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (String? value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter some UID';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+
+
+                      if ((selectCalendarType == 'festival_shedule'
+                          || selectCalendarType == 'tango_school')
+                          && calendarAddMode == 'newCalendar')
+                        TextFormField(
+                          controller: calendarNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'calendar name',
+                            disabledBorder: OutlineInputBorder(),
+                            hintText: 'Name Calendar',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (String? value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter some text';
+                            }
+                            return null;
+                          },
+                        ),
+
+                      const SizedBox(height: 20.0),
+
+                      if ((selectCalendarType == 'festival_shedule'
+                          || selectCalendarType == 'tango_school')
+                          && calendarAddMode == 'newCalendar')
+                        Container(
+                          height: 200,
+                          child: TextField(
+                            controller: calendarDescriptionController,
+                            decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Event Description'
+                            ),
+                            keyboardType: TextInputType.multiline,
+                            maxLines: null,
+                            expands: true, // <-- SEE HERE
+                          ),
+                        ),
+
+
+                    ],
+                  )
+              ),
+
+              const SizedBox(height: 20.0),
+              if (selectCalendarDisplayName != null)
+                ElevatedButton(
+                  onPressed: () {
+
+                    if (selectCalendarType == 'festival_shedule'
+                        || selectCalendarType == 'tango_school') {
+                      if (_formKey.currentState!.validate()) {
+
+                        addCalendar();
+                        shortMessage(context, 'process added', 2);
+                      }
+                    } else {
+                      addCalendar();
+                      shortMessage(context, 'process added', 2);
+                    }
+
+                  }, child: Text('create calendar',
+                  style: TextStyle(
+                      fontSize: 20
+                  ),),),
+            ],
           ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+        ),
+
+        bottomNavigationBar: BottomNavigationBar(
+          items:  <BottomNavigationBarItem>[
+
+            if (backRout != '')
+              BottomNavigationBarItem(
+                icon: Icon(Icons.arrow_back),
+                label: 'back',
+              )
+            else
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'home',
+              ),
+
+
+            BottomNavigationBarItem(
+              icon: Icon(Icons.refresh),
+              label: 'update',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
@@ -424,8 +516,13 @@ class _AddCalendarState extends State<AddCalendar> {
         'country': countryName,
         'city': cityValue,
         'type_events': selectCalendarType,
-        'source': autshUserData.role
+        'source': autshUserData.role,
+        'addMode': calendarAddMode
       };
+
+      if (calendarAddMode == 'issetCalendar') {
+        data['uid'] =  calendarUidController.text;
+      }
 
       print(data);
       var requestTokenData = {
@@ -439,12 +536,13 @@ class _AddCalendarState extends State<AddCalendar> {
 
         if (response.containsKey('errorMessage')) {
           debugPrint("error message - ${response['errorMessage']}");
-          shortMessage(context, "error - ${response['errorMessage']}", 2);
+          shortMessage(context, "error - ${response['errorMessage']['error']['message']}", 2);
         } else {
+
           Calendar calendar = new Calendar(
             id: "${response['id']}",
-            name: calendarNameController.text,
-            description: calendarDescriptionController.text,
+            name: "${response['name']}",
+            description: response['description'],
             typeEvents: response['type_events'],
             country: response['country'],
             city: cityValue,
@@ -452,26 +550,42 @@ class _AddCalendarState extends State<AddCalendar> {
             gcalendarId: "${response['gcalendarId']}",
             creator: autshUserData.uid,
           );
-        CalendarRepository().addNewCalendarToFirebase(calendar).then((value) async {
 
-          shortMessage(context, 'calendar add', 2);
+          print(calendar.toJson());
+          CalendarRepository().addNewCalendarToFirebase(calendar).then((value) async {
 
-          if (cityValue == '') {
-            if (countriesCalendars.containsKey(countryName) ) {
-              countriesCalendars[countryName].add(selectCalendarType);
-            } else {
-              countriesCalendars[countryName] = [];
-              countriesCalendars[countryName].add(selectCalendarType);
+
+            if (cityValue == '') {
+              if (countriesCalendars.containsKey(countryName) ) {
+                countriesCalendars[countryName].add(selectCalendarType);
+              } else {
+                countriesCalendars[countryName] = [];
+                countriesCalendars[countryName].add(selectCalendarType);
+              }
             }
-          }
 
-          selectCalendarDisplayName = null;
-          setState(() {});
+            selectCalendarDisplayName = null;
+            setState(() {});
 
-          await CalendarRepository().updateCalendarsData();
-          setCalendarsMap();
+            var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
 
-        });
+            if (selectedCalendarsJson != '') {
+              List selectedCalendars = json.decode(selectedCalendarsJson as String);
+              selectedCalendars.add(response['id']);
+              await localRepository().setLocalDataJson('selectedCalendars', selectedCalendars);
+            }
+
+            await CalendarRepository().updateCalendarsData();
+            setCalendarsMap();
+            shortMessage(context, 'calendar add', 2);
+
+            if (backRout != '') {
+              String redirect = backRout;
+              Navigator.pop(context);
+              Navigator.pushNamedAndRemoveUntil(context, redirect, (route) => false);
+            }
+
+          });
 
         }
       });

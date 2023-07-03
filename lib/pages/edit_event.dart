@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -7,15 +9,20 @@ import '../utils.dart';
 import 'package:intl/intl.dart';
 
 
-class CreateEvent extends StatefulWidget {
-  const CreateEvent({Key? key}) : super(key: key);
+class EditEvent extends StatefulWidget {
+  const EditEvent({Key? key}) : super(key: key);
 
   @override
-  _CreateEventState createState() => _CreateEventState();
+  _EditEventState createState() => _EditEventState();
 }
 
+enum EventChangeMode { one, after, all }
 
-class _CreateEventState extends State<CreateEvent> {
+class _EditEventState extends State<EditEvent> {
+
+  EventChangeMode? _changeMode = EventChangeMode.one;
+  String changeMode = "one";
+
 
   final GlobalKey<FormState> _form = GlobalKey();
   TextEditingController calendarNameController = TextEditingController();
@@ -26,6 +33,8 @@ class _CreateEventState extends State<CreateEvent> {
   TextEditingController dateEndStringController = TextEditingController();
   TextEditingController timeStartStringController = TextEditingController();
   TextEditingController timeEndStringController = TextEditingController();
+
+  var eventRepeat = false;
 
   String _timezone = 'Unknown';
   DateTime dateStart = DateTime.now();
@@ -38,15 +47,10 @@ class _CreateEventState extends State<CreateEvent> {
   List iterateRules = [];
   int iterableRuleIndexActive = 0;
 
-  String iterateTitle = 'newer';
-  String iterateValue = '';
 
   var selectCalendarId;
 
   int _selectedIndex = 0;
-
-  // var test = 'RRULE:FREQ=MONTHLY;BYDAY=1MO';
-
 
 
   Future dateDialog(DateTime DateTimeStart, String comand){
@@ -85,8 +89,6 @@ class _CreateEventState extends State<CreateEvent> {
 
                       }
                       setIterableRules();
-                      iterateTitle = iterateRules[iterableRuleIndexActive]['title'];
-                      iterateValue = iterateRules[iterableRuleIndexActive]['value'];
                       setState(() {
 
                       });
@@ -115,209 +117,132 @@ class _CreateEventState extends State<CreateEvent> {
   }
 
 
-  Future calendarNameDialog(){
-
-    List<Calendar> selectedList = [];
-
-    selectedCalendars.forEach((key, value) {
-      selectedList.add(value);
-    });
-
-    return  showDialog(
-      context: context,
-      builder: (_) =>  Dialog(
-        child: Container(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ListView.separated(
-                itemCount: selectedList.length,
-                // padding: EdgeInsets.only(left: 20),
-                shrinkWrap: true,
-                physics: ClampingScrollPhysics(),
-                separatorBuilder: (BuildContext context, int index) => Divider(
-                  height: 10,
-                  color: Colors.blueAccent,
-                  thickness: 3,
-                ),
-                itemBuilder: (BuildContext context, int index) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          Text("${selectedList[index].name}",
-                            style: TextStyle(
-                                fontSize: 15
-                            ),),
-
-
-                          Text(selectedList[index].typeEvents,
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),),
-                        ],
-                      ),
-
-                      Column(
-                        children: [
-
-                          if (((GlobalAddEventPermission[autshUserData.role] > 0
-                              && !userPermissions.containsKey(selectedList[index].id))
-                              || (GlobalAddEventPermission[autshUserData.role] > 0
-                                  && (userPermissions.containsKey(selectedList[index].id)
-                                      && userPermissions[selectedList[index].id]['add'] != 0)))
-                              && (selectedList[index].typeEvents != 'festival_shedule'
-                                  && selectedList[index].typeEvents != 'tango_school')
-                              || selectedList[index].creator == autshUserData.uid
-                              || (autshUserData.role == 'su_admin'|| autshUserData.role == 'admin')
-                          )
-                            Checkbox(
-                              value: selectedList[index].enable,
-                              onChanged: (bool? newValue) {
-
-                                calendarNameController.text = selectedList[index].name;
-                                selectCalendarId = selectedList[index].id;
-                                int x = 0;
-                                selectedList.forEach((value) {
-                                  selectedList[x].enable = false;
-                                  x++;
-                                });
-                                selectedList[index].enable = newValue!;
-
-                                setState(() {
-                                });
-
-                                Navigator.of(context).pop();
-
-                              })
-                          else 
-                            Icon(Icons.do_disturb_alt_outlined, color: Colors.red,),
-                        ],
-                      ),
-
-                    ],
-                  );
-                },
-              ),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                      onPressed: () => {
-                        Navigator.of(context).pop()
-                      },
-                      child: Text('close')
-                  ),
-                ],
-              )
-            ],
-          )
-        ),
-      ),
-      anchorPoint: Offset(1000, 1000),
-    );
-  }
-
 
   Future recurenceDialog(){
 
-
     return  showDialog(
       context: context,
       builder: (_) =>  Dialog(
-        child: Container(
-          padding: EdgeInsets.all(20),
+        child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Container (
+                margin: EdgeInsets.all(20),
+                child:
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
 
-              ListView.separated(
-                itemCount: iterateRules.length,
-                // padding: EdgeInsets.only(left: 20),
-                shrinkWrap: true,
-                physics: ClampingScrollPhysics(),
-                separatorBuilder: (BuildContext context, int index) => Divider(
-                  height: 10,
-                  color: Colors.blueAccent,
-                  thickness: 3,
+                    Column(
+                      children: [
+
+                        Text("only this"),
+
+                        Radio<EventChangeMode>(
+                          value: EventChangeMode.one,
+                          groupValue: _changeMode,
+                          onChanged: (EventChangeMode? value) {
+                            setState(() {
+                              _changeMode = value;
+                              changeMode = "one";
+                              Navigator.of(context).pop();
+                              recurenceDialog();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+
+
+                    if (eventRepeat)
+                      Column(
+                        children: [
+
+                          Text("this and after"),
+
+                          Radio<EventChangeMode>(
+                            value: EventChangeMode.after,
+                            groupValue: _changeMode,
+                            onChanged: (EventChangeMode? value) {
+                              setState(() {
+                                _changeMode = value;
+                                changeMode = "after";
+                                Navigator.of(context).pop();
+                                recurenceDialog();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+
+                    if (eventRepeat)
+                      Column(
+                        children: [
+
+                          Text("all"),
+
+                          Radio<EventChangeMode>(
+                            value: EventChangeMode.all,
+                            groupValue: _changeMode,
+                            onChanged: (EventChangeMode? value) {
+                              setState(() {
+                                _changeMode = value;
+                                changeMode = "all";
+                                Navigator.of(context).pop();
+                                recurenceDialog();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
-                itemBuilder: (BuildContext context, int index) {
-                  return Row(
+              ),
+              Container (
+                margin: EdgeInsets.only(top: 0, left: 20.0, right: 10.0),
+                child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
 
-                          Text("${iterateRules[index]['title']}",
-                            style: TextStyle(
-                                fontSize: 15
-                            ),),
+                      ElevatedButton(
+                          onPressed: ()  {
+                            Navigator.of(context).pop();
+                            addEvent();
+                          },
+                          child: Text('change')),
 
+                      ElevatedButton(
+                          onPressed: ()  {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('close'))
 
-                          Text(iterateRules[index]['value'],
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),),
-                        ],
-                      ),
-
-                      Column(
-                        children: [
-                          Checkbox(
-                              value: iterateRules[index]['checked'],
-                              onChanged: (bool? newValue) {
-
-                                iterateRules[iterableRuleIndexActive]['checked']= false;
-                                iterableRuleIndexActive = index;
-                                iterateTitle = iterateRules[iterableRuleIndexActive]['title'];
-                                iterateValue = iterateRules[iterableRuleIndexActive]['value'];
-                                iterateRules[index]['checked'] = newValue!;
-
-                                setState(() {
-                                });
-
-                                Navigator.of(context).pop();
-
-                              })
-                        ],
-                      ),
-
-                    ],
-                  );
-                },
-              ),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                      onPressed: () => {
-                        Navigator.of(context).pop()
-                      },
-                      child: Text('close')
-                  ),
-                ],
+                    ]
+                ),
               )
             ],
-          )
+          ),
         ),
       ),
       anchorPoint: Offset(1000, 1000),
     );
   }
 
-
-
   Future<void> showTimeDialog(timeCommand) async {
+
+    DateTime timeData;
+    if (timeCommand == 'start') {
+      timeData = DateTime.parse("${openEvent.dateStart} ${openEvent.timeStart}");
+    } else {
+      timeData = DateTime.parse("${openEvent.dateEnd} ${openEvent.timeEnd}");
+    }
+
+    TimeOfDay timeDay = TimeOfDay.fromDateTime(timeData);
+
     final TimeOfDay? result = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: timeDay,
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -362,12 +287,30 @@ class _CreateEventState extends State<CreateEvent> {
     }
   }
 
+  void setEventData() {
+    eventTitleController.text = openEvent.name;
+    eventDescriptionController.text = openEvent.descriptionString();
+    eventLocationnController.text = openEvent.locationString();
+    dateStartStringController.text = openEvent.dateStart;
+    dateEndStringController.text = openEvent.dateEnd;
+    timeStartStringController.text = openEvent.timeStart;
+    timeEndStringController.text = openEvent.timeEnd;
+
+    dateStart = DateTime.parse(openEvent.dateStart);
+    dateEnd = DateTime.parse(openEvent.dateEnd);
+    var uidData = openEvent.eventId.split('_');
+
+    if (uidData.length > 1) {
+      eventRepeat = true;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     initTimezone();
     getUserPermissions();
+    setEventData();
   }
 
 
@@ -381,7 +324,7 @@ class _CreateEventState extends State<CreateEvent> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Create Event'),
+            child: Text('Edit Event'),
           ),
           actions: [
 
@@ -394,36 +337,6 @@ class _CreateEventState extends State<CreateEvent> {
             child: ListView(
               children: [
 
-                const SizedBox(height: 10.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded (
-                      child: GestureDetector(
-                        onTap: () {
-                          calendarNameDialog();
-                        },
-                        child: TextFormField(
-                          enabled: false,
-                          controller: calendarNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'selected calendar',
-                            disabledBorder: OutlineInputBorder(),
-                            hintText: 'Select Calendar',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (String? value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some text';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ),
-
-                  ],
-                ),
                 const SizedBox(height: 20.0),
 
                 TextFormField(
@@ -445,12 +358,28 @@ class _CreateEventState extends State<CreateEvent> {
                 ),
                 const SizedBox(height: 20.0),
 
+                if (eventRepeat)
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Event repeated')
+                        ],
+                      ),
+                      const SizedBox(height: 20.0),
+                    ],
+                  ),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded (
                       child: GestureDetector(
-                        onTap: () => dateDialog(dateStart, 'start'),
+                        onTap: () {
+                          if (!eventRepeat)
+                            dateDialog(dateStart, 'start');
+                        },
                         child: TextFormField(
                           enabled: false,
                           controller: dateStartStringController,
@@ -474,7 +403,10 @@ class _CreateEventState extends State<CreateEvent> {
                     const SizedBox(width: 20.0),
                     Expanded (
                       child: GestureDetector(
-                        onTap: () => dateDialog(dateStart, 'end'),
+                        onTap: () {
+                          if (!eventRepeat)
+                            dateDialog(dateEnd, 'end');
+                        },
                         child: TextFormField(
                           enabled: false,
                           controller: dateEndStringController,
@@ -557,24 +489,6 @@ class _CreateEventState extends State<CreateEvent> {
                 ),
                 const SizedBox(height: 20.0),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("repeat: $iterateTitle"),
-
-                    const SizedBox(width: 20.0),
-
-                    ElevatedButton(
-                      onPressed: () {
-                        recurenceDialog();
-                      }, child: Text('rules',
-                      style: TextStyle(
-                          fontSize: 20
-                      ),),),
-                  ],
-                ),
-
-
                 const SizedBox(height: 20.0),
                 TextFormField(
                   controller: eventLocationnController,
@@ -610,13 +524,17 @@ class _CreateEventState extends State<CreateEvent> {
                 ElevatedButton(
                   onPressed: () {
                     if (_form.currentState!.validate()) {
-                      addEvent();
+                      if (eventRepeat) {
+                        recurenceDialog();
+                      } else {
+                        addEvent();
+                      }
                     } else {
                       shortMessage(context, "error form field", 2);
                     }
                   },
                   child: const Text(
-                    'Send',
+                    'change event',
                     style: TextStyle(fontSize: 24),
                   ),
                 ),
@@ -638,8 +556,8 @@ class _CreateEventState extends State<CreateEvent> {
               label: '',
             ),
             BottomNavigationBarItem(
-                icon: Icon(Icons.refresh, size: 0,),
-                label: ''
+                icon: Icon(Icons.refresh),
+                label: 'refresh'
             ),
           ],
           currentIndex: _selectedIndex,
@@ -660,7 +578,9 @@ class _CreateEventState extends State<CreateEvent> {
       var requestTokenData = {
         'tokenId': signedData['tokenId'],
         'signed': '${signedData['signed']}',
-        'calendars': [selectCalendarId],
+        'calendarId': openEvent.calendarId,
+        'eventId': openEvent.eventId,
+        'changeMode': changeMode,
         'event': {
           "name": eventTitleController.text,
           "location": eventLocationnController.text,
@@ -676,35 +596,24 @@ class _CreateEventState extends State<CreateEvent> {
           'organizer': {
             'displayName': autshUserData.name,
             'email': autshUserData.email
-          },
-          'recurrence': [iterateValue]
+          }
         }
       };
 
+      // print(requestTokenData);
+      // CalendarRepository().testRequest(requestTokenData);
 
-      eventTitleController.text = '';
-      iterateTitle = 'newer';
-      iterateValue = '';
-      eventTitleController.text = '';
-      eventDescriptionController.text = '';
-      calendarNameController.text = '';
-      eventLocationnController.text = '';
-
-      print(requestTokenData['event']);
-
-      CalendarRepository().apiAddEvent(requestTokenData).then((request) {
+      CalendarRepository().apiUpdateEvent(requestTokenData).then((request) {
 
         if (request.containsKey('errorMessage')) {
           debugPrint("error message - ${request['errorMessage']}");
           shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
         } else {
 
-          shortMessage(context, "event creaded", 2);
-          print(request);
-
-          setState(() {
-
-          });
+          shortMessage(context, "event updated", 2);
+          backCommand['comand'] = 'refresh';
+          Navigator.pop(context);
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
 
         }
       });
@@ -785,6 +694,7 @@ class _CreateEventState extends State<CreateEvent> {
         break;
       case 2:
 
+        setEventData();
         break;
     }
 

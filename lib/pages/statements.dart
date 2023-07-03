@@ -245,53 +245,59 @@ class _StatementsListState extends State<StatementsList> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('Statements'),
-        ),
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.menu),
-          //   onPressed: _menuOpen,
-          // )
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: statementsNew.length,
-        itemBuilder: (context, index) {
-          return Container(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 4.0,
-              ),
-              decoration: BoxDecoration(
-                border: Border.all(),
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              child: _statmenListItem(index)
-          );
-        },
-      ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text('Statements'),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete, color: Colors.white,),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: 'update',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+          actions: [
+            // IconButton(
+            //   icon: Icon(Icons.menu),
+            //   onPressed: _menuOpen,
+            // )
+          ],
+        ),
+        body: ListView.builder(
+          itemCount: statementsNew.length,
+          itemBuilder: (context, index) {
+            return Container(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 4.0,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(),
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                child: _statmenListItem(index)
+            );
+          },
+        ),
+
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.delete, color: Colors.white,),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.refresh),
+              label: 'update',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

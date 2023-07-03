@@ -100,9 +100,10 @@ class _CalendarsPageState extends State<CalendarsPage> {
     }
 
     if (selectedCalendars.length > 0) {
+      print(selectedCalendars);
       for(var x = 0; x < selectedCalendars.length; x++) {
-        var key = selectedCalendars[x] as String;
-        selected[key] = true;
+        var key = selectedCalendars[x];
+        selected["$key"] = true;
       }
     } else {
       print('not selected');
@@ -452,154 +453,154 @@ class _CalendarsPageState extends State<CalendarsPage> {
     return  showDialog(
       context: context,
       builder: (_) =>  Dialog(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Center(
-                  child: Text('cities',
-                    style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue
-                    ),
-                  ),
-                ),
-
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Container(
+          padding: EdgeInsets.all(20),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Column(
                     children: [
-                      Text('All',
-                        style: TextStyle(
-                            fontSize: 15
-                        ),),
-                      Checkbox(
-                          value:  all,
-                          onChanged: (bool? newValue) {
-                            filtersTypesEventsGeoMap[typeEvent]['cities'] = [];
-                            setState(() {
-                              Navigator.pop(context);
-                              // filterCoutriesSettingsDialog(typeEvent, countries);
-                            });
-                          })
-                    ]
-                ),
-                Divider(
-                  height: 10,
-                  color: Colors.blueAccent,
-                  thickness: 3,
-                ),
-
-                ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: countries.length,
-                    itemBuilder: (BuildContext context, int index) {
-
-                      return Container(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-
-                            Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(countries[index],
-                                    style: TextStyle(
-                                        fontSize: 15
-                                    ),),
-
-                                ]
-                            ),
-
-                            ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: citiesData[countries[index]].length,
-                                itemBuilder: (BuildContext context, int indexCity) {
-
-                                  var cityName = citiesData[countries[index]][indexCity];
-
-                                  return Container(
-                                    padding: EdgeInsets.only(left: 10),
-                                    child: ListView(
-                                      shrinkWrap: true,
-                                      children: [
-
-                                        Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(cityName,
-                                                style: TextStyle(
-                                                    fontSize: 15
-                                                ),),
-
-                                              Checkbox(
-                                                  value: filtersTypesEventsGeoMap[typeEvent]['cities'].contains(cityName),
-                                                  onChanged: (bool? newValue) {
-                                                    if (!filtersTypesEventsGeoMap[typeEvent]['cities']
-                                                        .contains(
-                                                        cityName)) {
-                                                      filtersTypesEventsGeoMap[typeEvent]['cities']
-                                                          .add(cityName);
-                                                    } else {
-                                                      filtersTypesEventsGeoMap[typeEvent]['cities']
-                                                          .remove(cityName);
-                                                    }
-                                                    setState(() {
-                                                      Navigator.pop(
-                                                          context);
-                                                      filterCitiesSettingsDialog(typeEvent, citiesData);
-                                                    });
-                                                  }
-                                              )
-
-                                            ]
-                                        ),
-
-
-
-                                        Divider(
-                                          height: 10,
-                                          color: Colors.blueAccent,
-                                          thickness: 1,
-                                        ),
-
-                                      ],
-                                    ),
-                                  );
-
-                                }),
-
-                            Divider(
-                              height: 10,
-                              color: Colors.blueAccent,
-                              thickness: 5,
-                            ),
-
-                          ],
+                      Center(
+                        child: Text('cities',
+                          style: TextStyle(
+                              fontSize: 25,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue
+                          ),
                         ),
-                      );
+                      ),
 
-                    }),
-              ],
-            ),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('All',
+                              style: TextStyle(
+                                  fontSize: 15
+                              ),),
+                            Checkbox(
+                                value:  all,
+                                onChanged: (bool? newValue) {
+                                  filtersTypesEventsGeoMap[typeEvent]['cities'] = [];
+                                  setState(() {
+                                    Navigator.pop(context);
+                                    // filterCoutriesSettingsDialog(typeEvent, countries);
+                                  });
+                                })
+                          ]
+                      ),
+
+                      Divider(
+                        height: 10,
+                        color: Colors.blueAccent,
+                        thickness: 3,
+                      ),
 
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                    onPressed: ()  {
-                      Navigator.of(context).pop();
+                      Column(
+                        children: List<Widget>.generate(
+                            countries.length,
+                                (int index) {
+                              return Column(
+                                children: [
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(countries[index],
+                                          style: TextStyle(
+                                              fontSize: 15,
+                                            fontWeight: FontWeight.w600
+                                          ),),
 
-                      calendarGeoSettingsDialog(true);
-                    },
-                    child: Text('close')
-                ),
-              ],
-            )
-          ],
+                                      ]
+                                  ),
+
+                                  Divider(
+                                    height: 10,
+                                    color: Colors.blueAccent,
+                                    thickness: 3,
+                                  ),
+
+                                  Column(
+                                    children: List<Widget>.generate(
+                                        citiesData[countries[index]].length,
+                                            (int indexCity) {
+
+                                              var cityName = citiesData[countries[index]][indexCity];
+                                              return Container(
+                                                padding: EdgeInsets.only(left: 10),
+                                                child:  Column(
+                                                  children: [
+                                                    Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Text(cityName,
+                                                            style: TextStyle(
+                                                                fontSize: 15
+                                                            ),),
+
+                                                          Checkbox(
+                                                              value: filtersTypesEventsGeoMap[typeEvent]['cities'].contains(cityName),
+                                                              onChanged: (bool? newValue) {
+                                                                if (!filtersTypesEventsGeoMap[typeEvent]['cities']
+                                                                    .contains(
+                                                                    cityName)) {
+                                                                  filtersTypesEventsGeoMap[typeEvent]['cities']
+                                                                      .add(cityName);
+                                                                } else {
+                                                                  filtersTypesEventsGeoMap[typeEvent]['cities']
+                                                                      .remove(cityName);
+                                                                }
+                                                                setState(() {
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                  filterCitiesSettingsDialog(typeEvent, citiesData);
+                                                                });
+                                                              }
+                                                          )
+
+                                                        ]
+                                                    ),
+                                                    Divider(
+                                                      height: 2,
+                                                      color: Colors.blueAccent,
+                                                      thickness: 1,
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                        }
+                                    ),
+                                  )
+
+                                ],
+                              );
+                            }
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                          onPressed: ()  {
+                            Navigator.of(context).pop();
+
+                            calendarGeoSettingsDialog(true);
+                          },
+                          child: Text('close')
+                      ),
+                    ],
+                  )
+                ],
+              ),
+
+            ],
+          ),
         ),
       ),
       anchorPoint: Offset(1000, 1000),
@@ -621,85 +622,90 @@ class _CalendarsPageState extends State<CalendarsPage> {
     print(selectedCalendars);
     var data = json.encode(selected);
     CalendarRepository().setLocalDataJson('selectedCalendars', data);
-    CalendarRepository().getEventsList();
+    backCommand['comand'] = 'refresh';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text('Calendars'),
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text('Calendars'),
+          ),
+          actions: [
+            // IconButton(
+            //   icon: Icon(Icons.menu),
+            //   onPressed: _menuOpen,
+            // )
+          ],
         ),
-        actions: [
-          // IconButton(
-          //   icon: Icon(Icons.menu),
-          //   onPressed: _menuOpen,
-          // )
-        ],
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-              children: [
+        body: Center(
+          child: SingleChildScrollView(
+            child: Column(
+                children: [
 
-                _buildPanel(),
+                  _buildPanel(),
 
-                const SizedBox(height: 20),
-                if (AllCalendarsCount != 0)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          calendarGeoSettingsDialog();
-                        },
-                        child: Text('settings geo')
-                    )
-                  ],
-                ),
+                  const SizedBox(height: 20),
+                  if (AllCalendarsCount != 0)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                            onPressed: () {
+                              calendarGeoSettingsDialog();
+                            },
+                            child: Text('settings geo')
+                        )
+                      ],
+                    ),
 
-                if (selectedCalendars.length == 0)
-                  Column(
-                    children: [
-                      const SizedBox(height: 8.0),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Calendars not selected',
-                            style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 20
+                  if (selectedCalendars.length == 0)
+                    Column(
+                      children: [
+                        const SizedBox(height: 8.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Calendars not selected',
+                              style: TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 20
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                          ],
+                        ),
+                      ],
+                    ),
 
-              ]
+                ]
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete),
-            label: 'clear',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: 'calendars list',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.delete),
+              label: 'clear',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.refresh),
+              label: 'calendars list',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlueAccent[800],
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }
@@ -708,6 +714,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
   Widget _buildPanel() {
 
+    // TODO: модернізувати списки під прокрутку
     if (AllCalendarsCount == 0)
       return ElevatedButton.icon(
           onPressed: () async {
@@ -723,7 +730,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
           label: Text('download calendars')
       );
     else
-    return ExpansionPanelList(
+      return ExpansionPanelList(
       expansionCallback: (int index, bool isExpanded) {
         setState(() {
           _dataTypes[index].isExpanded = !isExpanded;
@@ -733,6 +740,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
 
         String typeEvent = item.headerValue;
+        var itemEventCalendars = item.eventCalendars;
         var calendar;
 
         return ExpansionPanel(
@@ -746,66 +754,81 @@ class _CalendarsPageState extends State<CalendarsPage> {
                 ),),
             );
           },
-          body: Container(
-            child:  ListView.builder(
-              itemCount: item.eventCalendars.length,
-              padding: EdgeInsets.only(left: 20),
-              shrinkWrap: true,
-              physics: ClampingScrollPhysics(),
-              itemBuilder: (BuildContext context, int index) {
+          body: ListView.separated(
+            itemCount: item.eventCalendars.length,
+            padding: EdgeInsets.only(left: 20),
+            shrinkWrap: true,
+            physics: ClampingScrollPhysics(),
+            separatorBuilder: (BuildContext context, int index) {
+              if ( calendar.country == 'All'
+                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                      && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                          && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0))
+                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                      && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities'))
+                  || (!filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                      && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
+                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                      && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0
+                      && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
+                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                      && filtersTypesEventsGeoMap[typeEvent]['cities'].length > 0
+                      && filtersTypesEventsGeoMap[typeEvent]['cities'].contains(calendar.city))
+              )
+                return Divider(
+                  height: 10,
+                  color: Colors.blueAccent,
+                  thickness: 3,
+                );
+              else
+                return Divider(
+                  height: 0,
+                  color: Colors.white,
+                  thickness: 0,
+                );
+            } ,
+            itemBuilder: (BuildContext context, int index) {
 
-                calendar = calendarsList[item.eventCalendars[index]] as Calendar;
+              calendar = calendarsList[item.eventCalendars[index]] as Calendar;
 
-                if ( calendar.country == 'All'
-                    || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
-                    && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
-                            && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0))
-                    || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
-                        && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities'))
-                    || (!filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
-                        && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
-                    || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
-                        && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0
-                        && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
-                    || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
-                        && filtersTypesEventsGeoMap[typeEvent]['cities'].length > 0
-                        && filtersTypesEventsGeoMap[typeEvent]['cities'].contains(calendar.city))
-                    ) {
+              if ( calendar.country == 'All'
+                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                      && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                          && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0))
+                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                      && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities'))
+                  || (!filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                      && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
+                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                      && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0
+                      && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
+                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                      && filtersTypesEventsGeoMap[typeEvent]['cities'].length > 0
+                      && filtersTypesEventsGeoMap[typeEvent]['cities'].contains(calendar.city))
+              ) {
 
-                  return ListView(
-                    shrinkWrap: true,
-                    children: [
-                      Row(
-                        textDirection: TextDirection.ltr,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(calendarsList[item.eventCalendars[index]].name,
-                            style: TextStyle(
-                                fontSize: 15
-                            ),),
-                          Checkbox(value: calendarsList[item.eventCalendars[index]].enable, onChanged: (bool? newValue) {
-                            setState(() {
-                              calendarsList[item.eventCalendars[index]].enable = newValue!;
-                            });
-                            selectCalendar();
-                          })
-                        ],
-                      ),
-
-                      Divider(
-                        height: 10,
-                        color: Colors.blueAccent,
-                        thickness: 3,
-                      ),
-                    ],
-                  ) ;
-                } else {
-                  return  const SizedBox(height: 0);
-                }
+                return  Row(
+                  textDirection: TextDirection.ltr,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(calendarsList[item.eventCalendars[index]].name,
+                      style: TextStyle(
+                          fontSize: 15
+                      ),),
+                    Checkbox(value: calendarsList[item.eventCalendars[index]].enable, onChanged: (bool? newValue) {
+                      setState(() {
+                        calendarsList[item.eventCalendars[index]].enable = newValue!;
+                      });
+                      selectCalendar();
+                    })
+                  ],
+                );
+              } else {
+                return  const SizedBox(height: 0);
+              }
 
 
-              },
-            ),
+            },
           ),
           isExpanded: item.isExpanded,
         );
