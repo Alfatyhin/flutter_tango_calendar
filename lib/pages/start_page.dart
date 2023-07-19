@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 
 import '../AppTools.dart';
@@ -114,7 +115,6 @@ class _StartPageState extends State<StartPage> {
 
 
   Future<void> firstStart() async {
-    print('test first start');
     await CalendarRepository().updateCalendarsData();
     await calendarsMapped();
     List selected = [];
@@ -381,7 +381,7 @@ class _StartPageState extends State<StartPage> {
                   ElevatedButton(onPressed: () {
                     Navigator.pop(context);
                     Navigator.pushNamedAndRemoveUntil(context, '/about', (route) => false);
-                  }, child: Text('about',
+                  }, child: Text('About',
                     style: TextStyle(
                         fontSize: 20
                     ),),),

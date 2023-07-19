@@ -4,15 +4,16 @@ description: Tango Calendar
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.6 <3.0.0'
+  sdk: '>=2.19.6 <3.0.9'
 
 dependencies:
   flutter:
     sdk: flutter
 
 
+
   cupertino_icons: ^1.0.2
-  table_calendar: ^3.0.9
+  table_calendar: ^3.0.0
   dio: ^5.1.1
   googleapis: ^11.0.0
   googleapis_auth: ^1.4.0
@@ -27,6 +28,9 @@ dependencies:
   country_state_city_picker: ^1.2.8
   flutter_launcher_icons: ^0.13.1
   url_launcher: ^6.1.11
+  intl: any
+  flutter_localizations:
+    sdk: flutter
 #  flutter_facebook_auth: ^5.0.11
 
 dev_dependencies:
@@ -39,6 +43,7 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
+  generate: true
   uses-material-design: true
 
   assets:

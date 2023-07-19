@@ -531,7 +531,7 @@ class _AddCalendarState extends State<AddCalendar> {
         'data': data
       };
 
-      // CalendarRepository().testRequest(requestTokenData);
+      CalendarRepository().testRequest(requestTokenData);
       CalendarRepository().addGCalendarToApi(requestTokenData).then((response) {
 
         if (response.containsKey('errorMessage')) {

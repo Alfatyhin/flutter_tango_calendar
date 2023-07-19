@@ -249,7 +249,7 @@ class _UserProfileState extends State<UserProfile> {
               const SizedBox(height: 20),
 
 
-              _userLoleChange(),
+              _userRoleChange(),
 
 
               const SizedBox(height: 20),
@@ -348,7 +348,7 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
-  Widget _userLoleChange() {
+  Widget _userRoleChange() {
 
     if (userData.fbProfile != '') {
       return ListView(

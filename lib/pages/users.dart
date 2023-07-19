@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/UserData.dart';
 import '../repositories/users/users_reposirory.dart';
@@ -53,7 +54,7 @@ class _UsersListState extends State<UsersList> {
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
-              appBar: AppBar(title: Text('event data'),),
+              appBar: AppBar(title: Text('user data'),),
               body: Container (
                 margin: EdgeInsets.only(top: 20.0, left: 10.0, right: 10.0),
                 child: ListView(
@@ -74,6 +75,36 @@ class _UsersListState extends State<UsersList> {
                         style: TextStyle(fontSize: 20),
                       ),
                     ),
+
+                    const SizedBox(height: 10.0),
+                    if (data.fbProfile != '')
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text("${data.fbProfile}",
+                              textDirection: TextDirection.ltr,
+                              style: TextStyle(fontSize: 20),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Uri url = Uri.parse(data.fbProfile);
+                              _launchUrl(url);
+                            },
+                            child: Text('go'),
+                          ),
+                        ],
+                      )
+
+                    else
+                      Center(
+                        child:  SelectableText("fb profile empty",
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
+
+
                     const SizedBox(height: 8.0),
                     Text('select role',
                       style: TextStyle(
@@ -140,7 +171,12 @@ class _UsersListState extends State<UsersList> {
                 borderRadius: BorderRadius.circular(12.0),
               ),
               child: ListTile(
-                onTap: () => _userOpen(users[index]),
+                onTap: () {
+                  _userOpen(users[index]);
+                  // Navigator.pop(context);
+                  // Navigator.pushNamedAndRemoveUntil(context, '/user_profile', (route) => false, arguments: users[index].uid);
+
+                },
                 title: Row(
                   textDirection: TextDirection.ltr,
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -183,6 +219,15 @@ class _UsersListState extends State<UsersList> {
       ),
     );
   }
+
+  Future<void> _launchUrl(url) async {
+    if (!await launchUrl(url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
 
   void _onItemTapped(int index) async {
     switch (index) {

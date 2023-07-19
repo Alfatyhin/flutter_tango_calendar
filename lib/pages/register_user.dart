@@ -20,7 +20,6 @@ class RegisterUser extends StatefulWidget {
   _RegisterUserState createState() => _RegisterUserState();
 }
 
-const List<String> userRole = <String>['user', 'organizer', 'moderator', 'volunteer'];
 
 class _RegisterUserState extends State<RegisterUser> {
 
@@ -30,12 +29,14 @@ class _RegisterUserState extends State<RegisterUser> {
     print('done init');
   }
 
+  List<String> roleList = <String>['user', 'organizer', 'volunteer'];
+  TextEditingController fbProfileController = TextEditingController();
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  String dropdownValue = userRole.first;
+  String selectRole = 'user';
   int _selectedIndex = 0;
 
 
@@ -69,6 +70,7 @@ class _RegisterUserState extends State<RegisterUser> {
               key: _formKey,
               child: ListView(
                 padding: const EdgeInsets.all(20),
+                shrinkWrap: true,
                 children: [
                   const SizedBox(height: 10.0),
                   TextFormField(
@@ -112,6 +114,66 @@ class _RegisterUserState extends State<RegisterUser> {
                       return null;
                     },
                   ),
+
+
+                  const SizedBox(height: 30.0),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: Text('if you organiser or teacher, select role organiser.',
+                          style: TextStyle(
+                            fontSize: 18
+                          ),
+                          )
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10.0),
+                  Row(
+                    children: [
+                      Expanded(
+                          child: Text('if you not organiser or teacher & you want share event, select role volontuer.',
+                            style: TextStyle(
+                                fontSize: 18
+                            ),
+                          )),
+                    ],
+                  ),
+
+
+
+                  const SizedBox(height: 20.0),
+                  userRoleList(),
+
+                  if (selectRole != 'user')
+                   Row(
+                     children: [
+                       Column(
+                         children: [
+                           const SizedBox(height: 20.0),
+                           Text('enter please you fb profile link'),
+                           const SizedBox(height: 10.0),
+                         ],
+                       )
+                     ],
+                   ),
+
+                  if (selectRole != 'user')
+
+                    TextFormField(
+                      controller: fbProfileController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your Facebook profile',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter some text';
+                        }
+                        return null;
+                      },
+                    ),
 
 
                   const SizedBox(height: 30.0),
@@ -181,7 +243,47 @@ class _RegisterUserState extends State<RegisterUser> {
     );
   }
 
+  @override
+  Widget userRoleList() {
+    return DropdownButton<String>(
+      value: selectRole,
+      isExpanded: true,
+      icon: const Icon(Icons.arrow_downward),
+      elevation: 16,
+      style: const TextStyle(
+          color: Colors.black,
+          fontSize: 18
+      ),
+      underline: Container(
+        height: 2,
+        color: Colors.black26,
+      ),
+      onChanged: (String? value) {
+        // This is called when the user selects an item.
+        selectRole = value as String;
+        setState(() {
+          selectRole = value;
+        });
+      },
+      items: roleList.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: _listItem(value),
+        );
+      }).toList(),
+    );
+  }
 
+  Widget _listItem(value) {
+    if (value == selectRole) {
+      return Text(value, style: TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.w600
+      ),);
+    } else {
+      return Text(value);
+    }
+  }
 
   Future<void> _launchUrl(url) async {
     if (!await launchUrl(url,
@@ -192,24 +294,15 @@ class _RegisterUserState extends State<RegisterUser> {
   }
 
 
-  Widget _listItem(value) {
-    if (value == dropdownValue)
-      return Text(value, style: TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.w600
-      ),);
-    else
-      return Text(value);
-  }
-
-
 
   Future<void> _registerUser(email, password) async {
     try {
+
       final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
       FirebaseAuth.instance
           .authStateChanges()
           .listen((User? user) async {
@@ -221,15 +314,19 @@ class _RegisterUserState extends State<RegisterUser> {
             email: user.email,
             role: 'user',
             phone: '',
-            fbProfile: '',
+            fbProfile: fbProfileController.text,
             createdDt: user.metadata.creationTime,
             updatedDt: user.metadata.creationTime,
           );
           await usersRepository().addNewUser(userData);
 
+          if (selectRole != 'user') {
+            await _changeRoleStatment(user.uid);
+          }
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         }
       });
+
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         print('The password provided is too weak.');
@@ -239,6 +336,23 @@ class _RegisterUserState extends State<RegisterUser> {
     } catch (e) {
       print(e);
     }
+  }
+
+
+  Future<void> _changeRoleStatment(String uid) async {
+
+    var date = DateTime.now();
+    var data = {
+      "userUid": uid,
+      "type": 'role',
+      "value": selectRole,
+      "status": 'new',
+      "createdDt": date,
+      "updatedDt": date,
+    };
+    usersRepository().statementsAdd(data);
+    shortMessage(context as BuildContext, 'statement send', 2);
+
   }
 
   void _onItemTapped(int index) async {

@@ -255,10 +255,10 @@ class UserRoleList extends StatefulWidget {
   State<UserRoleList> createState() => _UserRoleListState();
 }
 
-var userRole;
+String userRole = 'user';
 
 class _UserRoleListState extends State<UserRoleList> {
-  List<String> roleList = <String>['user', 'organizer', 'moderator', 'volunteer', 'admin', 'su_admin'];
+  List<String> roleList = <String>['user', 'organizer', 'volunteer'];
   var dropdownValue;
 
   @override
@@ -284,7 +284,7 @@ class _UserRoleListState extends State<UserRoleList> {
       ),
       onChanged: (String? value) {
         // This is called when the user selects an item.
-        userRole = value;
+        userRole = value as String;
         setState(() {
           dropdownValue = value!;
         });
