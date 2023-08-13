@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:tango_calendar/repositories/localRepository.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import '../AppTools.dart';
 import '../models/Calendar.dart';
 import '../repositories/calendar/calendar_repository.dart';
@@ -95,7 +97,7 @@ class _AddCalendarState extends State<AddCalendar> {
 
       });
 
-      shortMessage(context, 'calendars updated', 2);
+      shortMessage(context, AppLocalizations.of(context)!.calendarsUpdated, 2);
       setState(() {});
     }
   }
@@ -250,7 +252,7 @@ class _AddCalendarState extends State<AddCalendar> {
                         onPressed: () => {
                           Navigator.of(context).pop()
                         },
-                        child: Text('close')
+                        child: Text(AppLocalizations.of(context)!.close)
                     ),
                   ],
                 )
@@ -273,7 +275,7 @@ class _AddCalendarState extends State<AddCalendar> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Add Calendar'),
+            child: Text(AppLocalizations.of(context)!.addCalendar),
           ),
           actions: [
 
@@ -316,13 +318,13 @@ class _AddCalendarState extends State<AddCalendar> {
                             )
                           else
                             Expanded (
-                              child: Text('select type calendar'),
+                              child: Text(AppLocalizations.of(context)!.selectTypeCalendar),
                             ),
 
                           ElevatedButton(
                             onPressed: () {
                               calendarTypeDialog();
-                            }, child: Text('select',
+                            }, child: Text(AppLocalizations.of(context)!.select,
                             style: TextStyle(
                                 fontSize: 20
                             ),),),
@@ -340,7 +342,7 @@ class _AddCalendarState extends State<AddCalendar> {
                             Column(
                               children: [
 
-                                Text("create new"),
+                                Text(AppLocalizations.of(context)!.createNew),
 
                                 Radio<CalendarAddMode>(
                                   value: CalendarAddMode.newCalendar,
@@ -360,7 +362,7 @@ class _AddCalendarState extends State<AddCalendar> {
                             Column(
                               children: [
 
-                                Text("add isset"),
+                                Text(AppLocalizations.of(context)!.addIsset),
 
                                 Radio<CalendarAddMode>(
                                   value: CalendarAddMode.issetCalendar,
@@ -412,10 +414,10 @@ class _AddCalendarState extends State<AddCalendar> {
                           && calendarAddMode == 'newCalendar')
                         TextFormField(
                           controller: calendarNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'calendar name',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.calendarName,
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Name Calendar',
+                            hintText: AppLocalizations.of(context)!.nameCalendaR,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -437,7 +439,7 @@ class _AddCalendarState extends State<AddCalendar> {
                             controller: calendarDescriptionController,
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(),
-                                labelText: 'Event Description'
+                                labelText: AppLocalizations.of(context)!.calendarDescriptioN
                             ),
                             keyboardType: TextInputType.multiline,
                             maxLines: null,
@@ -460,14 +462,14 @@ class _AddCalendarState extends State<AddCalendar> {
                       if (_formKey.currentState!.validate()) {
 
                         addCalendar();
-                        shortMessage(context, 'process added', 2);
+                        shortMessage(context, AppLocalizations.of(context)!.addingProcess, 2);
                       }
                     } else {
                       addCalendar();
-                      shortMessage(context, 'process added', 2);
+                      shortMessage(context, AppLocalizations.of(context)!.addingProcess, 2);
                     }
 
-                  }, child: Text('create calendar',
+                  }, child: Text(AppLocalizations.of(context)!.createCalendar,
                   style: TextStyle(
                       fontSize: 20
                   ),),),
@@ -481,18 +483,18 @@ class _AddCalendarState extends State<AddCalendar> {
             if (backRout != '')
               BottomNavigationBarItem(
                 icon: Icon(Icons.arrow_back),
-                label: 'back',
+                label: AppLocalizations.of(context)!.back,
               )
             else
               BottomNavigationBarItem(
                 icon: Icon(Icons.home),
-                label: 'home',
+                label: AppLocalizations.of(context)!.home,
               ),
 
 
             BottomNavigationBarItem(
               icon: Icon(Icons.refresh),
-              label: 'update',
+              label: AppLocalizations.of(context)!.update,
             ),
           ],
           currentIndex: _selectedIndex,
@@ -577,7 +579,7 @@ class _AddCalendarState extends State<AddCalendar> {
 
             await CalendarRepository().updateCalendarsData();
             setCalendarsMap();
-            shortMessage(context, 'calendar add', 2);
+            shortMessage(context, AppLocalizations.of(context)!.calendarAdded, 2);
 
             if (backRout != '') {
               String redirect = backRout;
@@ -613,7 +615,7 @@ class _AddCalendarState extends State<AddCalendar> {
         cityesCalendars = {};
         CalendarRepository().updateCalendarsData().then((value) {
           setCalendarsMap().then((value) {
-            shortMessage(context, 'upload complit', 2);
+            shortMessage(context, AppLocalizations.of(context)!.uploadComplit, 2);
             selectCalendarDisplayName = null;
             setState(() {});
           });

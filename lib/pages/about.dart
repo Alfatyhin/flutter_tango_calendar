@@ -19,9 +19,8 @@ class About extends StatefulWidget {
 }
 
 
-class _AboutState extends State<About> {
-
-  String text = """Application for viewing and publishing tango events.
+Map<String, String> localizedValues = {
+  'en': """Application for viewing and publishing tango events.
 The main purpose of the application is to connect organizers and tangeros by giving a convenient tool for searching and publishing events.
 
 In order to see the events, you need to load the list of available calendars on the calendar list page, select the ones you are interested in and update the events on the main page.
@@ -36,9 +35,9 @@ Also, if you are not an organizer, but you have a desire to share interesting ev
 
 In order to import from your Facebook calendar, you need to go to your events / all / in the web version of Facebook, find the button add to calendar at the top right and copy the link of this button. Then save this link in the application in the profile or on the "facebook events" page (this link is stored only in the memory of your device for the privacy of your data and is deleted when you clear the application data or delete the application itself)
 
-The application administration reserves the right to block access to the ability to add events or revoke the role if the added events do not relate to tango or are spam. """;
+The application administration reserves the right to block access to the ability to add events or revoke the role if the added events do not relate to tango or are spam. """,
 
-  String textUa = """Додаток для перегляду та публікацій танго подій.
+  'uk': """Додаток для перегляду та публікацій танго подій.
 Головна мета програми, з'єднати організаторів та тангерів давши зручний інструмент пошуку та публікації заходів.
 
 Для того, щоб побачити події, потрібно завантажити список доступних календарів на сторінці список календарів, вибрати ті що вам цікаві і оновити події на головній сторінці.
@@ -53,7 +52,12 @@ The application administration reserves the right to block access to the ability
 
 Для того, щоб робити імпорт зі свого календаря на фейсбуці, необхідно у веб версії фейсбуку зайти у свої заходи / все / праворуч вгорі знайти кнопку додати календар і скопіювати посилання цієї кнопки. Потім зберегти це посилання в програмі у профілі або на сторінці "події фейсбука" (дане посилання з метою конфіденційності ваших даних зберігається тільки в пам'яті вашого пристрою і видаляється при очищенні даних програми або видаленні самої програми)
 
-Адміністрація програми залишає за собою право заблокувати доступ до можливості додавати події або відкликати роль у випадку, якщо події, що додаються, не відносяться до танго або є спамом.""";
+Адміністрація програми залишає за собою право заблокувати доступ до можливості додавати події або відкликати роль у випадку, якщо події, що додаються, не відносяться до танго або є спамом.""",
+};
+
+class _AboutState extends State<About> {
+
+  var lang = 'en';
 
   var _selectedIndex = 0;
 
@@ -62,8 +66,20 @@ The application administration reserves the right to block access to the ability
     super.initState();
   }
 
+  String? about() {
+    if (lang == 'uk') {
+      return localizedValues[lang];
+    } else {
+      return localizedValues['en'];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    lang = Localizations.localeOf(context).toString();
+
+    String? aboutText = about();
 
     return WillPopScope(
       onWillPop: () async {
@@ -99,7 +115,7 @@ The application administration reserves the right to block access to the ability
 
 
               const SizedBox(height: 20),
-              Text(text,
+              Text(aboutText!,
                 style: TextStyle(
                   fontSize: 20
                 ),

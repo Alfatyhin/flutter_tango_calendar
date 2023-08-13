@@ -24,9 +24,9 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
       title: 'Tango Calendar',
       // localizationsDelegates: [
@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
           titleTextStyle: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               color: Colors.white,
           ),
         ),

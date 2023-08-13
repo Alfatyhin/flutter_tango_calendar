@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:tango_calendar/repositories/localRepository.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../repositories/calendar/calendar_repository.dart';
 import '../AppTools.dart';
@@ -18,6 +19,7 @@ class CalendarsPage extends StatefulWidget {
 
 List<TypeEvent> generateItems() {
   List typesEventsList = ['festivals', 'master classes', 'milongas', 'practices', 'tango school'];
+
   List<TypeEvent> types = [];
   typesEventsList.forEach((element) {
     var type = TypeEvent(headerValue: element);
@@ -212,7 +214,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Center(
-                  child: Text('Geo filters to Calendars List',
+                  child: Text(AppLocalizations.of(context)!.geoFiltersToCalendarsList,
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
@@ -252,7 +254,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                                       onPressed: () {
                                         filterCoutriesSettingsDialog(typeEvents, typeEventsData['countries']);
                                       },
-                                      child: Text('countries ${filtersTypesEventsGeoMap[typeEvents]['countries'].length}/${typeEventsData['countries'].length}'),
+                                      child: Text('${AppLocalizations.of(context)!.countries} ${filtersTypesEventsGeoMap[typeEvents]['countries'].length}/${typeEventsData['countries'].length}'),
 
                                     ),
                                   ]
@@ -265,7 +267,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                                       onPressed: () {
                                         filterCoutriesSettingsDialog(typeEvents, typeEventsData['countries']);
                                       },
-                                      child: Text('countries ${filtersTypesEventsGeoMap[typeEvents]['countries'].length}/${typeEventsData['countries'].length}'),
+                                      child: Text('${AppLocalizations.of(context)!.countries} ${filtersTypesEventsGeoMap[typeEvents]['countries'].length}/${typeEventsData['countries'].length}'),
 
                                     ),
 
@@ -275,7 +277,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                                       onPressed: () {
                                         filterCitiesSettingsDialog(typeEvents, typeEventsData['cities']);
                                       },
-                                      child: Text('cities ${filtersTypesEventsGeoMap[typeEvents]['cities'].length}'),
+                                      child: Text('${AppLocalizations.of(context)!.cities} ${filtersTypesEventsGeoMap[typeEvents]['cities'].length}'),
 
                                     ),
                                   ]
@@ -301,7 +303,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                           localRepository().setLocalDataJson('filtersTypesEventsGeoMap', filtersTypesEventsGeoMap);
                           Navigator.of(context).pop();
                         },
-                        child: Text('close')
+                        child: Text(AppLocalizations.of(context)!.close)
                     ),
                   ],
                 )
@@ -335,7 +337,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Center(
-                          child: Text('countries',
+                          child: Text(AppLocalizations.of(context)!.countries,
                             style: TextStyle(
                                 fontSize: 25,
                                 fontWeight: FontWeight.w600,
@@ -421,7 +423,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
                               calendarGeoSettingsDialog(true);
                             },
-                            child: Text('close')
+                            child: Text(AppLocalizations.of(context)!.close)
                         ),
                       ],
                     )
@@ -464,7 +466,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                   Column(
                     children: [
                       Center(
-                        child: Text('cities',
+                        child: Text(AppLocalizations.of(context)!.cities,
                           style: TextStyle(
                               fontSize: 25,
                               fontWeight: FontWeight.w600,
@@ -592,7 +594,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
                             calendarGeoSettingsDialog(true);
                           },
-                          child: Text('close')
+                          child: Text(AppLocalizations.of(context)!.close)
                       ),
                     ],
                   )
@@ -627,6 +629,16 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    List typesEventsList = ['festivals', 'master classes', 'milongas', 'practices', 'tango school'];
+    Map translateTypes = {
+      'festivals': AppLocalizations.of(context)!.festivals,
+      'master classes': AppLocalizations.of(context)!.masterClasses,
+      'festivals': AppLocalizations.of(context)!.festivals,
+      'festivals': AppLocalizations.of(context)!.festivals,
+      'festivals': AppLocalizations.of(context)!.festivals,
+    };
+
     return WillPopScope(
       onWillPop: () async {
         return false;
@@ -634,7 +646,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Calendars'),
+            child: Text(AppLocalizations.of(context)!.calendarS),
           ),
           actions: [
             // IconButton(
@@ -660,7 +672,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                             onPressed: () {
                               calendarGeoSettingsDialog();
                             },
-                            child: Text('settings geo')
+                            child: Text(AppLocalizations.of(context)!.settingsGeo)
                         )
                       ],
                     ),
@@ -672,7 +684,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Calendars not selected',
+                            Text(AppLocalizations.of(context)!.calendarsNotSelected,
                               style: TextStyle(
                                   color: Colors.red,
                                   fontSize: 20
@@ -688,18 +700,18 @@ class _CalendarsPageState extends State<CalendarsPage> {
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'home',
+              label: AppLocalizations.of(context)!.home,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.delete),
-              label: 'clear',
+              label: AppLocalizations.of(context)!.clear,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.refresh),
-              label: 'calendars list',
+              label: AppLocalizations.of(context)!.updateList,
             ),
           ],
           currentIndex: _selectedIndex,
