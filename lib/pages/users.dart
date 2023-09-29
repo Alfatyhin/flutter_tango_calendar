@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 import '../firebase_options.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -123,6 +124,37 @@ class _UsersListState extends State<UsersList> {
                       style: TextStyle(
                           fontSize: 20
                       ),),),
+
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text("uid - ${data.uid}",
+                            textDirection: TextDirection.ltr,
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: data.uid));
+                          },
+                          child: Text('copy'),
+                        ),
+                      ],
+                    ),
+
+
+                    if (autshUserData.role == 'su_admin')
+                      const SizedBox(height: 20),
+                      ElevatedButton(onPressed: () {
+                        emulateUser = true;
+                        emulateUserId = data.uid;
+                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                      }, child: Text('enter witsh user',
+                        style: TextStyle(
+                            fontSize: 20
+                        ),),),
                   ],
                 ),
               )

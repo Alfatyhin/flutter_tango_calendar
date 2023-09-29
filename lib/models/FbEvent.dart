@@ -23,11 +23,11 @@ class FbEvent extends Event {
   super.creatorName,
   super.organizerEmail,
   super.organizerName,
-  super.calendarId
+  super.calendarId,
+  super.url
   );
 
   var _importData;
-  var url;
   var status;
   var importStatus;
 

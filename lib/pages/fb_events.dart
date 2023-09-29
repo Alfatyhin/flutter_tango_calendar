@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/link.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tango_calendar/AppTools.dart';
 import 'package:tango_calendar/models/Event.dart';
 import 'package:tango_calendar/models/FbEvent.dart';
 import 'package:tango_calendar/models/Calendar.dart';
-import 'package:tango_calendar/models/UserData.dart';
 import 'package:tango_calendar/repositories/calendar/fb_events_repository.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 import 'package:tango_calendar/icalendar_parser.dart';
 import 'package:tango_calendar/repositories/localRepository.dart';
@@ -29,6 +29,7 @@ class FbEvents extends StatefulWidget {
 
 class _FbEventsState extends State<FbEvents> {
 
+  String htmlData = '';
   List<FbEvent> Events = [];
   late ICalendar _iCalendar;
   String eventsUrl = '';
@@ -53,6 +54,7 @@ class _FbEventsState extends State<FbEvents> {
     super.initState();
     setFilterIcon();
     getEvents();
+    // eventsHtml();
   }
 
   BottomNavigationBarItem _calendarButton() {
@@ -76,20 +78,16 @@ class _FbEventsState extends State<FbEvents> {
 
     seeFilter = await localRepository().getLocalDataBool('seeFilter');
 
-    print("test - $seeFilter");
-
     await calendarsMapped();
-
-    print(calendarsTypesMap);
 
     List fbEventsIdsList = [];
 
     eventsUrl = (await FbEventsRepository().getLocalDataString('eventsUrl'))!;
-    setState(() {
 
-    });
 
     if (eventsUrl != '') {
+
+      await FbEventsRepository().getEventsList(eventsUrl);
       String fbCalendar = await FbEventsRepository().getLocalDataString('fbEvents') as String;
 
       if (fbCalendar != '') {
@@ -129,9 +127,9 @@ class _FbEventsState extends State<FbEvents> {
                 element['organizer']['name'],
                 element['organizer']['mail'],
                 element['organizer']['name'],
-                'facebook'
+                'facebook',
+                element['url']
             );
-            cEvent.url = element['url'];
             cEvent.importData = element;
 
             if (now.isBefore(dateTimeEnd)) {
@@ -220,7 +218,7 @@ class _FbEventsState extends State<FbEvents> {
 
       List calendarsData = data;
 
-        if (autshUserData.role == 'admin' || autshUserData.role == 'su_admin') {
+        if (autshUserData.role != 'user' ) {
           calendarsData.forEach((value) {
             var calendar = Calendar.fromLocalData(value);
             if (selectedData.contains(calendar.id)) {
@@ -233,33 +231,11 @@ class _FbEventsState extends State<FbEvents> {
             }
           });
 
-        } else {
-          if (autshUserData.role != 'user' ) {
-            CalendarRepository().getUserCalendarsPermissions(autshUserData.uid).then((UserCalendarsPermission) {
-
-              calendarsData.forEach((value) {
-                var calendar = Calendar.fromLocalData(value);
-                if ((selectedData.contains(calendar.id)
-                    && UserCalendarsPermission.containsKey(calendar.id)
-                    && UserCalendarsPermission[calendar.id]['add'] == 1)
-                    || calendar.creator == autshUserData.uid) {
-
-                  calendar.enable = false;
-                  selectedCalendars.add(calendar);
-                  usersRepository().getFbEventImportSettingsByCalId(calendar.id).then((calImportSettings){
-                    FbImportSettings[calendar.id] = calImportSettings;
-                  });
-                }
-              });
-
-            });
-          }
-
-
         }
-      setState(() {});
 
     }
+
+    setState(() {});
     setFilterIcon();
 
     // TODO: робити прокрутку до івенту
@@ -329,13 +305,23 @@ class _FbEventsState extends State<FbEvents> {
                       ),
                     ),
                     const SizedBox(height: 8.0),
-                    Center(
-                      child:  ElevatedButton(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: event.url));
-                        },
-                        child: Text('copy url event'),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: event.url));
+                          },
+                          child: Text('copy url event'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Uri url = Uri.parse(event.url);
+                            _launchUrl(url);
+                          },
+                          child: Text('go event'),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8.0),
                     Center(
@@ -374,6 +360,8 @@ class _FbEventsState extends State<FbEvents> {
     if (eventImportMap.containsKey(event.eventId)) {
       List eventImportsData = eventImportMap[event.eventId];
 
+      print('eventImportsData');
+      print(eventImportsData);
       print(event.name);
       print("${event.getHashEvent()} -- ${eventImportsData[0]['hashEvent']}");
 
@@ -415,6 +403,8 @@ class _FbEventsState extends State<FbEvents> {
 
 
       selectedCalendars.forEach((calendar) {
+        print("selectedCalendars - ${calendar.name}");
+
         if (FbImportSettings.containsKey(calendar.id)
             && FbImportSettings[calendar.id].length > 0) {
 
@@ -478,6 +468,7 @@ class _FbEventsState extends State<FbEvents> {
         MaterialPageRoute(builder: (BuildContext context) {
           return Scaffold(
             appBar: AppBar(
+              toolbarHeight: 50,
               title: Text('Import', textAlign: TextAlign.left,),
               actions: [
 
@@ -495,7 +486,11 @@ class _FbEventsState extends State<FbEvents> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add_box_outlined),
-                            Text('new calendar')
+                            Text('new calendar',
+                              style: TextStyle(
+                                fontSize: 14
+                              ),
+                            )
                           ],
                         ),
                       ),
@@ -513,7 +508,11 @@ class _FbEventsState extends State<FbEvents> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.upload_rounded),
-                            Text('export')
+                            Text('export',
+                              style: TextStyle(
+                                  fontSize: 14
+                              )
+                            )
                           ],
                         ),
                       ),
@@ -530,7 +529,11 @@ class _FbEventsState extends State<FbEvents> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.list_alt),
-                            Text('calendars')
+                            Text('calendars',
+                                style: TextStyle(
+                                    fontSize: 14
+                                )
+                            )
                           ],
                         ),
                       ),
@@ -540,22 +543,6 @@ class _FbEventsState extends State<FbEvents> {
                 )
 
               ],
-              // bottom: TabBar(
-              //   tabs: <Widget>[
-              //     Tab(
-              //       icon: const Icon(Icons.cloud_outlined),
-              //       text: 'test 1',
-              //     ),
-              //     Tab(
-              //       icon: const Icon(Icons.beach_access_sharp),
-              //       text: 'test 1',
-              //     ),
-              //     Tab(
-              //       icon: const Icon(Icons.brightness_5_sharp),
-              //       text: 'test 1',
-              //     ),
-              //   ],
-              // ),
             ),
             body: ListView(
                 children: [
@@ -771,6 +758,13 @@ class _FbEventsState extends State<FbEvents> {
                         ),
                         ElevatedButton(
                           onPressed: () {
+                            Uri url = Uri.parse("http://maps.google.com/maps?q=${event.locationString()}");
+                            _launchUrl(url);
+                          },
+                          child: Text('go map'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
                             Clipboard.setData(ClipboardData(text: event.url));
                           },
                           child: Text('copy url'),
@@ -783,13 +777,11 @@ class _FbEventsState extends State<FbEvents> {
               ),
             bottomNavigationBar: BottomNavigationBar(
               items:  <BottomNavigationBarItem>[
-                if (autshUserData.role == 'su_admin'
-                    || autshUserData.role == 'admin'
-                    || autshUserData.role == 'organizer')
+                if (autshUserData.role != 'user')
 
                   BottomNavigationBarItem(
-                  icon: Icon(Icons.add),
-                  label: 'add calendar',
+                    icon: Icon(Icons.add),
+                    label: 'add calendar',
                 )
                 else
                   BottomNavigationBarItem(
@@ -988,6 +980,10 @@ class _FbEventsState extends State<FbEvents> {
 
   @override
   Widget build(BuildContext context) {
+
+
+    var title = "${Events.length} / imported ${eventImportMap.length}";
+
     return WillPopScope(
       onWillPop: () async {
         return false;
@@ -995,7 +991,7 @@ class _FbEventsState extends State<FbEvents> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('My Fb Events'),
+            child: Text('Fb Events $title'),
           ),
           actions: [
             // IconButton(
@@ -1042,6 +1038,7 @@ class _FbEventsState extends State<FbEvents> {
   }
 
   Widget _body() {
+
     if (Events.length == 0)
       return Container(
         child:  Center(
@@ -1053,10 +1050,17 @@ class _FbEventsState extends State<FbEvents> {
           ),
         ),
       );
+      // return SingleChildScrollView(
+      //     child: Html(
+      //         data: htmlData,
+      //     )
+      // );
     else
 
-      print("Events.length ${Events.length}");
-      return ListView.builder(
+      print("count events ${Events.length} / import events ${eventImportMap.length}");
+
+
+      return  ListView.builder(
         itemCount: Events.length,
         shrinkWrap: true,
         itemBuilder: (context, index) {
@@ -1273,6 +1277,16 @@ class _FbEventsState extends State<FbEvents> {
       );
   }
 
+  //TODO проверить возможность вытягивания контента из событий
+  Future eventsHtml() async {
+    await Dio().get('https://www.facebook.com/events/1225019481413631/').then((value){
+
+      htmlData = value.data;
+      setState(() {
+        print(htmlData);
+      });
+    });
+  }
 
   Future allCalendarsDialog(){
 
@@ -1401,7 +1415,7 @@ class _FbEventsState extends State<FbEvents> {
     );
   }
 
-  Future<void> refreshEvents(index) async {
+  Future<void> refreshEvents() async {
     if (eventsUrl == '') {
       showDialog(context: context, builder: (BuildContext context) {
         return AlertDialog(
@@ -1428,7 +1442,6 @@ class _FbEventsState extends State<FbEvents> {
       await getEvents();
       setState(() {
         eventImportMap = eventImportMap;
-        _selectedIndex = index;
       });
     }
   }
@@ -1448,8 +1461,10 @@ class _FbEventsState extends State<FbEvents> {
         });
         break;
       case 2:
-        refreshEvents(index);
-
+        refreshEvents();
+        setState(() {
+          _selectedIndex = index;
+        });
         break;
     }
   }

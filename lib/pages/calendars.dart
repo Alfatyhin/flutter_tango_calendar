@@ -18,7 +18,7 @@ class CalendarsPage extends StatefulWidget {
 
 
 List<TypeEvent> generateItems() {
-  List typesEventsList = ['festivals', 'master classes', 'milongas', 'practices', 'tango school'];
+  List typesEventsList = ['festivals', 'festival shedule', 'master classes', 'milongas', 'practices', 'tango school'];
 
   List<TypeEvent> types = [];
   typesEventsList.forEach((element) {
@@ -37,6 +37,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
   List calendarsList = [];
   var eventsWorld;
   List festivals = [];
+  List festivalShedule = [];
   List masterClasses = [];
   List milongas = [];
   List practices = [];
@@ -48,6 +49,10 @@ class _CalendarsPageState extends State<CalendarsPage> {
     },
     'master classes': {
       'countries': []
+    },
+    'festival shedule': {
+      'countries': [],
+      'cities': []
     },
     'milongas': {
       'countries': [],
@@ -65,11 +70,15 @@ class _CalendarsPageState extends State<CalendarsPage> {
   Map viewCalendarsList = {};
   int _selectedIndex = 0;
 
+  Map translateTypes = {};
+
   @override
   void initState() {
     super.initState();
     setlocaleJsonData();
+    print('test');
     calendarsMapped();
+
   }
 
   @override
@@ -87,11 +96,17 @@ class _CalendarsPageState extends State<CalendarsPage> {
     AllCalendarsCount = AllCalendars.length;
 
 
-
     var filtersTypesEventsGeoMapJson = await CalendarRepository().getLocalDataJson('filtersTypesEventsGeoMap');
 
     if (filtersTypesEventsGeoMapJson != '') {
       filtersTypesEventsGeoMap = json.decode(filtersTypesEventsGeoMapJson as String);
+    }
+
+    if (!filtersTypesEventsGeoMap.containsKey('festival shedule')) {
+      filtersTypesEventsGeoMap['festival shedule'] = {
+        'countries': [],
+        'cities': []
+      };
     }
 
     var calendarsJson = await CalendarRepository().getLocalDataJson('calendars');
@@ -170,6 +185,9 @@ class _CalendarsPageState extends State<CalendarsPage> {
           case 'master_classes':
             masterClasses.add(xl);
             break;
+          case 'festival_shedule':
+            festivalShedule.add(xl);
+            break;
           case 'milongas':
             milongas.add(xl);
             break;
@@ -185,10 +203,11 @@ class _CalendarsPageState extends State<CalendarsPage> {
 
       setState(() {
         _dataTypes[0].eventCalendars = festivals;
-        _dataTypes[1].eventCalendars = masterClasses;
-        _dataTypes[2].eventCalendars = milongas;
-        _dataTypes[3].eventCalendars = practices;
-        _dataTypes[4].eventCalendars = tangoSchools;
+        _dataTypes[1].eventCalendars = festivalShedule;
+        _dataTypes[2].eventCalendars = masterClasses;
+        _dataTypes[3].eventCalendars = milongas;
+        _dataTypes[4].eventCalendars = practices;
+        _dataTypes[5].eventCalendars = tangoSchools;
 
         typesEventsGeoMap = typesEventsGeoMap;
       });
@@ -210,8 +229,8 @@ class _CalendarsPageState extends State<CalendarsPage> {
       builder: (_) =>  Dialog(
         child: Container(
             padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: ListView(
+              // shrinkWrap: true,
               children: [
                 Center(
                   child: Text(AppLocalizations.of(context)!.geoFiltersToCalendarsList,
@@ -222,78 +241,85 @@ class _CalendarsPageState extends State<CalendarsPage> {
                     ),
                   ),
                 ),
-                ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _dataTypes.length,
-                    itemBuilder: (BuildContext context, int index) {
+                Column(
+                  children: List<Widget>.generate(
+                      _dataTypes.length,
+                          (int index) {
+                            var typeEvents = _dataTypes[index].headerValue;
+                            Map typeEventsData = typesEventsGeoMap[typeEvents];
+                            print(typeEvents);
+                            print(typeEventsData);
 
-                      var typeEvents = _dataTypes[index].headerValue;
-                      Map typeEventsData = typesEventsGeoMap[typeEvents];
-                      // print(typeEvents);
-                      // print(typeEventsData);
+                            var countCountries = 0;
+                            var countTypeCountries = 0;
+                            if (filtersTypesEventsGeoMap.containsKey(typeEvents)) {
+                              countCountries = filtersTypesEventsGeoMap[typeEvents]['countries'].length;
+                              countTypeCountries = typeEventsData['countries'].length;
+                            }
 
-                      return Container(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-                            Center (
-                              child: Text(_dataTypes[index].headerValue,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            return Container(
+                              child: Column(
+                                children: [
+                                  Center (
+                                    child: Text(translateTypes[typeEvents],
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+
+                                  if (_dataTypes[index].headerValue == 'festivals'
+                                      || _dataTypes[index].headerValue == 'master classes'
+                                      || _dataTypes[index].headerValue == 'festival shedule')
+                                    Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              filterCoutriesSettingsDialog(typeEvents, typeEventsData['countries']);
+                                            },
+                                            child:
+                                            Text('${AppLocalizations.of(context)!.countries} ${countCountries}/${countTypeCountries}'),
+                                          ),
+                                        ]
+                                    )
+                                  else
+                                    Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              filterCoutriesSettingsDialog(typeEvents, typeEventsData['countries']);
+                                            },
+                                            child: Text('${AppLocalizations.of(context)!.countries} ${countCountries}/${countTypeCountries}'),
+
+                                          ),
+
+                                          if (filtersTypesEventsGeoMap[typeEvents]['countries'].length > 0)
+                                            Text(''),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              filterCitiesSettingsDialog(typeEvents, typeEventsData['cities']);
+                                            },
+                                            child: Text('${AppLocalizations.of(context)!.cities} ${filtersTypesEventsGeoMap[typeEvents]['cities'].length}'),
+
+                                          ),
+                                        ]
+                                    ),
+
+                                  Divider(
+                                    height: 10,
+                                    color: Colors.blueAccent,
+                                    thickness: 3,
+                                  ),
+
+                                ],
                               ),
-                            ),
-
-                            if (_dataTypes[index].headerValue == 'festivals'
-                                || _dataTypes[index].headerValue == 'master classes')
-                              Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        filterCoutriesSettingsDialog(typeEvents, typeEventsData['countries']);
-                                      },
-                                      child: Text('${AppLocalizations.of(context)!.countries} ${filtersTypesEventsGeoMap[typeEvents]['countries'].length}/${typeEventsData['countries'].length}'),
-
-                                    ),
-                                  ]
-                              )
-                            else
-                              Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        filterCoutriesSettingsDialog(typeEvents, typeEventsData['countries']);
-                                      },
-                                      child: Text('${AppLocalizations.of(context)!.countries} ${filtersTypesEventsGeoMap[typeEvents]['countries'].length}/${typeEventsData['countries'].length}'),
-
-                                    ),
-
-                                    if (filtersTypesEventsGeoMap[typeEvents]['countries'].length > 0)
-                                      Text(''),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        filterCitiesSettingsDialog(typeEvents, typeEventsData['cities']);
-                                      },
-                                      child: Text('${AppLocalizations.of(context)!.cities} ${filtersTypesEventsGeoMap[typeEvents]['cities'].length}'),
-
-                                    ),
-                                  ]
-                              ),
-
-                            Divider(
-                              height: 10,
-                              color: Colors.blueAccent,
-                              thickness: 3,
-                            ),
-
-                          ],
-                        ),
-                      );
-
-                    }),
+                            );
+                      }
+                  ),
+                ),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -319,7 +345,7 @@ class _CalendarsPageState extends State<CalendarsPage> {
   Future filterCoutriesSettingsDialog(typeEvent, countries){
 
     var all = false;
-    if(filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0) {
+    if(filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0) {
       all = true;
     }
 
@@ -374,6 +400,9 @@ class _CalendarsPageState extends State<CalendarsPage> {
                           children: List<Widget>.generate(
                               countries.length,
                                   (int index) {
+
+                                print(typeEvent);
+
                                 return Column(
                                   children: [
                                     Row(
@@ -630,14 +659,6 @@ class _CalendarsPageState extends State<CalendarsPage> {
   @override
   Widget build(BuildContext context) {
 
-    List typesEventsList = ['festivals', 'master classes', 'milongas', 'practices', 'tango school'];
-    Map translateTypes = {
-      'festivals': AppLocalizations.of(context)!.festivals,
-      'master classes': AppLocalizations.of(context)!.masterClasses,
-      'festivals': AppLocalizations.of(context)!.festivals,
-      'festivals': AppLocalizations.of(context)!.festivals,
-      'festivals': AppLocalizations.of(context)!.festivals,
-    };
 
     return WillPopScope(
       onWillPop: () async {
@@ -723,10 +744,9 @@ class _CalendarsPageState extends State<CalendarsPage> {
   }
 
 
-
   Widget _buildPanel() {
 
-    // TODO: модернізувати списки під прокрутку
+
     if (AllCalendarsCount == 0)
       return ElevatedButton.icon(
           onPressed: () async {
@@ -745,22 +765,32 @@ class _CalendarsPageState extends State<CalendarsPage> {
       return ExpansionPanelList(
       expansionCallback: (int index, bool isExpanded) {
         setState(() {
-          _dataTypes[index].isExpanded = !isExpanded;
+          _dataTypes[index].isExpanded = !_dataTypes[index].isExpanded;;
         });
       },
       children: _dataTypes.map<ExpansionPanel>((TypeEvent item) {
 
 
         String typeEvent = item.headerValue;
-        var itemEventCalendars = item.eventCalendars;
         var calendar;
+
+        translateTypes = {
+          'festivals': AppLocalizations.of(context)!.festivals,
+          'festival shedule': AppLocalizations.of(context)!.festivalShedule,
+          'master classes': AppLocalizations.of(context)!.masterClasses,
+          'milongas': AppLocalizations.of(context)!.milongas,
+          'practices': AppLocalizations.of(context)!.practices,
+          'tango school': AppLocalizations.of(context)!.tangoSchool,
+        };
+
+        String typesLocale = translateTypes[typeEvent];
 
         return ExpansionPanel(
           headerBuilder: (BuildContext context, bool isExpanded) {
 
             return ListTile(
               title: Text(
-                typeEvent,
+                typesLocale,
                 style: TextStyle(
                     fontSize: 20
                 ),),
@@ -773,17 +803,21 @@ class _CalendarsPageState extends State<CalendarsPage> {
             physics: ClampingScrollPhysics(),
             separatorBuilder: (BuildContext context, int index) {
               if ( calendar.country == 'All'
-                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                  || (!filtersTypesEventsGeoMap.containsKey(typeEvent))
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
                       && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                           && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0))
-                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                      && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                          && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0))
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
                       && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities'))
-                  || (!filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                       && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
-                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                       && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0
                       && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
-                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                       && filtersTypesEventsGeoMap[typeEvent]['cities'].length > 0
                       && filtersTypesEventsGeoMap[typeEvent]['cities'].contains(calendar.city))
               )
@@ -804,17 +838,18 @@ class _CalendarsPageState extends State<CalendarsPage> {
               calendar = calendarsList[item.eventCalendars[index]] as Calendar;
 
               if ( calendar.country == 'All'
-                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                  || (!filtersTypesEventsGeoMap.containsKey(typeEvent))
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
                       && (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                           && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0))
-                  || (filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent]['countries'].length == 0
                       && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities'))
-                  || (!filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && !filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                       && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
-                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                       && filtersTypesEventsGeoMap[typeEvent]['cities'].length == 0
                       && filtersTypesEventsGeoMap[typeEvent]['countries'].contains(calendar.country))
-                  || (filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
+                  || (filtersTypesEventsGeoMap.containsKey(typeEvent) && filtersTypesEventsGeoMap[typeEvent].containsKey('cities')
                       && filtersTypesEventsGeoMap[typeEvent]['cities'].length > 0
                       && filtersTypesEventsGeoMap[typeEvent]['cities'].contains(calendar.city))
               ) {
@@ -823,16 +858,55 @@ class _CalendarsPageState extends State<CalendarsPage> {
                   textDirection: TextDirection.ltr,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(calendarsList[item.eventCalendars[index]].name,
-                      style: TextStyle(
-                          fontSize: 15
-                      ),),
-                    Checkbox(value: calendarsList[item.eventCalendars[index]].enable, onChanged: (bool? newValue) {
-                      setState(() {
-                        calendarsList[item.eventCalendars[index]].enable = newValue!;
-                      });
-                      selectCalendar();
-                    })
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(calendarsList[item.eventCalendars[index]].name,
+                          style: TextStyle(
+                              fontSize: 15
+                          ),),
+
+                        if (typeEvent == 'tango school')
+
+                          Text(calendarsList[item.eventCalendars[index]].city,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue[600],
+                                fontWeight: FontWeight.w900
+                            ),),
+
+                      ],
+                    ),
+
+                    Column(
+                      children: [
+                        Row(
+                          children: [
+
+                            if(autshUserData.role != null &&
+                                (autshUserData.role == 'admin' ||
+                                    autshUserData.role == 'su_admin' ||
+                                    autshUserData.role == 'organiser'))
+                              IconButton(
+                                icon: Icon(Icons.update, color: Colors.blue[300],),
+                                onPressed: () {
+                                  updateCalendarData(calendarsList[item.eventCalendars[index]]);
+                                },
+                              ),
+
+                            Checkbox(value: calendarsList[item.eventCalendars[index]].enable, onChanged: (bool? newValue) {
+                              setState(() {
+                                calendarsList[item.eventCalendars[index]].enable = newValue!;
+                              });
+                              selectCalendar();
+                            })
+
+                          ],
+                        )
+                       ],
+                    ),
+
+
                   ],
                 );
               } else {
@@ -846,6 +920,14 @@ class _CalendarsPageState extends State<CalendarsPage> {
         );
       }).toList(),
     );
+  }
+
+  Future<void> updateCalendarData(Calendar calendar) async {
+    await CalendarRepository().apiGetCalendarDataBuUid(calendar.gcalendarId).then((value) async {
+      await CalendarRepository().changeCalendarData(calendar.id, 'name', "${value['name']}");
+      await CalendarRepository().changeCalendarData(calendar.id, 'description', "${value['description']}");
+      _onItemTapped(2);
+    });
   }
 
   Future<void> _onItemTapped(int index) async {

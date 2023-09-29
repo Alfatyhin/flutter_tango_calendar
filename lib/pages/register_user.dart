@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../AppTools.dart';
 import '../models/UserData.dart';
@@ -56,7 +57,7 @@ class _RegisterUserState extends State<RegisterUser> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Registration'),
+            child: Text(AppLocalizations.of(context)!.registration),
           ),
           actions: [
             // IconButton(
@@ -75,8 +76,8 @@ class _RegisterUserState extends State<RegisterUser> {
                   const SizedBox(height: 10.0),
                   TextFormField(
                     controller: nameController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your Name',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.enterYourName,
                       border: OutlineInputBorder(),
                     ),
                     validator: (String? value) {
@@ -89,8 +90,8 @@ class _RegisterUserState extends State<RegisterUser> {
                   const SizedBox(height: 10.0),
                   TextFormField(
                     controller: emailController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your Email',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.enterYourEmail,
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
@@ -103,8 +104,8 @@ class _RegisterUserState extends State<RegisterUser> {
                   const SizedBox(height: 10.0),
                   TextFormField(
                     controller: passwordController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your Password',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.enterYourPassword,
                       border: OutlineInputBorder(),
                     ),
                     validator: (String? value) {
@@ -120,7 +121,7 @@ class _RegisterUserState extends State<RegisterUser> {
                   Row(
                     children: [
                       Expanded(
-                          child: Text('if you organiser or teacher, select role organiser.',
+                          child: Text(AppLocalizations.of(context)!.ifOrganiser,
                           style: TextStyle(
                             fontSize: 18
                           ),
@@ -133,7 +134,7 @@ class _RegisterUserState extends State<RegisterUser> {
                   Row(
                     children: [
                       Expanded(
-                          child: Text('if you not organiser or teacher & you want share event, select role volontuer.',
+                          child: Text(AppLocalizations.of(context)!.ifVolontuer,
                             style: TextStyle(
                                 fontSize: 18
                             ),
@@ -152,7 +153,7 @@ class _RegisterUserState extends State<RegisterUser> {
                        Column(
                          children: [
                            const SizedBox(height: 20.0),
-                           Text('enter please you fb profile link'),
+                           Text(AppLocalizations.of(context)!.enterFblink),
                            const SizedBox(height: 10.0),
                          ],
                        )
@@ -177,8 +178,7 @@ class _RegisterUserState extends State<RegisterUser> {
 
 
                   const SizedBox(height: 30.0),
-                  Text('Check out the privacy policy.'
-                      '\n''By continuing to register, you agree to its terms.',
+                  Text(AppLocalizations.of(context)!.checkPrivacyPolicy,
                     style: TextStyle(
                         fontSize: 20,
                         color: Colors.black
@@ -213,7 +213,7 @@ class _RegisterUserState extends State<RegisterUser> {
 
                         }
                       },
-                      child: const Text('Submit'),
+                      child: Text(AppLocalizations.of(context)!.submit),
                     ),
                   ),
                 ],
@@ -221,10 +221,10 @@ class _RegisterUserState extends State<RegisterUser> {
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'home',
+              label: AppLocalizations.of(context)!.home,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.delete, color: Colors.white,),

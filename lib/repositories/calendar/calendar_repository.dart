@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:tango_calendar/models/Event.dart';
@@ -201,7 +201,6 @@ class CalendarRepository {
   }
 
   Future<Map> getEventsListForMonth(date) async {
-
     var dateFormat = DateFormatDate(date);
     Map<dynamic, dynamic> res = {};
     var dataJson;
@@ -210,6 +209,7 @@ class CalendarRepository {
     List selectedCalendars = [];
     Map<DateTime, List<Event>> kEventSource = {};
     var selectedCalendarsJson = await CalendarRepository().getLocalDataJson('selectedCalendars');
+
 
     if (selectedCalendarsJson != '') {
       selectedCalendars = json.decode(selectedCalendarsJson as String);
@@ -223,33 +223,43 @@ class CalendarRepository {
         dataSaver = json.decode(oldJson as String);
       }
 
-
       for(var x = 0; x < selectedCalendars.length; x++) {
         var calendarId = selectedCalendars[x];
-        var response = await Dio().get('${apiUrl}/api/get/events/$calendarId?month=$dateFormat');
-        if (response.statusCode == 200) {
-          dataJson = response.data;
 
-          if (dataJson is String) {
-            var data = json.decode(dataJson);
-            if (data is Map) {
-              data.forEach((key, value) {
-                for(var i = 0; i < value.length; i++) {
-                  value[i]['calId'] = calendarId;
-                }
+        try {
+          var response = await Dio().get('${apiUrl}/api/get/events/$calendarId?month=$dateFormat');
 
-                if (dataSaver.containsKey(key)) {
-                  List oldData = dataSaver[key];
-                  oldData.addAll(value);
-                  dataSaver[key] = oldData;
-                } else {
-                  dataSaver[key] = value;
-                }
-              });
+          if (response.statusCode == 200) {
+            dataJson = response.data;
 
+            if (dataJson is String) {
+              var data = json.decode(dataJson);
+              if (data is Map) {
+                data.forEach((key, value) {
+                  for(var i = 0; i < value.length; i++) {
+                    value[i]['calId'] = calendarId;
+                  }
+
+                  if (dataSaver.containsKey(key)) {
+                    List oldData = dataSaver[key];
+                    oldData.addAll(value);
+                    dataSaver[key] = oldData;
+                  } else {
+                    dataSaver[key] = value;
+                  }
+                });
+
+              }
             }
           }
+        } catch(e) {
+          print('test error');
+          res['error'] = e.toString();
+          print(e.toString());
+          return res;
         }
+
+
       }
       kEventSource = getKeventToDataMap(dataSaver);
 
@@ -330,6 +340,32 @@ class CalendarRepository {
     return data;
   }
 
+
+  Future<Map> apiGetCalendarDataBuUid(uid) async {
+    final response = await Dio().get('${apiUrl}/api/get_calendar_data_bu_uid/${uid}');
+    Map data = {};
+    var dataJson = response.data;
+    print(dataJson);
+    data = json.decode(dataJson);
+
+    return data;
+  }
+
+
+  Future<String> changeCalendarData(calId, fieldName, fieldValue) async {
+    print('change ${fieldName}');
+    return db.collection("calendars")
+        .doc(calId,)
+        .update({'${fieldName}': fieldValue})
+        .then((value) {
+      print("Calendar Updated");
+      return 'Calendar Updated';
+    }).catchError((error) {
+      print("Failed to update Calendar: $error");
+      return 'Failed to update Calendar';
+    });
+  }
+
   void testRequest(requestTokenData) async {
     final response = await Dio().post('https://webhook.site/491a5c65-c7bd-4563-a8c7-b2d989dcd38e', data: requestTokenData);
   }
@@ -393,8 +429,11 @@ class CalendarRepository {
             eventData['creatorName'],
             eventData['organizerEmail'],
             eventData['organizerName'],
-            eventData['calId']
+            eventData['calId'],
+            eventData['url']
         );
+        if(eventData.containsKey('colorHash'))
+        cEvent.setColorHash(eventData['colorHash']);
         values.add(cEvent);
       }
       kEventSource[keyDate] = values;
@@ -436,4 +475,5 @@ class CalendarRepository {
       onError: (e) => print("Error completing: $e"),
     );
   }
+
 }

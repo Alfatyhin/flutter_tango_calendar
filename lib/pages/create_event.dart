@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../AppTools.dart';
 import '../repositories/calendar/calendar_repository.dart';
+import '../repositories/users/users_reposirory.dart';
 import '../utils.dart';
 import 'package:intl/intl.dart';
 
@@ -101,7 +103,7 @@ class _CreateEventState extends State<CreateEvent> {
                       onPressed: () => {
                         Navigator.of(context).pop()
                       },
-                      child: Text('close')
+                      child: Text(AppLocalizations.of(context)!.close)
                   ),
                 ],
               )
@@ -211,7 +213,7 @@ class _CreateEventState extends State<CreateEvent> {
                       onPressed: () => {
                         Navigator.of(context).pop()
                       },
-                      child: Text('close')
+                      child: Text(AppLocalizations.of(context)!.close)
                   ),
                 ],
               )
@@ -235,7 +237,7 @@ class _CreateEventState extends State<CreateEvent> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-
+              Text(AppLocalizations.of(context)!.repeatRules, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.blueAccent),),
               ListView.separated(
                 itemCount: iterateRules.length,
                 // padding: EdgeInsets.only(left: 20),
@@ -260,10 +262,11 @@ class _CreateEventState extends State<CreateEvent> {
                             ),),
 
 
-                          Text(iterateRules[index]['value'],
-                            style: TextStyle(
-                              fontSize: 10,
-                            ),),
+                          if (autshUserData.role == 'su_admin')
+                            Text(iterateRules[index]['value'],
+                              style: TextStyle(
+                                fontSize: 10,
+                              ),),
                         ],
                       ),
 
@@ -300,7 +303,7 @@ class _CreateEventState extends State<CreateEvent> {
                       onPressed: () => {
                         Navigator.of(context).pop()
                       },
-                      child: Text('close')
+                      child: Text(AppLocalizations.of(context)!.close)
                   ),
                 ],
               )
@@ -374,6 +377,7 @@ class _CreateEventState extends State<CreateEvent> {
   @override
   Widget build(BuildContext context) {
 
+    iterateTitle = AppLocalizations.of(context)!.newer;
     return WillPopScope(
       onWillPop: () async {
         return false;
@@ -381,9 +385,16 @@ class _CreateEventState extends State<CreateEvent> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Create Event'),
+            child: Text(AppLocalizations.of(context)!.createEventTitle),
           ),
           actions: [
+
+            IconButton(
+                onPressed: () {
+                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                },
+                icon: Icon(Icons.arrow_back),
+            )
 
           ],
         ),
@@ -406,10 +417,10 @@ class _CreateEventState extends State<CreateEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: calendarNameController,
-                          decoration: const InputDecoration(
-                            labelText: 'selected calendar',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.selectedCalendar,
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Select Calendar',
+                            hintText: AppLocalizations.of(context)!.selectedCalendar,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -430,10 +441,10 @@ class _CreateEventState extends State<CreateEvent> {
                   minLines: 1,
                   maxLines: 2,
                   controller: eventTitleController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     enabledBorder: OutlineInputBorder(),
-                    hintText: 'Event Title',
-                    labelText: 'Event Title',
+                    hintText: AppLocalizations.of(context)!.eventTitlE,
+                    labelText: AppLocalizations.of(context)!.eventTitlE,
                     border: OutlineInputBorder(),
                   ),
                   validator: (String? value) {
@@ -454,12 +465,12 @@ class _CreateEventState extends State<CreateEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: dateStartStringController,
-                          decoration: const InputDecoration(
-                            label: Text('dete start', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.dateStart, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Start date',
+                            hintText: AppLocalizations.of(context)!.dateStart,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -478,12 +489,12 @@ class _CreateEventState extends State<CreateEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: dateEndStringController,
-                          decoration: const InputDecoration(
-                            label: Text('dete end', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.dateEnd, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Start date',
+                            hintText: AppLocalizations.of(context)!.dateEnd,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -510,12 +521,12 @@ class _CreateEventState extends State<CreateEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: timeStartStringController,
-                          decoration: const InputDecoration(
-                            label: Text('time start', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.timeStart, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Time start',
+                            hintText: AppLocalizations.of(context)!.timeStart,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -536,12 +547,12 @@ class _CreateEventState extends State<CreateEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: timeEndStringController,
-                          decoration: const InputDecoration(
-                            label: Text('time end', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.timeEnd, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Time end',
+                            hintText: AppLocalizations.of(context)!.timeEnd,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -560,14 +571,14 @@ class _CreateEventState extends State<CreateEvent> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("repeat: $iterateTitle"),
+                    Text("${AppLocalizations.of(context)!.repeat}: $iterateTitle"),
 
                     const SizedBox(width: 20.0),
 
                     ElevatedButton(
                       onPressed: () {
                         recurenceDialog();
-                      }, child: Text('rules',
+                      }, child: Text(AppLocalizations.of(context)!.rules,
                       style: TextStyle(
                           fontSize: 20
                       ),),),
@@ -578,10 +589,10 @@ class _CreateEventState extends State<CreateEvent> {
                 const SizedBox(height: 20.0),
                 TextFormField(
                   controller: eventLocationnController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     enabledBorder: OutlineInputBorder(),
-                    hintText: 'Event Location',
-                    labelText: 'Event Location',
+                    hintText: AppLocalizations.of(context)!.eventLocatioN,
+                    labelText: AppLocalizations.of(context)!.eventLocatioN,
                     border: OutlineInputBorder(),
                   ),
                   validator: (String? value) {
@@ -598,7 +609,7 @@ class _CreateEventState extends State<CreateEvent> {
                     controller: eventDescriptionController,
                     decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        labelText: 'Event Description'
+                        labelText: AppLocalizations.of(context)!.eventDescriptioN
                     ),
                     keyboardType: TextInputType.multiline,
                     maxLines: null,
@@ -615,8 +626,8 @@ class _CreateEventState extends State<CreateEvent> {
                       shortMessage(context, "error form field", 2);
                     }
                   },
-                  child: const Text(
-                    'Send',
+                  child: Text(
+                    AppLocalizations.of(context)!.submit,
                     style: TextStyle(fontSize: 24),
                   ),
                 ),
@@ -628,10 +639,10 @@ class _CreateEventState extends State<CreateEvent> {
         ),
 
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'home',
+              label: AppLocalizations.of(context)!.home,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.delete, size: 0,),
@@ -687,8 +698,6 @@ class _CreateEventState extends State<CreateEvent> {
       iterateValue = '';
       eventTitleController.text = '';
       eventDescriptionController.text = '';
-      calendarNameController.text = '';
-      eventLocationnController.text = '';
 
       print(requestTokenData['event']);
 
@@ -698,6 +707,17 @@ class _CreateEventState extends State<CreateEvent> {
           debugPrint("error message - ${request['errorMessage']}");
           shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
         } else {
+
+          var eventPermission = {
+            'eventId': request['data'][0]['eventId'],
+            'userUid': autshUserData.uid,
+            'add': 1,
+            'redact': 1,
+            'delete': 1,
+            'updatedDt':  DateTime.now(),
+            'changeUserId': autshUserData.uid
+          };
+          usersRepository().setUserEventPermissions(eventPermission);
 
           shortMessage(context, "event creaded", 2);
           print(request);
@@ -712,9 +732,6 @@ class _CreateEventState extends State<CreateEvent> {
 
     });
   }
-
-
-
 
   void setIterableRules() {
 
@@ -737,17 +754,17 @@ class _CreateEventState extends State<CreateEvent> {
 
     if ( dateStart.add(Duration(days: 7)).month != dateStart.month) {
       weekXm = -1;
-      monWeekTitle = 'last';
+      monWeekTitle = AppLocalizations.of(context)!.lastWeekDay(wDayText);
     }
 
     if (weekXm == 1) {
-      monWeekTitle = 'first';
+      monWeekTitle = AppLocalizations.of(context)!.firstWeekDay(wDayText);
     } else if (weekXm == 2) {
-      monWeekTitle = 'second';
+      monWeekTitle = AppLocalizations.of(context)!.secondWeekDay(wDayText);
     } else if (weekXm == 3) {
-      monWeekTitle = 'third';
+      monWeekTitle = AppLocalizations.of(context)!.thirdWeekDay(wDayText);
     } else if (weekXm == 4) {
-      monWeekTitle = 'fourth';
+      monWeekTitle = AppLocalizations.of(context)!.fourthWeekDay(wDayText);
     } else if (weekXm == 5) {
       monWeekTitle = 'fifth';
     }
@@ -755,17 +772,17 @@ class _CreateEventState extends State<CreateEvent> {
 
     iterateRules = [
       {
-        'title': 'newer',
+        'title': AppLocalizations.of(context)!.newer,
         'value': '',
         'checked': false
       },
       {
-        'title': 'weekly ewery $wDayText',
+        'title': "${AppLocalizations.of(context)!.weekly} ${AppLocalizations.of(context)!.eweryWeekDay(wDayText)} \n${AppLocalizations.of(context)!.weekDay(wDayText)}",
         'value': 'RRULE:FREQ=WEEKLY;BYDAY=$wDayText',
         'checked': false
       },
       {
-        'title': 'monthly ewery $monWeekTitle $wDayText',
+        'title': '${AppLocalizations.of(context)!.monthly} ${AppLocalizations.of(context)!.eweryWeekDay(wDayText)} \n$monWeekTitle ${AppLocalizations.of(context)!.weekDay(wDayText)}',
         'value': 'RRULE:FREQ=MONTHLY;BYDAY=$weekXm$wDayText',
         'checked': false
       }

@@ -35,6 +35,11 @@ class localRepository {
     await prefs.setString(key, dataString);
   }
 
+  Future setLocalDataDouble(key, data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(key, data);
+  }
+
   Future<String?> getLocalDataString(key) async {
     final prefs = await SharedPreferences.getInstance();
     String? string = '';
@@ -42,6 +47,15 @@ class localRepository {
       string = await prefs.getString(key);
     }
     return string;
+  }
+
+  Future<double?> getLocalDataDouble(key) async {
+    final prefs = await SharedPreferences.getInstance();
+    double? value = 0;
+    if (prefs.containsKey(key)) {
+      value = await prefs.getDouble(key);
+    }
+    return value;
   }
 
 }

@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -88,7 +89,7 @@ class _AboutState extends State<About> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('About/Contacts'),
+            child: Text(AppLocalizations.of(context)!.aboutcontacts),
           ),
           actions: [
             // IconButton(
@@ -104,7 +105,7 @@ class _AboutState extends State<About> {
               Row (
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('About Tango Calendar',
+                  Text("About Tango Calendar",
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w600

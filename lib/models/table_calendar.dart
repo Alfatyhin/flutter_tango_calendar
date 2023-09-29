@@ -690,6 +690,9 @@ class _TableCalendarCustonState<T> extends State<TableCalendarCuston<T>> {
   Widget _buildSingleMarker(DateTime day, T event, double markerSize) {
 
     var cEvent = event as Event;
+
+    var color = Color(int.parse(cEvent.colorHash));
+
     return widget.calendarBuilders.singleMarkerBuilder
         ?.call(context, day, event) ??
         Container(
@@ -698,7 +701,7 @@ class _TableCalendarCustonState<T> extends State<TableCalendarCuston<T>> {
           height: markerSize,
           margin: widget.calendarStyle.markerMargin,
           decoration: ShapeDecoration(
-            color: Color(cEvent.colorHash), shape: CircleBorder(),
+            color: color, shape: CircleBorder(),
           ),
         );
   }

@@ -13,16 +13,33 @@ class EventSettings extends StatefulWidget {
 
 class _EventSettingsState extends State<EventSettings> {
 
+  Map checkboxValue = {
+    0: false,
+    1: true
+  };
+  Map permissionsValue = {
+    false: 0,
+    true: 1
+  };
 
   TextEditingController fbOrgNameController = TextEditingController();
+  TextEditingController userUidController = TextEditingController();
   List fbOrgNames = [];
   int _selectedIndex = 0;
   Map eventFbImportRules = {};
+  Map eventPermissions = {};
+  String eventGUid = '';
 
   Map importRules = {
     'name': true,
     'location': false,
     'description': true
+  };
+
+  Map newPermissions = {
+    'add': false,
+    'delete': false,
+    'redact': true
   };
 
 
@@ -34,14 +51,16 @@ class _EventSettingsState extends State<EventSettings> {
 
   Future<void> getEventImportRules() async {
     fbOrgNames = [];
-    var evenIdData = openEvent.eventId.split('_');
-    var result = await usersRepository().getFbEventImportSettingsByEventId(evenIdData[0]);
+    eventGUid = getEventGUid(openEvent.eventId);
+    eventPermissions = await usersRepository().getEventsPermissions(eventGUid);
+    var result = await usersRepository().getFbEventImportSettingsByEventId(eventGUid);
+
 
     if (result.length > 0) {
-      eventFbImportRules = result[evenIdData[0]];
+      eventFbImportRules = result[eventGUid];
       fbOrgNames = eventFbImportRules['fbOrgName'];
-      setState(() { });
     }
+    setState(() { });
   }
 
 
@@ -74,9 +93,12 @@ class _EventSettingsState extends State<EventSettings> {
                 ),
               ),
             ),
-
-
-
+            
+            Row(
+              children: [
+                Expanded(child: Text("GUID - $eventGUid"))
+                ]
+            ),
 
             if (fbOrgNames.length > 0)
 
@@ -111,7 +133,6 @@ class _EventSettingsState extends State<EventSettings> {
               ),
             ),
 
-
             Container(
               padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
               child: Row(
@@ -133,7 +154,6 @@ class _EventSettingsState extends State<EventSettings> {
                 ],
               ),
             ),
-
 
             Container(
               padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
@@ -190,6 +210,185 @@ class _EventSettingsState extends State<EventSettings> {
                 ),),),
             ),
 
+            Center(
+                child:   Text("permissions",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ),
+
+            ListView.builder(
+                shrinkWrap: true,
+                itemCount: eventPermissions.length,
+                itemBuilder: (context, index) {
+
+
+
+                  return   Container(
+                    padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                    child:  Column(
+                      children: [
+                        Text("user - ${eventPermissions[index]['userUid']}"),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                Text("add permissions",
+                                  style: TextStyle(
+                                      fontSize: 15
+                                  ),),
+
+                                Checkbox(
+                                    value: checkboxValue[eventPermissions[index]['add']],
+                                    onChanged: (bool? newValue) {
+                                      eventPermissions[index]['add'] = permissionsValue[newValue];
+                                      setState(() {
+                                      });
+                                    })
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                Text("redact",
+                                  style: TextStyle(
+                                      fontSize: 15
+                                  ),),
+
+                                Checkbox(
+                                    value: checkboxValue[eventPermissions[index]['redact']],
+                                    onChanged: (bool? newValue) {
+                                      eventPermissions[index]['redact'] = permissionsValue[newValue];
+                                      setState(() {
+                                      });
+                                    })
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                Text("delete",
+                                  style: TextStyle(
+                                      fontSize: 15
+                                  ),),
+
+                                Checkbox(
+                                    value: checkboxValue[eventPermissions[index]['delete']],
+                                    onChanged: (bool? newValue) {
+                                      eventPermissions[index]['delete'] = permissionsValue[newValue];
+                                      setState(() {
+                                      });
+                                    })
+                              ],
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  );
+                }
+            ),
+
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+              child:
+              TextFormField(
+                controller: userUidController,
+                decoration: const InputDecoration(
+                  hintText: 'Enter user uid',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (String? value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter some text';
+                  }
+                  return null;
+                },
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+              child:  Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      Text("add permissions",
+                        style: TextStyle(
+                            fontSize: 15
+                        ),),
+
+                      Checkbox(
+                          value: newPermissions['add'],
+                          onChanged: (bool? newValue) {
+                            newPermissions['add'] = newValue!;
+                            setState(() {
+                            });
+                          })
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Text("redact",
+                        style: TextStyle(
+                            fontSize: 15
+                        ),),
+
+                      Checkbox(
+                          value: newPermissions['redact'],
+                          onChanged: (bool? newValue) {
+                            newPermissions['redact'] = newValue!;
+                            setState(() {
+                            });
+                          })
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Text("delete",
+                        style: TextStyle(
+                            fontSize: 15
+                        ),),
+
+                      Checkbox(
+                          value: newPermissions['delete'],
+                          onChanged: (bool? newValue) {
+                            newPermissions['delete'] = newValue!;
+                            setState(() {
+                            });
+                          })
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+              child:  ElevatedButton(onPressed: () {
+                addNewPermissions();
+              }, child: Text('add permissions',
+                style: TextStyle(
+                    fontSize: 20
+                ),),),
+            ),
+
+            // Container(
+            //     padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+            //     child:  Center(
+            //       child: Text(
+            //         'export setting',
+            //         style: TextStyle(
+            //             fontSize: 20,
+            //             fontWeight: FontWeight.w600,
+            //             color: Colors.blue
+            //         ),
+            //       ),
+            //     )
+            // ),
+
             const SizedBox(height: 20),
 
           ],
@@ -216,6 +415,29 @@ class _EventSettingsState extends State<EventSettings> {
         ),
       ),
     );
+  }
+
+  void addNewPermissions() {
+    var add = 0;
+    var redact = 0;
+    var delete = 0;
+    if (newPermissions['add'])
+      add = 1;
+    if (newPermissions['redact'])
+      redact = 1;
+    if (newPermissions['delete'])
+      delete = 1;
+
+    var eventPermission = {
+      'eventId': eventGUid,
+      'userUid': userUidController.text,
+      'add': add,
+      'redact': redact,
+      'delete': delete,
+      'updatedDt':  DateTime.now(),
+      'changeUserId': autshUserData.uid
+    };
+    usersRepository().setUserEventPermissions(eventPermission);
   }
 
   List<Widget> fbOrgsList(orgs) {

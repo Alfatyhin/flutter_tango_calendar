@@ -1,13 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:country_state_city_picker/country_state_city_picker.dart';
 import 'package:tango_calendar/repositories/localRepository.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 import '../AppTools.dart';
 import '../models/Calendar.dart';
 import '../repositories/calendar/calendar_repository.dart';
+import '../repositories/users/users_reposirory.dart';
 
 
 class AddCalendar extends StatefulWidget {
@@ -16,6 +17,7 @@ class AddCalendar extends StatefulWidget {
   @override
   _AddCalendarState createState() => _AddCalendarState();
 }
+
 
 // TODO: сделать перезапись списка стран при обновлении списка календарей
 
@@ -32,13 +34,24 @@ class _AddCalendarState extends State<AddCalendar> {
   TextEditingController calendarUidController = TextEditingController();
   TextEditingController calendarNameController = TextEditingController();
   TextEditingController calendarDescriptionController = TextEditingController();
+  TextEditingController _searchController = TextEditingController();
+  TextEditingController _searchCityController = TextEditingController();
+
+
+  Map addEventToCalendar = GlobalPermissions().addEventToCalendar;
+  Map redactEventToCalendar = GlobalPermissions().redactEventToCalendar;
+  Map deleteEventToCalendar = GlobalPermissions().deleteEventToCalendar;
 
   Map countriesCalendars = {};
   Map cityesCalendars = {};
+  Map countriesAll = {};
+  List<String> countriesList = [];
+  List<String> filteredCountries = [];
+  List<String> cityesList = [];
+  List<String> filteredCityes = [];
 
   var countryValue;
   var countryName = '';
-  var stateValue;
   var cityValue = '';
 
   List calendarTypes = CalendarTypes().calendarTypes;
@@ -54,6 +67,44 @@ class _AddCalendarState extends State<AddCalendar> {
   void initState() {
     super.initState();
     setCalendarsMap();
+    getCountries();
+    userRole = autshUserData.role;
+    print("userRole - $userRole");
+  }
+
+
+  Future<void> getCountries() async {
+    var res = await rootBundle.loadString(
+        'packages/country_state_city_picker/lib/assets/country.json');
+
+    var countries = jsonDecode(res);
+    countriesAll = {};
+
+    countries.forEach((data) {
+      var name = data['name'];
+      countriesList.add(name);
+      List<String> cityes = [];
+
+      data['state'].forEach((state) {
+        List stateCityes = state['city'];
+
+        stateCityes.forEach((element) {
+          cityes.add(element['name']);
+        });
+
+      });
+
+      countriesAll[name] = {
+        "id": data["id"],
+        "emoji": data["emoji"],
+        "cityes": cityes
+      };
+
+
+    });
+    setState(() {
+
+    });
   }
 
   Future<void> setCalendarsMap() async {
@@ -102,7 +153,6 @@ class _AddCalendarState extends State<AddCalendar> {
     }
   }
 
-
   Future calendarTypeDialog(){
 
     List selectedList = [];
@@ -137,12 +187,11 @@ class _AddCalendarState extends State<AddCalendar> {
        if ((calType == 'festivals' || calType == 'master_classes')
            && countryValue != null) {
 
-         var countryData = countryValue.split('    ');
-         type['name'] = "$calTypeName in ${countryData[1]}";
-         countryName = countryData[1];
+         type['name'] = "$calTypeName in $countryValue";
+         countryName = countryValue;
 
-         if (countriesCalendars.containsKey(countryData[1])
-             && countriesCalendars[countryData[1]].contains(calType)) {
+         if (countriesCalendars.containsKey(countryValue)
+             && countriesCalendars[countryValue].contains(calType)) {
            type['isset'] = true;
          }
 
@@ -196,10 +245,12 @@ class _AddCalendarState extends State<AddCalendar> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded (
-                          child: Text("${selectedList[index]['name']}",
-                            style: TextStyle(
-                                fontSize: 15
-                            ),),
+                          child: Expanded(
+                            child: Text("${selectedList[index]['name']}",
+                              style: TextStyle(
+                                  fontSize: 15
+                              ),),
+                          ),
                         ),
 
                         Column(
@@ -264,6 +315,23 @@ class _AddCalendarState extends State<AddCalendar> {
     );
   }
 
+  void filterCountries(String query) {
+    query = query.toLowerCase();
+    setState(() {
+      filteredCountries.clear();
+      filteredCountries.addAll(countriesList.where((country) =>
+          country.toLowerCase().contains(query)));
+    });
+  }
+
+  void filterCityes(String query) {
+    query = query.toLowerCase();
+    setState(() {
+      filteredCityes.clear();
+      filteredCityes.addAll(cityesList.where((city) =>
+          city.toLowerCase().contains(query)));
+    });
+  }
 
 
   @override
@@ -286,21 +354,67 @@ class _AddCalendarState extends State<AddCalendar> {
           child: ListView(
             shrinkWrap: true,
             children: [
-              SelectState(
-                onCountryChanged: (value) {
-                  setState(() {
-                    countryValue = value;
-                  });
+              Padding(
+                padding: const EdgeInsets.all(0.0),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: filterCountries,
+                  decoration: InputDecoration(
+                    labelText: 'Country search',
+                  ),
+                ),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: filteredCountries.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return ListTile(
+                    title: Text("${countriesAll[filteredCountries[index]]['emoji']}    ${filteredCountries[index]}"),
+                    onTap: () {
+                      _searchController.text =  filteredCountries[index];
+                      countryValue =  filteredCountries[index];
+                      countryName =  countryValue;
+                      filteredCountries = [];
+                      cityesList = countriesAll[countryValue]['cityes'];
+
+                      setState(() {
+
+                      });
+                    },
+                    // Дополнительные параметры и обработчики для элементов списка
+                  );
                 },
-                onStateChanged:(value) {
-                  setState(() {
-                    stateValue = value;
-                  });
-                },
-                onCityChanged:(value) {
-                  setState(() {
-                    cityValue = value;
-                  });
+              ),
+
+
+              if (cityesList.length > 0)
+              Padding(
+                padding: const EdgeInsets.all(0.0),
+                child: TextField(
+                  controller: _searchCityController,
+                  onChanged: filterCityes,
+                  decoration: InputDecoration(
+                    labelText: 'City search',
+                  ),
+                ),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: filteredCityes.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return ListTile(
+                    title: Text(filteredCityes[index]),
+                    onTap: () {
+                      _searchCityController.text = filteredCityes[index];
+                      cityValue = filteredCityes[index];
+                      filteredCityes = [];
+
+                      setState(() {
+
+                      });
+                    },
+                    // Дополнительные параметры и обработчики для элементов списка
+                  );
                 },
               ),
 
@@ -533,7 +647,7 @@ class _AddCalendarState extends State<AddCalendar> {
         'data': data
       };
 
-      CalendarRepository().testRequest(requestTokenData);
+      // CalendarRepository().testRequest(requestTokenData);
       CalendarRepository().addGCalendarToApi(requestTokenData).then((response) {
 
         if (response.containsKey('errorMessage')) {
@@ -565,6 +679,21 @@ class _AddCalendarState extends State<AddCalendar> {
                 countriesCalendars[countryName].add(selectCalendarType);
               }
             }
+
+            if (userRole != 'su_admin' || userRole != 'admin') {
+              var date = DateTime.now();
+              var calendarPermission = {
+                'calId': response['id'],
+                'userUid': autshUserData.uid,
+                'add': addEventToCalendar[userRole],
+                'redact': redactEventToCalendar[userRole],
+                'delete': deleteEventToCalendar[userRole],
+                'updatedDt': date,
+                'changeUserId': autshUserData.uid
+              };
+              usersRepository().setCalendarsPermissions(calendarPermission);
+            }
+
 
             selectCalendarDisplayName = null;
             setState(() {});
@@ -613,6 +742,7 @@ class _AddCalendarState extends State<AddCalendar> {
       case 1:
         countriesCalendars = {};
         cityesCalendars = {};
+
         CalendarRepository().updateCalendarsData().then((value) {
           setCalendarsMap().then((value) {
             shortMessage(context, AppLocalizations.of(context)!.uploadComplit, 2);

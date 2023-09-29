@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Tango Calendar',
       // localizationsDelegates: [
       //   AppLocalizations.delegate,
@@ -43,10 +44,21 @@ class MyApp extends StatelessWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(
         appBarTheme: const AppBarTheme(
+          elevation: 10,
+          toolbarHeight: 30,
           titleTextStyle: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               color: Colors.white,
           ),
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          elevation: 20,
+          selectedIconTheme: IconThemeData(
+              size: 25,
+          ),
+          unselectedIconTheme: IconThemeData(
+              size: 25
+          )
         ),
         primarySwatch: Colors.blue,
       ),

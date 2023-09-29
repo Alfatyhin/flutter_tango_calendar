@@ -12,6 +12,7 @@ class Calendar {
   final gcalendarId;
   final creator;
   bool _enable = false;
+  String colorHash = '0xFF000000';
 
   Calendar({
     this.id,
@@ -24,6 +25,10 @@ class Calendar {
     this.gcalendarId,
     this.creator
   });
+
+  void setColorHash(hash) {
+    this.colorHash = hash;
+  }
 
 
   Map<String, Object> toJson(){

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../firebase_options.dart';
 
 import '../AppTools.dart';
@@ -51,7 +52,7 @@ class _LoginUserState extends State<LoginUser> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Enter Login'),
+            child: Text(AppLocalizations.of(context)!.enterLogin),
           ),
           actions: [
             // IconButton(
@@ -69,8 +70,8 @@ class _LoginUserState extends State<LoginUser> {
                   const SizedBox(height: 10.0),
                   TextFormField(
                     controller: emailController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your Email',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.enterYourEmail,
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.emailAddress,
@@ -85,8 +86,8 @@ class _LoginUserState extends State<LoginUser> {
                     controller: passwordController,
                     obscureText: true,
                     obscuringCharacter: '*',
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your Password',
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.enterYourPassword,
                       border: OutlineInputBorder(),
                     ),
                     validator: (String? value) {
@@ -111,7 +112,7 @@ class _LoginUserState extends State<LoginUser> {
 
                         }
                       },
-                      child: const Text('Submit'),
+                      child: Text(AppLocalizations.of(context)!.submit),
                     ),
                   ),
                 ],
@@ -119,10 +120,10 @@ class _LoginUserState extends State<LoginUser> {
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'home',
+              label: AppLocalizations.of(context)!.home,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.delete, color: Colors.white,),

@@ -208,6 +208,93 @@ class usersRepository {
     });
   }
 
+  Future<String> setUserEventPermissions(data) async {
+    var id = '${data['eventId']}-${data['userUid']}';
+    return db.collection("eventsPermissions")
+        .doc(id)
+        .set(data)
+        .then((value) {
+      print("Events Permissions Updated");
+      return 'Events Permissions Updated';
+    })
+        .catchError((error) {
+      print("Failed to update Events Permissions: $error");
+      return 'Failed to update Events Permissions';
+    });
+  }
+
+
+  Future<Map> getEventsPermissions(eventGUid) {
+    return db.collection("eventsPermissions").where('eventId', isEqualTo: eventGUid)
+        .get()
+        .then(
+          (querySnapshot) {
+        Map data = {};
+        print("Successfully completed");
+        var x = 0;
+        for (var docSnapshot in querySnapshot.docs) {
+          var doc = docSnapshot.data();
+          data[x] = {
+            'userUid': doc['userUid'],
+            'add': doc['add'],
+            'redact': doc['redact'],
+            'delete': doc['delete']
+          };
+          x++;
+        };
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+  Future<Map> getUserEventsPermissions(userUid) {
+    return db.collection("eventsPermissions").where('userUid', isEqualTo: userUid)
+        .get()
+        .then(
+          (querySnapshot) {
+        Map data = {};
+        print("Successfully completed");
+        for (var docSnapshot in querySnapshot.docs) {
+          var doc = docSnapshot.data();
+          data[doc['eventId']] = {
+            'add': doc['add'],
+            'redact': doc['redact'],
+            'delete': doc['delete']
+          };
+        };
+        return data;
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+  }
+
+  Future deleteUserEventsPermissions(eventId) {
+
+    return db.collection("eventsPermissions").where('eventId', isEqualTo: eventId)
+        .get()
+        .then(
+          (querySnapshot) {
+        for (var docSnapshot in querySnapshot.docs) {
+          var docId = docSnapshot.id;
+
+          db.collection("eventsPermissions")
+              .doc(docId)
+              .delete()
+              .then((value) {
+            print("Event permission Delete");
+          })
+              .catchError((error) {
+            print("Failed to delete Event permission: $error");
+          });
+        };
+
+      },
+      onError: (e) => print("Error completing: $e"),
+    );
+
+  }
+
   Future<Map<String, dynamic>> getUserTokenByUid(userUid) async {
     return db.collection('usersTokens').doc(userUid).get().then(
           (DocumentSnapshot doc) {

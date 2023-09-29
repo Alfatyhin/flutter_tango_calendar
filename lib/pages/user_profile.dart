@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import '../firebase_options.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../models/Calendar.dart';
 import '../models/UserData.dart';
@@ -126,7 +126,7 @@ class _UserProfileState extends State<UserProfile> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Profile'),
+            child: Text(AppLocalizations.of(context)!.profile),
           ),
           actions: [
             // IconButton(
@@ -138,10 +138,10 @@ class _UserProfileState extends State<UserProfile> {
         body: _body(uid),
 
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'home',
+              label: AppLocalizations.of(context)!.home,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.delete, color: Colors.white,),
@@ -149,7 +149,7 @@ class _UserProfileState extends State<UserProfile> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.refresh),
-              label: 'update',
+              label: AppLocalizations.of(context)!.update,
             ),
           ],
           currentIndex: _selectedIndex,
@@ -178,7 +178,7 @@ class _UserProfileState extends State<UserProfile> {
                   child:  SelectableText("${userData.name}",
                     textDirection: TextDirection.ltr,
                     style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600
                     ),
                   )
@@ -189,7 +189,7 @@ class _UserProfileState extends State<UserProfile> {
               Center(
                 child:  SelectableText("${userData.email}",
                   textDirection: TextDirection.ltr,
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(fontSize: 18),
                 ),
               ),
 
@@ -197,8 +197,8 @@ class _UserProfileState extends State<UserProfile> {
               const SizedBox(height: 10.0),
               TextFormField(
                 controller: fbProfileController,
-                decoration: const InputDecoration(
-                  hintText: 'Enter your Facebook profile',
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.enterYourFbProfile,
                   border: OutlineInputBorder(),
                 ),
                 validator: (String? value) {
@@ -213,9 +213,9 @@ class _UserProfileState extends State<UserProfile> {
 
               ElevatedButton(onPressed: () {
                 _changeFbUrl();
-              }, child: Text('change profile fb url',
+              }, child: Text(AppLocalizations.of(context)!.changeProfileFbUrl,
                 style: TextStyle(
-                    fontSize: 20
+                    fontSize: 18
                 ),),),
 
 
@@ -241,9 +241,9 @@ class _UserProfileState extends State<UserProfile> {
 
                   shortMessage(context, 'fb events url changed', 2);
                 });
-              }, child: Text('change events fb url',
+              }, child: Text(AppLocalizations.of(context)!.changeEventsFbUrl,
                 style: TextStyle(
-                    fontSize: 20
+                    fontSize: 18
                 ),),),
 
 
@@ -258,9 +258,9 @@ class _UserProfileState extends State<UserProfile> {
               if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
                 ElevatedButton(onPressed: () {
                 _calendarsStatmentOpen();
-              }, child: Text('calendars permissins',
+              }, child: Text(AppLocalizations.of(context)!.calendarsPermissins,
                 style: TextStyle(
-                    fontSize: 20
+                    fontSize: 18
                 ),),),
 
               const SizedBox(height: 20),
@@ -271,7 +271,7 @@ class _UserProfileState extends State<UserProfile> {
                       onPressed: () {
                         deleteUserDialog();
                       },
-                      child: Text('delete my profile data'))
+                      child: Text(AppLocalizations.of(context)!.deleteProfileData))
                 ],
               )
             ],
@@ -361,7 +361,7 @@ class _UserProfileState extends State<UserProfile> {
 
           if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
 
-            Text('access level',
+            Text(AppLocalizations.of(context)!.accessLevel,
               style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 18,
@@ -373,7 +373,7 @@ class _UserProfileState extends State<UserProfile> {
           UserRoleList(),
 
           if (autshUserData.role == 'admin' || autshUserData.role == 'su_admin')
-            Text('access level <<${autshUserData.role}>>',
+            Text('${AppLocalizations.of(context)!.accessLevel} <<${autshUserData.role}>>',
               style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 18,
@@ -384,12 +384,12 @@ class _UserProfileState extends State<UserProfile> {
           const SizedBox(height: 20),
 
           if (autshUserData.role != 'admin' && autshUserData.role != 'su_admin')
-          ElevatedButton(onPressed: () {
-            _changeRoleStatment(userData.uid);
-          }, child: Text('statement',
-            style: TextStyle(
-                fontSize: 20
-            ),),),
+            ElevatedButton(onPressed: () {
+              _changeRoleStatment(userData.uid);
+            }, child: Text(AppLocalizations.of(context)!.roleChange,
+              style: TextStyle(
+                  fontSize: 18
+              ),),),
         ],
       );
     }
@@ -399,7 +399,7 @@ class _UserProfileState extends State<UserProfile> {
 
         const SizedBox(height: 8.0),
 
-        Text('access level ${userData.role}',
+        Text('${AppLocalizations.of(context)!.accessLevel} ${userData.role}',
           style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 18,

@@ -8,9 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../firebase_options.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:new_version_plus/new_version_plus.dart';
 
 
 import '../AppTools.dart';
@@ -41,7 +44,9 @@ class _StartPageState extends State<StartPage> {
   EventChangeMode? _changeMode = EventChangeMode.one;
   String changeMode = "one";
 
+  bool auth = false;
   var CalEvents = {};
+  Map eventsPermissions = {};
   var userUid = '';
   var userRole = '';
   var key = DateTime.now();
@@ -49,6 +54,24 @@ class _StartPageState extends State<StartPage> {
   int _selectedIndexEventOpen = 0;
   int statmensCount = 0;
   DateTime kLastDayThis = kLastDay;
+  bool shouldPop = false;
+  int priodUpdate = 30;
+  double rowHeight = 26;
+  double fontsize = 16;
+  Map<double, double> fontSizes = {
+    26: 16,
+    28: 16.5,
+    30: 17,
+    32: 17.5,
+    34: 18,
+    36: 18.5,
+    38: 19,
+    40: 20,
+    42: 20.5,
+    44: 21,
+    46: 21.5
+  };
+
 
   List shortFilter = [];
 
@@ -56,6 +79,26 @@ class _StartPageState extends State<StartPage> {
 
   Map exportData = {};
   List exportIds = [];
+
+  @override
+  void initState() {
+    super.initState();
+    initFirebase();
+    _selectedDay = _focusedDay;
+    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+    print('init state');
+
+    if (backCommand['comand'] == 'refresh') {
+      backCommand['comand'] = '';
+      refreshCommand();
+    }
+
+    if (!newVersionShow) {
+      newVersionShow = true;
+      newVersionMain.showAlertIfNecessary(context: context);
+    }
+
+  }
 
   void initFirebase() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -70,15 +113,30 @@ class _StartPageState extends State<StartPage> {
         .authStateChanges()
         .listen((User? user) async {
       if (user != null) {
+
         UserData userData = await usersRepository().getUserDataByUid(user.uid!);
-        // UserData userData = await usersRepository().getUserDataByUid('');
+        if (emulateUser) {
+           userData = await usersRepository().getUserDataByUid(emulateUserId);
+        }
 
         autshUserData = userData;
+        auth = true;
         if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
+          pro = true;
+          calendarsMapped();
           usersRepository().getStatementsCount().then((value) {
             statmensCount = value;
-            setState(() {});
+            setState(() {
+              statmensCount = value;
+            });
           });
+        }
+
+        if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin') {
+
+        } else {
+          eventsPermissions = await usersRepository().getUserEventsPermissions(autshUserData.uid);
+
         }
 
         CalendarRepository().getUserCalendarsPermissions(autshUserData.uid).then((value) {
@@ -87,8 +145,9 @@ class _StartPageState extends State<StartPage> {
 
         if (userData.role == 'admin'
             || userData.role == 'su_admin'
-            || userData.role == 'organizer') {
-          kLastDayThis = DateTime(kToday.year, kToday.month + 12, kToday.day);
+            || userData.role == 'organizer'
+            || pro == true) {
+          kLastDayThis = DateTime(kToday.year, kToday.month + 18, kToday.day);
         } else {
           kLastDayThis = DateTime(kToday.year, kToday.month + 6, kToday.day);
         }
@@ -101,14 +160,76 @@ class _StartPageState extends State<StartPage> {
         autshUserData = UserData();
       }
     });
+
   }
+
 
   void initCalendars(){
 
     calendarsMapped();
     kEvents = CalEvents;
     //////////////////////////////////
+    localRepository().getLocalDataString('shortFilter').then((value){
+      if (value != '') {
+        setState(() {
+          shortFilter = json.decode(value as String);
+        });
+      }
+    });
 
+    localRepository().getLocalDataDouble('rowHeight').then((value){
+      print('rowHeight - ${value}');
+      if (value != 0) {
+        setState(() {
+          rowHeight = value!;
+        });
+      }
+    });
+
+    localRepository().getLocalDataString('uploadsEventDates').then((value){
+      if (value != '') {
+        Map uploadsDates = json.decode(value as String);
+        try {
+          uploadsEventDates['minDate'] = DateTime.parse(uploadsDates['minDate']);
+          uploadsEventDates['maxDate'] = DateTime.parse(uploadsDates['maxDate']);
+          print(uploadsEventDates);
+          setlocaleJsonData();
+          // _selectedEvents.value = _getEventsForDay(_selectedDay!);
+          setState(() {});
+        } catch(e) {
+          print(e);
+        }
+
+      }
+    });
+
+    localRepository().getLocalDataString('priodUpdate').then((value){
+      print('priodUpdate - ${value}');
+      if (value != '') {
+        priodUpdate = value as int;
+      }
+      localRepository().getLocalDataString('lastUpdateEventsData').then((value){
+        print('lastUpdateEventsData - ${value}');
+
+        DateTime dateNow = DateTime.now();
+        if (value != '') {
+          print('lastUpdateEventsData - not empty');
+          DateTime lastUpdateEventsData = DateTime.parse(value!);
+          DateTime endpoint = lastUpdateEventsData.add(Duration(minutes: priodUpdate));
+
+          if (dateNow.isAfter(endpoint)) {
+            shortMessage(context, 'auto update events', 2);
+            _onItemTapped(2);
+            localRepository().setLocalDataString('lastUpdateEventsData', dateNow.toString());
+          }
+
+        } else {
+          _onItemTapped(2);
+          localRepository().setLocalDataString('lastUpdateEventsData', dateNow.toString());
+        }
+      });
+
+    });
 
     CalendarRepository().getLocalDataJson('selectedCalendars').then((selectedCalendarsJson) {
 
@@ -134,9 +255,27 @@ class _StartPageState extends State<StartPage> {
 
                 if (selectedData.contains(calendar.id)) {
                   selectedCalendars[calendar.id] = calendar;
+
+                  print('calendar.typeEvents');
+                  print(calendar.typeEvents);
+
+                  if (calendar.typeEvents == 'festivals') {
+                    calendar.setColorHash('0xFFA90000');
+                  }
+                  if (calendar.typeEvents == 'milongas') {
+                    calendar.setColorHash('0xFF06A900');
+                  }
+                  if (calendar.typeEvents == 'master_classes') {
+                    calendar.setColorHash('0xFFA97900');
+                  }
+                  if (calendar.typeEvents == 'tango_school') {
+                    calendar.setColorHash('0xFF003BA9');
+                  }
+
                 }
 
               });
+
             }
           }
         } else {
@@ -148,30 +287,6 @@ class _StartPageState extends State<StartPage> {
 
     });
 
-    localRepository().getLocalDataString('shortFilter').then((value){
-      if (value != '') {
-        setState(() {
-          shortFilter = json.decode(value as String);
-        });
-      }
-    });
-
-    localRepository().getLocalDataString('uploadsEventDates').then((value){
-      if (value != '') {
-        Map uploadsDates = json.decode(value as String);
-        try {
-          uploadsEventDates['minDate'] = DateTime.parse(uploadsDates['minDate']);
-          uploadsEventDates['maxDate'] = DateTime.parse(uploadsDates['maxDate']);
-          print(uploadsEventDates);
-          setlocaleJsonData();
-          // _selectedEvents.value = _getEventsForDay(_selectedDay!);
-          setState(() {});
-        } catch(e) {
-          print(e);
-        }
-
-      }
-    });
   }
 
 
@@ -202,20 +317,7 @@ class _StartPageState extends State<StartPage> {
   }
 
 
-  @override
-  void initState() {
-    super.initState();
-    initFirebase();
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-    print('init state');
 
-    if (backCommand['comand'] == 'refresh') {
-      backCommand['comand'] = '';
-      refreshCommand();
-    }
-
-  }
 
   Future<void> refreshCommand() async {
     uploadsEventDates = {};
@@ -225,6 +327,7 @@ class _StartPageState extends State<StartPage> {
 
 
   void _menuOpen() {
+
 
     var title = AppLocalizations.of(context)!.menu;
     Navigator.of(context).push(
@@ -236,13 +339,12 @@ class _StartPageState extends State<StartPage> {
               appBar: AppBar(title: Text(title),),
               body:
               Container(
-                margin: EdgeInsets.all(10.0),
+                margin: EdgeInsets.all(30.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
 
-                    const SizedBox(height: 10),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/register_user', (route) => false);
@@ -252,7 +354,6 @@ class _StartPageState extends State<StartPage> {
                       ),),),
 
 
-                    const SizedBox(height: 10),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/login_user', (route) => false);
@@ -262,11 +363,11 @@ class _StartPageState extends State<StartPage> {
                       ),),),
 
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 5),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/about', (route) => false);
-                    }, child: Text(AppLocalizations.of(context)!.about,
+                    }, child: Text("${AppLocalizations.of(context)!.about}    v - $v",
                       style: TextStyle(
                           fontSize: 20
                       ),),),
@@ -281,12 +382,11 @@ class _StartPageState extends State<StartPage> {
               appBar: AppBar(title: Text(title),),
               body:
               Container(
-                margin: EdgeInsets.all(10.0),
+                margin: EdgeInsets.all(30.0),
                 child:  Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 10),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
@@ -295,7 +395,6 @@ class _StartPageState extends State<StartPage> {
                           fontSize: 20
                       ),),),
 
-                    const SizedBox(height: 10),
                     ElevatedButton(onPressed: () {
                       _logOut();
                       Navigator.pop(context);
@@ -305,7 +404,6 @@ class _StartPageState extends State<StartPage> {
                       ),),),
 
 
-                    const SizedBox(height: 10),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/user_profile', (route) => false, arguments: userUid);
@@ -318,80 +416,49 @@ class _StartPageState extends State<StartPage> {
 
 
                     if (autshUserData.role == 'su_admin')
-                      Container(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
 
-                            const SizedBox(height: 10),
-                            ElevatedButton(onPressed: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamedAndRemoveUntil(context, '/users', (route) => false);
-                            }, child: Text(AppLocalizations.of(context)!.users,
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),),),
+                      ElevatedButton(onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, '/users', (route) => false);
+                      }, child: Text(AppLocalizations.of(context)!.users,
+                        style: TextStyle(
+                            fontSize: 20
+                        ),),),
 
-
-                            const SizedBox(height: 10),
-                            ElevatedButton(onPressed: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamedAndRemoveUntil(context, '/statements', (route) => false);
-                            }, child: Text(AppLocalizations.of(context)!.statements,
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),),),
-
-                          ],
-                        ),
-                      ),
+                    if (autshUserData.role == 'su_admin')
+                      ElevatedButton(onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, '/statements', (route) => false);
+                      }, child: Text(AppLocalizations.of(context)!.statements,
+                        style: TextStyle(
+                            fontSize: 20
+                        ),),),
 
 
-                    if (autshUserData.role == 'su_admin'
-                        || autshUserData.role == 'admin'
-                        || autshUserData.role == 'organizer')
+                    if (autshUserData.role != 'user')
 
-                      Container(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-
-                            const SizedBox(height: 10),
-                            ElevatedButton(onPressed: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamedAndRemoveUntil(context, '/add_calendar', (route) => false);
-                            }, child: Text(AppLocalizations.of(context)!.addCalendar,
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),),),
-                          ],
-                        ),
-                      ),
+                      ElevatedButton(onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, '/add_calendar', (route) => false);
+                      }, child: Text(AppLocalizations.of(context)!.addCalendar,
+                        style: TextStyle(
+                            fontSize: 20
+                        ),),),
 
 
                     if (autshUserData.role == 'su_admin'
                         || autshUserData.role == 'admin'
                         || autshUserData.role == 'organizer')
 
-                      Container(
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-
-                            const SizedBox(height: 15),
-                            ElevatedButton(onPressed: () {
-                              Navigator.pop(context);
-                              Navigator.pushNamedAndRemoveUntil(context, '/create_event', (route) => false);
-                            }, child: Text(AppLocalizations.of(context)!.createEvent,
-                              style: TextStyle(
-                                  fontSize: 20
-                              ),),),
-                          ],
-                        ),
-                      ),
+                      ElevatedButton(onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, '/create_event', (route) => false);
+                      }, child: Text(AppLocalizations.of(context)!.createEvent,
+                        style: TextStyle(
+                            fontSize: 20
+                        ),),),
 
 
-                    const SizedBox(height: 10),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
@@ -401,15 +468,13 @@ class _StartPageState extends State<StartPage> {
                       ),),),
 
 
-                    const SizedBox(height: 10),
                     ElevatedButton(onPressed: () {
                       Navigator.pop(context);
                       Navigator.pushNamedAndRemoveUntil(context, '/about', (route) => false);
-                    }, child: Text(AppLocalizations.of(context)!.about,
+                    }, child: Text("${AppLocalizations.of(context)!.about}    v - $v",
                       style: TextStyle(
                           fontSize: 20
                       ),),),
-
                   ],
                 ),
               ),
@@ -430,10 +495,19 @@ class _StartPageState extends State<StartPage> {
     });
   }
 
-  void _eventOpen(Event event) {
+  Future<void> _eventOpen(Event event) async {
     _changeMode = EventChangeMode.one;
     changeMode = "one";
     openEvent = event;
+    var eventGuid = getEventGUid(event.eventId);
+    print('eventId - ${event.eventId}');
+
+    // final html = await fetchHtml(event.url);
+    // Clipboard.setData(ClipboardData(text: html));
+
+    // final imageUrl = extractImageUrl(html);
+    // print('Main Event Image URL: $imageUrl');
+    // print(event.url);
 
     Navigator.of(context).push(
         MaterialPageRoute(builder: (BuildContext context) {
@@ -469,6 +543,15 @@ class _StartPageState extends State<StartPage> {
                   ),
                   const SizedBox(height: 8.0),
 
+                  if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin')
+                    ElevatedButton(
+                      onPressed: () {
+                        Uri url = Uri.parse("http://maps.google.com/maps?q=${event.locationString()}");
+                        _launchUrl(url);
+                      },
+                      child: Text('go map'),
+                    ),
+
 
                   Center(
                       child: SelectableText("${event.descriptionString()}",
@@ -485,6 +568,14 @@ class _StartPageState extends State<StartPage> {
                       ),
                   ),
 
+                  if (event.url != '')
+                    ElevatedButton(
+                    onPressed: () {
+                      Uri url = Uri.parse(event.url);
+                      _launchUrl(url);
+                    },
+                    child: Text('go event'),
+                  ),
 
                   if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin')
                     Column(
@@ -539,11 +630,14 @@ class _StartPageState extends State<StartPage> {
                     label: AppLocalizations.of(context)!.import,
                   ),
 
+
+
                 if(autshUserData.role != null && ((userCalendarsPermissions.containsKey(key)
                     && userCalendarsPermissions[event.calendarId]['delete'] > 0
                     && CalendarPermEventDelete[autshUserData.role] > 1)
                     || selectedCalendars[event.calendarId].creator == autshUserData.uid
-                    || CalendarPermEventDelete[autshUserData.role] > 1))
+                    || CalendarPermEventDelete[autshUserData.role] > 1)
+                    || (eventsPermissions.containsKey(eventGuid) && eventsPermissions[eventGuid]['delete'] > 0))
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.delete, color: Colors.green,),
@@ -565,11 +659,13 @@ class _StartPageState extends State<StartPage> {
                     label: AppLocalizations.of(context)!.delete,
                   ),
 
+
                 if(autshUserData.role != null && ((userCalendarsPermissions.containsKey(key)
                     && userCalendarsPermissions[event.calendarId]['redact'] > 0
                     && CalendarPermEventRedact[autshUserData.role] > 1)
                     || selectedCalendars[event.calendarId].creator == autshUserData.uid
-                    || CalendarPermEventDelete[autshUserData.role] > 1))
+                    || CalendarPermEventDelete[autshUserData.role] > 1)
+                    || (eventsPermissions.containsKey(eventGuid) && eventsPermissions[eventGuid]['redact'] > 0))
 
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.green,),
@@ -589,7 +685,7 @@ class _StartPageState extends State<StartPage> {
                   BottomNavigationBarItem(
                     icon: Icon(Icons.receipt_long, color: Colors.grey[300],),
                     label: AppLocalizations.of(context)!.edit,
-                  )
+                  ),
 
               ],
 
@@ -704,7 +800,7 @@ class _StartPageState extends State<StartPage> {
                           Navigator.of(context).pop();
                           setlocaleJsonData();
                         },
-                        child: Text(AppLocalizations.of(context)!.close))
+                        child: Text("Ok"))
 
                   ]
               ),
@@ -849,9 +945,14 @@ class _StartPageState extends State<StartPage> {
        if (shortFilter.length != 0) {
          Map newData = {};
          data.forEach((key, value) {
+
            value as List;
+
            var filtersEvents = [];
            value.forEach((element) {
+
+             element['colorHash'] = AllCalendars[element['calId']].colorHash;
+
              if(shortFilter.contains(element['calId'])) {
                filtersEvents.add(element);
              }
@@ -904,7 +1005,7 @@ class _StartPageState extends State<StartPage> {
 
 
     while(dayEventsIds.length > 0 ) {
-      print('test');
+
       int size = 10;
       if (dayEventsIds.length < 10) {
         size = dayEventsIds.length;
@@ -983,230 +1084,499 @@ class _StartPageState extends State<StartPage> {
     }
   }
 
+  SureExitDialog(BuildContext context) {
+    Widget cancelButton = TextButton(
+      child: Text(AppLocalizations.of(context)!.stay),
+      onPressed:  () {Navigator.pop(context);},
+    );
+    Widget yesButton = TextButton(
+      child: Text(AppLocalizations.of(context)!.yes),
+      onPressed:  () {
+        shouldPop = true;
+        Navigator.pop(context);
+      },
+    );
+    AlertDialog alert = AlertDialog(
+      title: Text(AppLocalizations.of(context)!.confirmatioN),
+      content: Text(AppLocalizations.of(context)!.confirmExitText),
+      actions: [
+        cancelButton,
+        yesButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Center(
-          child: Text(AppLocalizations.of(context)!.tangoCalendar,
-            style: TextStyle(
-                fontSize: 20,
-                fontFamily: 'Frederic'
-            ),
-          ),
 
-        ),
-        actions: [
-          Container(
-            child: _appBarLogin(),
-          ),
-          if (statmensCount > 0)
-            Text('$statmensCount',
+    double iconHeight = 42;
+
+    return WillPopScope(
+      onWillPop: () async {
+        if (shouldPop == false ) {
+          SureExitDialog(context);
+          return false;
+        } else {
+          return true;
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Center(
+            child: Text(AppLocalizations.of(context)!.tangoCalendar,
               style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-                color: Colors.yellow[700]
+                  fontSize: 20,
+                  fontFamily: 'Frederic'
               ),
             ),
-          IconButton(
-            icon: Icon(Icons.menu),
-            onPressed: _menuOpen,
+
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          TableCalendarCuston<Event>(
-            locale: Localizations.localeOf(context).toString(),
-            firstDay: kFirstDay,
-            lastDay: kLastDayThis,
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            rangeStartDay: _rangeStart,
-            rangeEndDay: _rangeEnd,
-            calendarFormat: _calendarFormat,
-            rangeSelectionMode: _rangeSelectionMode,
-            eventLoader: _getEventsForDay,
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            calendarBuilders: CalendarBuilders(
-              // singleMarkerBuilder: SingleMarkerBuilder()
+          actions: [
+            Container(
+              child: _appBarLogin(),
             ),
-            calendarStyle: CalendarStyle(
-              // Use `CalendarStyle` to customize the UI
-              outsideDaysVisible: false,
-              // markerDecoration: BoxDecoration(color: Colors.cyanAccent)
-            ),
-            onDaySelected: _onDaySelected,
-            onRangeSelected: _onRangeSelected,
-            onFormatChanged: (format) {
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
-            onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
-              print('page change');
-              updateData();
-            },
-          ),
-
-          if (AllCalendars.length == 0)
-
-            Column(
-              children: [
-                const SizedBox(height: 8.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(AppLocalizations.of(context)!.calendarListEmpty,
-                      style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 20
-                      ),
-                    ),
-
-                    TextButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
-                    },
-                        child: Text(AppLocalizations.of(context)!.loadCalendars,
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 20,
-                          ),
-                        )
-                    )
-                  ],
+            if (statmensCount > 0)
+              Text('$statmensCount',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    color: Colors.yellow[700]
                 ),
-              ],
+              ),
+            IconButton(
+              icon: Icon(Icons.menu),
+              onPressed: _menuOpen,
             ),
+          ],
+        ),
+        body: Column(
+          children: [
+           Row(
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+             children: [
+               Column(
+                 children: [
+                   Container(
+                     width: 270,
+                     child: TableCalendarCuston<Event>(
+                       locale: Localizations.localeOf(context).toString(),
+                       firstDay: kFirstDay,
+                       lastDay: kLastDayThis,
+                       rowHeight: rowHeight,
+                       focusedDay: _focusedDay,
+                       selectedDayPredicate: (day) {
+                         // Use `selectedDayPredicate` to determine which day is currently selected.
+                         // If this returns true, then `day` will be marked as selected.
 
-          if (selectedCalendars.length == 0 && AllCalendars.length != 0)
-            Column(
-              children: [
-                const SizedBox(height: 8.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(AppLocalizations.of(context)!.calendarsNotSelected,
-                      style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 20
+                         // Using `isSameDay` is recommended to disregard
+                         // the time-part of compared DateTime objects.
+                         return isSameDay(_selectedDay, day);
+                       },
+                       rangeStartDay: _rangeStart,
+                       rangeEndDay: _rangeEnd,
+                       calendarFormat: _calendarFormat,
+                       rangeSelectionMode: _rangeSelectionMode,
+                       eventLoader: _getEventsForDay,
+                       startingDayOfWeek: StartingDayOfWeek.monday,
+                       calendarBuilders: CalendarBuilders(
+                         // singleMarkerBuilder: SingleMarkerBuilder()
+                       ),
+                       headerStyle: HeaderStyle(
+                         titleTextStyle: const TextStyle(fontSize: 12.0),
+                       ),
+                       calendarStyle: CalendarStyle(
+                         todayTextStyle: TextStyle(
+                           fontSize: fontSizes[rowHeight]
+                         ),
+                         defaultTextStyle: TextStyle(
+                           fontSize: fontSizes[rowHeight]
+                         ),
+                         selectedTextStyle: TextStyle(
+                             color: const Color(0xFFFAFAFA),
+                             fontSize: fontSizes[rowHeight]
+                         ),
+                         weekendTextStyle: TextStyle(
+                           fontSize: fontSizes[rowHeight]
+                         ),
+                         // Use `CalendarStyle` to customize the UI
+                         outsideDaysVisible: false,
+                         cellMargin: EdgeInsets.all(3.0),
+                         markersMaxCount: 4,
+                         markerSize: 6,
+                         // markerDecoration: BoxDecoration(color: Colors.cyanAccent)
+                       ),
+                       onDaySelected: _onDaySelected,
+                       onRangeSelected: _onRangeSelected,
+                       onFormatChanged: (format) {
+                         if (_calendarFormat != format) {
+                           setState(() {
+                             _calendarFormat = format;
+                           });
+                         }
+                       },
+                       onPageChanged: (focusedDay) {
+                         _focusedDay = focusedDay;
+                         print('page change');
+                         updateData();
+                       },
+                     ),
+                   ),
+                 ],
+               ),
+               Column(
+                 crossAxisAlignment: CrossAxisAlignment.end,
+                 mainAxisSize: MainAxisSize.max,
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 children: [
+
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     children: [
+                       Container (
+                         width: 32,
+                         height: iconHeight,
+                         child: IconButton(
+                           padding: EdgeInsets.all(1),
+                           style: ButtonStyle(
+                             padding: MaterialStateProperty.all<EdgeInsets>(
+                                 EdgeInsets.all(1)),
+                           ),
+                           onPressed: (){
+                             if (rowHeight > 26 ) {
+                               rowHeight = rowHeight - 2;
+                               localRepository().setLocalDataDouble('rowHeight', rowHeight);
+                               setState(() {
+
+                               });
+                             }
+                           },
+                           icon: Icon(Icons.horizontal_rule, color: Colors.lightBlue,),
+                         ),
+                       ),
+                       Container (
+                         width: 10,
+                         height: iconHeight,
+                       ),
+                       Container (
+                         width: 32,
+                         height: iconHeight,
+                         child: IconButton(
+                           padding: EdgeInsets.all(1),
+                           style: ButtonStyle(
+                             padding: MaterialStateProperty.all<EdgeInsets>(
+                                 EdgeInsets.all(1)),
+                           ),
+                           onPressed: (){
+                             _onItemTapped(0);
+                           },
+                           icon: Icon(Icons.list_alt, color: Colors.lightBlue,),
+                         ),
+                       ),
+                     ],
+                   ),
+
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     children: [
+                       Container (
+                         width: 32,
+                         height: iconHeight,
+                         child: IconButton(
+                           padding: EdgeInsets.all(1),
+                           style: ButtonStyle(
+                             padding: MaterialStateProperty.all<EdgeInsets>(
+                                 EdgeInsets.all(0.5)),
+                           ),
+                           onPressed: (){
+                             if (rowHeight < 46 ) {
+                               rowHeight = rowHeight + 2;
+                               localRepository().setLocalDataDouble('rowHeight', rowHeight);
+                               setState(() {
+
+                               });
+                             }
+                           },
+                           icon: Icon(Icons.add, color: Colors.lightBlue,),
+                         ),
+                       ),
+                       Container (
+                         width: 10,
+                         height: iconHeight,
+                       ),
+                       Container (
+                         width: 32,
+                         height: iconHeight,
+                         child: IconButton(
+                           padding: EdgeInsets.all(1),
+                           style: ButtonStyle(
+                             padding: MaterialStateProperty.all<EdgeInsets>(
+                                 EdgeInsets.all(0.5)),
+                           ),
+                           onPressed: (){
+                             _onItemTapped(1);
+                           },
+                           icon: Icon(Icons.delete, color: Colors.grey,),
+                         ),
+                       ),
+                     ],
+                   ),
+
+                   Container (
+                     width: 32,
+                     height: iconHeight,
+                     child: IconButton(
+                       padding: EdgeInsets.all(1),
+                       style: ButtonStyle(
+                         padding: MaterialStateProperty.all<EdgeInsets>(
+                             EdgeInsets.all(0.5)),
+                       ),
+                       onPressed: (){
+                         _onItemTapped(2);
+                       },
+                       icon: Icon(Icons.refresh, color: Colors.green,),
+                     ),
+                   ),
+
+
+                   if (auth && (autshUserData.role == 'su_admin'
+                       || autshUserData.role == 'admin'
+                       || autshUserData.role == 'organizer'))
+
+                     Container (
+                       width: 32,
+                       height: iconHeight,
+                       child: IconButton(
+                         padding: EdgeInsets.all(1),
+                         style: ButtonStyle(
+                           padding: MaterialStateProperty.all<EdgeInsets>(
+                               EdgeInsets.all(1)),
+                         ),
+                         onPressed: (){
+                           Navigator.pop(context);
+                           Navigator.pushNamedAndRemoveUntil(context, '/create_event', (route) => false);
+
+                         },
+                         icon: Icon(Icons.add, color: Colors.green,),
+                       ),
+                     ),
+
+
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     children: [
+                       if (emulateUser)
+                        Container (
+                         width: 32,
+                         height: iconHeight,
+                         child: IconButton(
+                           padding: EdgeInsets.all(1),
+                           style: ButtonStyle(
+                             padding: MaterialStateProperty.all<EdgeInsets>(
+                                 EdgeInsets.all(1)),
+                           ),
+                           onPressed: (){
+                             emulateUser = false;
+                             emulateUserId = '';
+                             setState(() {
+                               initFirebase();
+                             });
+                           },
+                           icon: Icon(Icons.outbond_rounded, color: Colors.green[600],),
+                         ),
+                       ),
+                       Container (
+                         width: 10,
+                         height: iconHeight,
+                       ),
+
+                       Container (
+                         width: 35,
+                         height: iconHeight,
+                         child:
+                         TextButton(
+                             onPressed:  (){
+                               Navigator.pop(context);
+                               Navigator.pushNamedAndRemoveUntil(context, '/fb_events', (route) => false);
+
+                             },
+                             child: Text('Fb',
+                               style: TextStyle(
+                                 fontWeight: FontWeight.w900,
+                                 color: Colors.blueAccent,
+                               ),
+                             )),
+                       ),
+                     ],
+                   ),
+
+
+
+
+                 ],
+               ),
+             ],
+           ),
+
+
+            if (AllCalendars.length == 0)
+
+              Column(
+                children: [
+                  const SizedBox(height: 3.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(AppLocalizations.of(context)!.calendarListEmpty,
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 20
+                        ),
                       ),
-                    ),
 
-                    TextButton(onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
-                    },
-                        child: Text(AppLocalizations.of(context)!.selectedCalendars,
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontSize: 20,
+                      TextButton(onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+                      },
+                          child: Text(AppLocalizations.of(context)!.loadCalendars,
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 20,
+                            ),
+                          )
+                      )
+                    ],
+                  ),
+                ],
+              ),
+
+            if (selectedCalendars.length == 0 && AllCalendars.length != 0)
+              Column(
+                children: [
+                  const SizedBox(height: 3.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(AppLocalizations.of(context)!.calendarsNotSelected,
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 20
+                        ),
+                      ),
+
+                      TextButton(onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamedAndRemoveUntil(context, '/calendars', (route) => false);
+                      },
+                          child: Text(AppLocalizations.of(context)!.selectedCalendars,
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 20,
+                            ),
+                          )
+                      )
+                    ],
+                  ),
+                ],
+              ),
+
+            const SizedBox(height: 3.0),
+            Expanded(
+              child: ValueListenableBuilder<List<Event>>(
+                valueListenable: _selectedEvents,
+                builder: (context, value, _) {
+
+                  return ListView.builder(
+                    itemCount: value.length,
+                    itemBuilder: (context, index) {
+
+                      String colorHash = value[index].colorHash;
+                      String calNameColor = '0xFF0099FA';
+                      if (autshUserData.role == 'su_admin') {
+                        calNameColor = colorHash;
+                      }
+
+
+                      var color = 0xFF000000;
+
+                      if (!exportData.containsKey(value[index].eventId)
+                          && AllCalendars[value[index].calendarId].typeEvents == 'festivals') {
+                        if (auth && (autshUserData.role == 'su_admin' || autshUserData.role == 'admin'))
+                          color = 0xFFEA0707;
+                      }
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Color(int.parse(colorHash)),
                           ),
-                        )
-                    )
-                  ],
-                ),
-              ],
-            ),
-
-          const SizedBox(height: 8.0),
-          Expanded(
-            child: ValueListenableBuilder<List<Event>>(
-              valueListenable: _selectedEvents,
-              builder: (context, value, _) {
-
-                return ListView.builder(
-                  itemCount: value.length,
-                  itemBuilder: (context, index) {
-
-
-                    var color = 0xFF000000;
-
-                    if (!exportData.containsKey(value[index].eventId)
-                        && AllCalendars[value[index].calendarId].typeEvents == 'festivals') {
-                      if (autshUserData.role == 'su_admin' || autshUserData.role == 'admin')
-                        color = 0xFFEA0707;
-                    }
-
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 4.0,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(
+                          borderRadius: BorderRadius.circular(12.0),
                         ),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: ListTile(
-                        onTap: () => _eventOpen(value[index]),
-                        title: Column(
-                          children: [
-                            Row(
-                              children: [
-                                Text(value[index].timePeriod()),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child:
-                                  Text(value[index].name, style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(color)
-                                  ),),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        subtitle: Row(
-                          children: [
-                            Expanded(
-                              child:
-                              Text('${value[index].locationString()}'),
-                            ),
-
-                            if (selectedCalendars.containsKey(value[index].calendarId))
-                            Text("${selectedCalendars[value[index].calendarId].name}",
-                              style: TextStyle(
-                                color: Colors.blueAccent,
-                                fontWeight: FontWeight.w600
+                        child: ListTile(
+                          onTap: () => _eventOpen(value[index]),
+                          title: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(value[index].timePeriod()),
+                                  // Container(
+                                  //   // color: Colors.cyanAccent[200],
+                                  //   width: 20,
+                                  //   height: 20,
+                                  //   decoration: ShapeDecoration(
+                                  //     color: Color(int.parse(colorHash)), shape: CircleBorder(),
+                                  //   ),
+                                  // )
+                                ],
                               ),
-                            )
-                          ],
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child:
+                                    Text(value[index].name, style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(color)
+                                    ),),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          subtitle: Row(
+                            children: [
+                              Expanded(
+                                child:
+                                Text('${value[index].locationString()}'),
+                              ),
+
+                              if (selectedCalendars.containsKey(value[index].calendarId))
+                                Text("${selectedCalendars[value[index].calendarId].name}",
+                                  style: TextStyle(
+                                      color: Color(int.parse(calNameColor)),
+                                      fontWeight: FontWeight.w600
+                                  ),
+                                )
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: AppLocalizations.of(context)!.calendars,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.delete),
-            label: AppLocalizations.of(context)!.clear,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.refresh),
-            label: AppLocalizations.of(context)!.update,
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlueAccent[800],
-        onTap: _onItemTapped,
+          ],
+        ),
       ),
     );
   }
@@ -1240,7 +1610,7 @@ class _StartPageState extends State<StartPage> {
           _selectedEvents.value = _getEventsForDay(_selectedDay!);
           _selectedIndex = index;
         });
-        shortMessage(context, AppLocalizations.of(context)!.eventDeleted, 2);
+        shortMessage(context, AppLocalizations.of(context)!.storageCleared, 2);
         break;
       case 2:
 
@@ -1259,7 +1629,7 @@ class _StartPageState extends State<StartPage> {
 
   Future<void> updateData() async {
 
-    if ((autshUserData.role == 'su_admin' || autshUserData.role == 'admin')) {
+    if (auth && (autshUserData.role == 'su_admin' || autshUserData.role == 'admin')) {
       usersRepository().getStatementsCount().then((value) {
         setState(() {
           statmensCount = value;
@@ -1294,15 +1664,22 @@ class _StartPageState extends State<StartPage> {
   }
 
   Future<void> uploadEvents() async {
-    await CalendarRepository().getEventsListForMonth(_focusedDay);
-    setlocaleJsonData();
-    shortMessage(context, AppLocalizations.of(context)!.downloadComplit, 2);
-    print('save uploadsDates');
-    Map uploadsDates = {};
-    uploadsDates['minDate'] = "${uploadsEventDates['minDate']}";
-    uploadsDates['maxDate'] = "${uploadsEventDates['maxDate']}";
-    String data = json.encode(uploadsDates);
-    localRepository().setLocalDataString('uploadsEventDates', data);
+
+    await CalendarRepository().getEventsListForMonth(_focusedDay).then((value)  {
+      if (value.containsKey('error')) {
+        shortMessage(context, value['error'], 2);
+      } else {
+        setlocaleJsonData();
+        shortMessage(context, AppLocalizations.of(context)!.downloadComplit, 2);
+        print('save uploadsDates');
+        Map uploadsDates = {};
+        uploadsDates['minDate'] = "${uploadsEventDates['minDate']}";
+        uploadsDates['maxDate'] = "${uploadsEventDates['maxDate']}";
+        String data = json.encode(uploadsDates);
+        localRepository().setLocalDataString('uploadsEventDates', data);
+      }
+    });
+
   }
 
   void deleteEvent() {
@@ -1332,6 +1709,8 @@ class _StartPageState extends State<StartPage> {
           shortMessage(context, "error - ${request['errorMessage']['error']['message']}", 2);
         } else {
 
+          usersRepository().deleteUserEventsPermissions(getEventGUid(openEvent.eventId));
+
           Navigator.pop(context);
           _onItemTapped(2);
 
@@ -1346,6 +1725,9 @@ class _StartPageState extends State<StartPage> {
   }
 
   void _onEventOpenItemTapped(int index) async {
+
+    var eventGUid = getEventGUid(openEvent.eventId);
+
     switch (index) {
       case 0:
         if ((autshUserData.role == 'su_admin' || autshUserData.role == 'admin')) {
@@ -1355,11 +1737,13 @@ class _StartPageState extends State<StartPage> {
         break;
       case 1:
 
+
         if(autshUserData.role != null && ((userCalendarsPermissions.containsKey(key)
             && userCalendarsPermissions[openEvent.calendarId]['delete'] > 0
             && CalendarPermEventDelete[autshUserData.role] > 1)
             || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid
-            || CalendarPermEventDelete[autshUserData.role] > 1)) {
+            || CalendarPermEventDelete[autshUserData.role] > 1)
+            || eventsPermissions[eventGUid]['delete'] > 0) {
 
           deleteEventDialog();
 
@@ -1373,7 +1757,8 @@ class _StartPageState extends State<StartPage> {
             && userCalendarsPermissions[openEvent.calendarId]['redact'] > 0
             && CalendarPermEventDelete[autshUserData.role] > 1)
             || selectedCalendars[openEvent.calendarId].creator == autshUserData.uid
-            || CalendarPermEventDelete[autshUserData.role] > 1)) {
+            || CalendarPermEventDelete[autshUserData.role] > 1)
+            || eventsPermissions[eventGUid]['redact'] > 0) {
 
           Navigator.pop(context);
           Navigator.pushNamedAndRemoveUntil(context, '/edit_event', (route) => false);
@@ -1387,4 +1772,12 @@ class _StartPageState extends State<StartPage> {
 
   }
 
+
+  Future<void> _launchUrl(url) async {
+    if (!await launchUrl(url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $url');
+    }
+  }
 }

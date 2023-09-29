@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/Calendar.dart';
 import '../models/UserData.dart';
@@ -146,6 +147,15 @@ class _StatementsListState extends State<StatementsList> {
                           fontSize: 18,
                           color: Colors.black
                       ),
+                    ),
+
+                    const SizedBox(height: 8.0),
+                    ElevatedButton(
+                      onPressed: () {
+                        Uri url = Uri.parse(data.fbProfile);
+                        _launchUrl(url);
+                      },
+                      child: Text('go Fb profile'),
                     ),
 
                     const SizedBox(height: 8.0),
@@ -483,5 +493,14 @@ class _StatementsListState extends State<StatementsList> {
 
   }
 
+
+
+  Future<void> _launchUrl(url) async {
+    if (!await launchUrl(url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $url');
+    }
+  }
 }
 

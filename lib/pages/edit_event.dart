@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:tango_calendar/models/Calendar.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../AppTools.dart';
 import '../repositories/calendar/calendar_repository.dart';
 import '../utils.dart';
@@ -103,7 +104,7 @@ class _EditEventState extends State<EditEvent> {
                       onPressed: () => {
                         Navigator.of(context).pop()
                       },
-                      child: Text('close')
+                      child: Text(AppLocalizations.of(context)!.close)
                   ),
                 ],
               )
@@ -324,7 +325,7 @@ class _EditEventState extends State<EditEvent> {
       child: Scaffold(
         appBar: AppBar(
           title: Center(
-            child: Text('Edit Event'),
+            child: Text(AppLocalizations.of(context)!.editEvenT),
           ),
           actions: [
 
@@ -343,10 +344,10 @@ class _EditEventState extends State<EditEvent> {
                   minLines: 1,
                   maxLines: 2,
                   controller: eventTitleController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     enabledBorder: OutlineInputBorder(),
-                    hintText: 'Event Title',
-                    labelText: 'Event Title',
+                    hintText: AppLocalizations.of(context)!.eventTitlE,
+                    labelText: AppLocalizations.of(context)!.eventTitlE,
                     border: OutlineInputBorder(),
                   ),
                   validator: (String? value) {
@@ -364,7 +365,7 @@ class _EditEventState extends State<EditEvent> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Event repeated')
+                          Text(AppLocalizations.of(context)!.eventRepeated)
                         ],
                       ),
                       const SizedBox(height: 20.0),
@@ -383,12 +384,12 @@ class _EditEventState extends State<EditEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: dateStartStringController,
-                          decoration: const InputDecoration(
-                            label: Text('dete start', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.dateStart, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Start date',
+                            hintText: AppLocalizations.of(context)!.dateStart,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -410,12 +411,12 @@ class _EditEventState extends State<EditEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: dateEndStringController,
-                          decoration: const InputDecoration(
-                            label: Text('dete end', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.dateEnd, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Start date',
+                            hintText: AppLocalizations.of(context)!.dateEnd,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -442,12 +443,12 @@ class _EditEventState extends State<EditEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: timeStartStringController,
-                          decoration: const InputDecoration(
-                            label: Text('time start', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.timeStart, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Time start',
+                            hintText: AppLocalizations.of(context)!.timeStart,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -468,12 +469,12 @@ class _EditEventState extends State<EditEvent> {
                         child: TextFormField(
                           enabled: false,
                           controller: timeEndStringController,
-                          decoration: const InputDecoration(
-                            label: Text('time end', style: TextStyle(
+                          decoration: InputDecoration(
+                            label: Text(AppLocalizations.of(context)!.timeEnd, style: TextStyle(
                                 color: Colors.black
                             ),),
                             disabledBorder: OutlineInputBorder(),
-                            hintText: 'Time end',
+                            hintText: AppLocalizations.of(context)!.timeEnd,
                             border: OutlineInputBorder(),
                           ),
                           validator: (String? value) {
@@ -492,10 +493,10 @@ class _EditEventState extends State<EditEvent> {
                 const SizedBox(height: 20.0),
                 TextFormField(
                   controller: eventLocationnController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     enabledBorder: OutlineInputBorder(),
-                    hintText: 'Event Location',
-                    labelText: 'Event Location',
+                    hintText: AppLocalizations.of(context)!.eventLocatioN,
+                    labelText: AppLocalizations.of(context)!.eventLocatioN,
                     border: OutlineInputBorder(),
                   ),
                   validator: (String? value) {
@@ -512,7 +513,7 @@ class _EditEventState extends State<EditEvent> {
                     controller: eventDescriptionController,
                     decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        labelText: 'Event Description'
+                        labelText: AppLocalizations.of(context)!.eventDescriptioN
                     ),
                     keyboardType: TextInputType.multiline,
                     maxLines: null,
@@ -533,8 +534,8 @@ class _EditEventState extends State<EditEvent> {
                       shortMessage(context, "error form field", 2);
                     }
                   },
-                  child: const Text(
-                    'change event',
+                  child: Text(
+                    AppLocalizations.of(context)!.changeEvent,
                     style: TextStyle(fontSize: 24),
                   ),
                 ),
@@ -546,10 +547,10 @@ class _EditEventState extends State<EditEvent> {
         ),
 
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'home',
+              label: AppLocalizations.of(context)!.home,
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.delete, size: 0,),
@@ -557,7 +558,7 @@ class _EditEventState extends State<EditEvent> {
             ),
             BottomNavigationBarItem(
                 icon: Icon(Icons.refresh),
-                label: 'refresh'
+                label: AppLocalizations.of(context)!.update
             ),
           ],
           currentIndex: _selectedIndex,
@@ -622,9 +623,6 @@ class _EditEventState extends State<EditEvent> {
     });
   }
 
-
-
-
   void setIterableRules() {
 
     var start = DateTime(dateStart.year, dateStart.month, 1);
@@ -646,17 +644,17 @@ class _EditEventState extends State<EditEvent> {
 
     if ( dateStart.add(Duration(days: 7)).month != dateStart.month) {
       weekXm = -1;
-      monWeekTitle = 'last';
+      monWeekTitle = AppLocalizations.of(context)!.lastWeekDay(wDayText);
     }
 
     if (weekXm == 1) {
-      monWeekTitle = 'first';
+      monWeekTitle = AppLocalizations.of(context)!.firstWeekDay(wDayText);
     } else if (weekXm == 2) {
-      monWeekTitle = 'second';
+      monWeekTitle = AppLocalizations.of(context)!.secondWeekDay(wDayText);
     } else if (weekXm == 3) {
-      monWeekTitle = 'third';
+      monWeekTitle = AppLocalizations.of(context)!.thirdWeekDay(wDayText);
     } else if (weekXm == 4) {
-      monWeekTitle = 'fourth';
+      monWeekTitle = AppLocalizations.of(context)!.fourthWeekDay(wDayText);
     } else if (weekXm == 5) {
       monWeekTitle = 'fifth';
     }
@@ -664,17 +662,17 @@ class _EditEventState extends State<EditEvent> {
 
     iterateRules = [
       {
-        'title': 'newer',
+        'title': AppLocalizations.of(context)!.newer,
         'value': '',
         'checked': false
       },
       {
-        'title': 'weekly ewery $wDayText',
+        'title': "${AppLocalizations.of(context)!.weekly} ${AppLocalizations.of(context)!.eweryWeekDay(wDayText)} \n${AppLocalizations.of(context)!.weekDay(wDayText)}",
         'value': 'RRULE:FREQ=WEEKLY;BYDAY=$wDayText',
         'checked': false
       },
       {
-        'title': 'monthly ewery $monWeekTitle $wDayText',
+        'title': '${AppLocalizations.of(context)!.monthly} ${AppLocalizations.of(context)!.eweryWeekDay(wDayText)} \n$monWeekTitle ${AppLocalizations.of(context)!.weekDay(wDayText)}',
         'value': 'RRULE:FREQ=MONTHLY;BYDAY=$weekXm$wDayText',
         'checked': false
       }

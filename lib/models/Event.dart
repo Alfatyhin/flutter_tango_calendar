@@ -1,6 +1,6 @@
 
 import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 
 class Event{
@@ -19,7 +19,10 @@ class Event{
   final String organizerEmail;
   final dynamic organizerName;
   final calendarId;
-  var colorHash = 0xFF000000;
+  final url;
+  String colorHash = '0xFF000000';
+  var color = Color(0xFF770101);
+
 
   Event(
       this.eventId,
@@ -36,8 +39,10 @@ class Event{
       this.creatorName,
       this.organizerEmail,
       this.organizerName,
-      this.calendarId
+      this.calendarId,
+      this.url
       );
+
 
 
   String timePeriod() {
@@ -46,11 +51,11 @@ class Event{
       if (dateStart == dateEnd) {
         string = "$timeStart - $timeEnd";
       } else {
-        string = "с $dateStart $timeStart по $dateEnd $timeEnd";
+        string = "from $dateStart $timeStart \nto $dateEnd $timeEnd";
       }
     } else {
       if (dateStart != dateEnd) {
-        string = "с $dateStart по $dateEnd";
+        string = "from $dateStart to $dateEnd";
       }
     }
     return string;
@@ -74,6 +79,17 @@ class Event{
     return string;
   }
 
+  void setColorHash(String hash) {
+    this.colorHash = hash;
+  }
+
+
+
+  dynamic getColorHash() {
+    String colorCode = this.colorHash;
+    return colorCode;
+  }
+
   Digest getHashEvent() {
     var description = this.description;
     RegExp exp = RegExp(r" ");
@@ -92,4 +108,6 @@ class Event{
 
   @override
   String toString() => "$eventId || $name || $location";
+
+
 }
